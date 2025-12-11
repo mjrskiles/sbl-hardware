@@ -1,0 +1,93 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/mainboard.schema.json",
+  "schemaVersion": "0.1",
+
+  "mainboard": {
+    "name": "raspberry-pi-pico-2",
+    "revision": "1.0",
+    "mcu": "mcu/arm/rp2350"
+  },
+
+  "exposes": {
+    "gpio": {
+      "gp0":  { "mcu_pin": "GPIO0",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp1":  { "mcu_pin": "GPIO1",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp2":  { "mcu_pin": "GPIO2",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp3":  { "mcu_pin": "GPIO3",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp4":  { "mcu_pin": "GPIO4",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp5":  { "mcu_pin": "GPIO5",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp6":  { "mcu_pin": "GPIO6",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp7":  { "mcu_pin": "GPIO7",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp8":  { "mcu_pin": "GPIO8",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp9":  { "mcu_pin": "GPIO9",  "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp10": { "mcu_pin": "GPIO10", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp11": { "mcu_pin": "GPIO11", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp12": { "mcu_pin": "GPIO12", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp13": { "mcu_pin": "GPIO13", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp14": { "mcu_pin": "GPIO14", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp15": { "mcu_pin": "GPIO15", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp16": { "mcu_pin": "GPIO16", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp17": { "mcu_pin": "GPIO17", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp18": { "mcu_pin": "GPIO18", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp19": { "mcu_pin": "GPIO19", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp20": { "mcu_pin": "GPIO20", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp21": { "mcu_pin": "GPIO21", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp22": { "mcu_pin": "GPIO22", "functions": ["gpio", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp26": { "mcu_pin": "GPIO26", "functions": ["gpio", "adc", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp27": { "mcu_pin": "GPIO27", "functions": ["gpio", "adc", "spi", "uart", "i2c", "pwm", "pio"] },
+      "gp28": { "mcu_pin": "GPIO28", "functions": ["gpio", "adc", "spi", "uart", "i2c", "pwm", "pio"] }
+    },
+    "adc": {
+      "a0": { "mcu_pin": "GPIO26", "mcu_channel": "ADC_CH0" },
+      "a1": { "mcu_pin": "GPIO27", "mcu_channel": "ADC_CH1" },
+      "a2": { "mcu_pin": "GPIO28", "mcu_channel": "ADC_CH2" }
+    },
+    "buses": {
+      "spi0": {
+        "type": "spi",
+        "mcu_peripheral": "SPI0",
+        "pins": { "sck": "gp2", "mosi": "gp3", "miso": "gp0" }
+      },
+      "spi1": {
+        "type": "spi",
+        "mcu_peripheral": "SPI1",
+        "pins": { "sck": "gp10", "mosi": "gp11", "miso": "gp8" }
+      },
+      "i2c0": {
+        "type": "i2c",
+        "mcu_peripheral": "I2C0",
+        "pins": { "sda": "gp4", "scl": "gp5" }
+      },
+      "i2c1": {
+        "type": "i2c",
+        "mcu_peripheral": "I2C1",
+        "pins": { "sda": "gp6", "scl": "gp7" }
+      },
+      "uart0": {
+        "type": "uart",
+        "mcu_peripheral": "UART0",
+        "pins": { "tx": "gp0", "rx": "gp1" }
+      },
+      "uart1": {
+        "type": "uart",
+        "mcu_peripheral": "UART1",
+        "pins": { "tx": "gp4", "rx": "gp5" }
+      }
+    }
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "mcu_pin": "GPIO25",
+        "function": "gpio",
+        "direction": "out",
+        "id": "status_led"
+      }
+    ]
+  },
+
+  "config": {
+    "sysclk_mhz": 150
+  }
+}

@@ -1,0 +1,395 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/mcu.schema.json",
+  "schemaVersion": "0.1",
+  "mcu": "rp2350",
+  "family": "rp2350",
+  "vendor": "raspberry-pi",
+  "arch": "arm-cortex-m33",
+  "driver": "./driver",
+
+  "pins": {
+    "GPIO0": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 0 },
+        "spi": { "peripheral": "SPI0", "signal": "miso" },
+        "uart": { "peripheral": "UART0", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM0", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO1": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 1 },
+        "spi": { "peripheral": "SPI0", "signal": "cs" },
+        "uart": { "peripheral": "UART0", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM0", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO2": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 2 },
+        "spi": { "peripheral": "SPI0", "signal": "sck" },
+        "uart": { "peripheral": "UART0", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM1", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO3": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 3 },
+        "spi": { "peripheral": "SPI0", "signal": "mosi" },
+        "uart": { "peripheral": "UART0", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM1", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO4": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 4 },
+        "spi": { "peripheral": "SPI0", "signal": "miso" },
+        "uart": { "peripheral": "UART1", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM2", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO5": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 5 },
+        "spi": { "peripheral": "SPI0", "signal": "cs" },
+        "uart": { "peripheral": "UART1", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM2", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO6": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 6 },
+        "spi": { "peripheral": "SPI0", "signal": "sck" },
+        "uart": { "peripheral": "UART1", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM3", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO7": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 7 },
+        "spi": { "peripheral": "SPI0", "signal": "mosi" },
+        "uart": { "peripheral": "UART1", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM3", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO8": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 8 },
+        "spi": { "peripheral": "SPI1", "signal": "miso" },
+        "uart": { "peripheral": "UART1", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM4", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO9": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 9 },
+        "spi": { "peripheral": "SPI1", "signal": "cs" },
+        "uart": { "peripheral": "UART1", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM4", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO10": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 10 },
+        "spi": { "peripheral": "SPI1", "signal": "sck" },
+        "uart": { "peripheral": "UART1", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM5", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO11": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 11 },
+        "spi": { "peripheral": "SPI1", "signal": "mosi" },
+        "uart": { "peripheral": "UART1", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM5", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO12": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 12 },
+        "spi": { "peripheral": "SPI1", "signal": "miso" },
+        "uart": { "peripheral": "UART0", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM6", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO13": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 13 },
+        "spi": { "peripheral": "SPI1", "signal": "cs" },
+        "uart": { "peripheral": "UART0", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM6", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO14": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 14 },
+        "spi": { "peripheral": "SPI1", "signal": "sck" },
+        "uart": { "peripheral": "UART0", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM7", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO15": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 15 },
+        "spi": { "peripheral": "SPI1", "signal": "mosi" },
+        "uart": { "peripheral": "UART0", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM7", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO16": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 16 },
+        "spi": { "peripheral": "SPI0", "signal": "miso" },
+        "uart": { "peripheral": "UART0", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM0", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO17": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 17 },
+        "spi": { "peripheral": "SPI0", "signal": "cs" },
+        "uart": { "peripheral": "UART0", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM0", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO18": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 18 },
+        "spi": { "peripheral": "SPI0", "signal": "sck" },
+        "uart": { "peripheral": "UART0", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM1", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO19": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 19 },
+        "spi": { "peripheral": "SPI0", "signal": "mosi" },
+        "uart": { "peripheral": "UART0", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM1", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO20": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 20 },
+        "spi": { "peripheral": "SPI0", "signal": "miso" },
+        "uart": { "peripheral": "UART1", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM2", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO21": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 21 },
+        "spi": { "peripheral": "SPI0", "signal": "cs" },
+        "uart": { "peripheral": "UART1", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM2", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO22": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 22 },
+        "spi": { "peripheral": "SPI0", "signal": "sck" },
+        "uart": { "peripheral": "UART1", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM3", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO23": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 23 },
+        "spi": { "peripheral": "SPI0", "signal": "mosi" },
+        "uart": { "peripheral": "UART1", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM3", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO24": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 24 },
+        "spi": { "peripheral": "SPI1", "signal": "miso" },
+        "uart": { "peripheral": "UART1", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM4", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO25": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 25 },
+        "spi": { "peripheral": "SPI1", "signal": "cs" },
+        "uart": { "peripheral": "UART1", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM4", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO26": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 26 },
+        "adc": { "peripheral": "ADC", "channel": 0 },
+        "spi": { "peripheral": "SPI1", "signal": "sck" },
+        "uart": { "peripheral": "UART1", "signal": "cts" },
+        "i2c": { "peripheral": "I2C1", "signal": "sda" },
+        "pwm": { "peripheral": "PWM5", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO27": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 27 },
+        "adc": { "peripheral": "ADC", "channel": 1 },
+        "spi": { "peripheral": "SPI1", "signal": "mosi" },
+        "uart": { "peripheral": "UART1", "signal": "rts" },
+        "i2c": { "peripheral": "I2C1", "signal": "scl" },
+        "pwm": { "peripheral": "PWM5", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO28": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 28 },
+        "adc": { "peripheral": "ADC", "channel": 2 },
+        "spi": { "peripheral": "SPI1", "signal": "miso" },
+        "uart": { "peripheral": "UART0", "signal": "tx" },
+        "i2c": { "peripheral": "I2C0", "signal": "sda" },
+        "pwm": { "peripheral": "PWM6", "channel": 0 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    },
+    "GPIO29": {
+      "functions": {
+        "gpio": { "port": 0, "pin": 29 },
+        "adc": { "peripheral": "ADC", "channel": 3 },
+        "spi": { "peripheral": "SPI1", "signal": "cs" },
+        "uart": { "peripheral": "UART0", "signal": "rx" },
+        "i2c": { "peripheral": "I2C0", "signal": "scl" },
+        "pwm": { "peripheral": "PWM6", "channel": 1 },
+        "pio": { "peripheral": "PIO0" }
+      }
+    }
+  },
+
+  "peripherals": {
+    "ADC": {
+      "type": "adc",
+      "resolution_bits": 12,
+      "max_channels": 8,
+      "pins": {
+        "ch0": ["GPIO26"],
+        "ch1": ["GPIO27"],
+        "ch2": ["GPIO28"],
+        "ch3": ["GPIO29"]
+      }
+    },
+    "SPI0": {
+      "type": "spi",
+      "max_speed_hz": 62500000,
+      "pins": {
+        "miso": ["GPIO0", "GPIO4", "GPIO16", "GPIO20"],
+        "cs": ["GPIO1", "GPIO5", "GPIO17", "GPIO21"],
+        "sck": ["GPIO2", "GPIO6", "GPIO18", "GPIO22"],
+        "mosi": ["GPIO3", "GPIO7", "GPIO19", "GPIO23"]
+      }
+    },
+    "SPI1": {
+      "type": "spi",
+      "max_speed_hz": 62500000,
+      "pins": {
+        "miso": ["GPIO8", "GPIO12", "GPIO24", "GPIO28"],
+        "cs": ["GPIO9", "GPIO13", "GPIO25", "GPIO29"],
+        "sck": ["GPIO10", "GPIO14", "GPIO26"],
+        "mosi": ["GPIO11", "GPIO15", "GPIO27"]
+      }
+    },
+    "I2C0": {
+      "type": "i2c",
+      "max_speed_hz": 1000000,
+      "pins": {
+        "sda": ["GPIO0", "GPIO4", "GPIO8", "GPIO12", "GPIO16", "GPIO20", "GPIO24", "GPIO28"],
+        "scl": ["GPIO1", "GPIO5", "GPIO9", "GPIO13", "GPIO17", "GPIO21", "GPIO25", "GPIO29"]
+      }
+    },
+    "I2C1": {
+      "type": "i2c",
+      "max_speed_hz": 1000000,
+      "pins": {
+        "sda": ["GPIO2", "GPIO6", "GPIO10", "GPIO14", "GPIO18", "GPIO22", "GPIO26"],
+        "scl": ["GPIO3", "GPIO7", "GPIO11", "GPIO15", "GPIO19", "GPIO23", "GPIO27"]
+      }
+    },
+    "UART0": {
+      "type": "uart",
+      "pins": {
+        "tx": ["GPIO0", "GPIO12", "GPIO16", "GPIO28"],
+        "rx": ["GPIO1", "GPIO13", "GPIO17", "GPIO29"],
+        "cts": ["GPIO2", "GPIO14", "GPIO18"],
+        "rts": ["GPIO3", "GPIO15", "GPIO19"]
+      }
+    },
+    "UART1": {
+      "type": "uart",
+      "pins": {
+        "tx": ["GPIO4", "GPIO8", "GPIO20", "GPIO24"],
+        "rx": ["GPIO5", "GPIO9", "GPIO21", "GPIO25"],
+        "cts": ["GPIO6", "GPIO10", "GPIO22", "GPIO26"],
+        "rts": ["GPIO7", "GPIO11", "GPIO23", "GPIO27"]
+      }
+    },
+    "PWM0": { "type": "pwm", "pins": { "a": ["GPIO0", "GPIO16"], "b": ["GPIO1", "GPIO17"] } },
+    "PWM1": { "type": "pwm", "pins": { "a": ["GPIO2", "GPIO18"], "b": ["GPIO3", "GPIO19"] } },
+    "PWM2": { "type": "pwm", "pins": { "a": ["GPIO4", "GPIO20"], "b": ["GPIO5", "GPIO21"] } },
+    "PWM3": { "type": "pwm", "pins": { "a": ["GPIO6", "GPIO22"], "b": ["GPIO7", "GPIO23"] } },
+    "PWM4": { "type": "pwm", "pins": { "a": ["GPIO8", "GPIO24"], "b": ["GPIO9", "GPIO25"] } },
+    "PWM5": { "type": "pwm", "pins": { "a": ["GPIO10", "GPIO26"], "b": ["GPIO11", "GPIO27"] } },
+    "PWM6": { "type": "pwm", "pins": { "a": ["GPIO12", "GPIO28"], "b": ["GPIO13", "GPIO29"] } },
+    "PWM7": { "type": "pwm", "pins": { "a": ["GPIO14"], "b": ["GPIO15"] } },
+    "PIO0": { "type": "pio" },
+    "PIO1": { "type": "pio" },
+    "PIO2": { "type": "pio" }
+  }
+}
