@@ -4,7 +4,9 @@ Hardware definitions for Sound Byte Labs firmware projects.
 
 ## Overview
 
-This repository contains MCU drivers, mainboard definitions, module definitions, and JSON schemas for the Sound Byte Libs hardware resolution system. Use these definitions as a source in your `sbl.json` configuration.
+This repository contains MCU definitions, mainboard definitions, and module definitions for the Sound Byte Libs hardware resolution system. Use these definitions as a source in your `sbl.json` configuration.
+
+JSON schemas are maintained separately in [sound-byte-libs/schema/](https://github.com/mjrskiles/sound-byte-libs/tree/main/schema).
 
 ## Usage
 
@@ -21,7 +23,7 @@ Reference this repository in your project's `sbl.json`:
         "ref": "main"
       }
     ],
-    "target": "sbl:modules/boards/daisy-pod"
+    "target": "sbl:mainboards/raspberry-pi-pico"
   }
 }
 ```
@@ -50,17 +52,14 @@ sbl-hardware/
 ├── mcu/                          # MCU definitions (SBL-native only)
 │   ├── arm/                      # ARM Cortex-M MCUs
 │   │   ├── rp2040/               # Raspberry Pi RP2040
-│   │   └── stm32h750/            # STM32H750 (Daisy Seed)
+│   │   └── stm32h750/            # STM32H750
 │   └── native/                   # Native simulator
 ├── mainboards/                   # Primary boards running SBL applications
 │   ├── raspberry-pi-pico/        # Raspberry Pi Pico
-│   ├── daisy-seed/               # Electro-Smith Daisy Seed
 │   └── sbl-simulator-0/          # Native simulator mainboard
-├── modules/                      # Extension modules
-│   ├── boards/                   # Expansion PCBs
-│   │   └── daisy-pod/            # Electro-Smith Daisy Pod
-│   └── ic/                       # Complex ICs
-└── schema/                       # JSON schemas for validation
+└── modules/                      # Extension modules
+    ├── boards/                   # Expansion PCBs
+    └── ic/                       # Complex ICs (DACs, codecs, etc.)
 ```
 
 ## Hardware Hierarchy
@@ -68,8 +67,8 @@ sbl-hardware/
 | Level | Description | Example |
 |-------|-------------|---------|
 | MCU | Silicon + driver + pin definitions | rp2040, stm32h750 |
-| Mainboard | Primary board running SBL, exposes pins | raspberry-pi-pico, daisy-seed |
-| Module | Attaches to mainboard/module, claims pins | daisy-pod |
+| Mainboard | Primary board running SBL, exposes pins | raspberry-pi-pico |
+| Module | Attaches to mainboard/module, claims pins | led-panel, dac-board |
 
 ### Mainboard vs Module
 
@@ -81,12 +80,11 @@ sbl-hardware/
 ### Mainboards
 
 - `sbl:mainboards/raspberry-pi-pico` - Raspberry Pi Pico (RP2040)
-- `sbl:mainboards/daisy-seed` - Electro-Smith Daisy Seed (STM32H750)
 - `sbl:mainboards/sbl-simulator-0` - Native simulator for development
 
 ### Modules
 
-- `sbl:modules/boards/daisy-pod` - Electro-Smith Daisy Pod (attaches to daisy-seed)
+None yet - add your own!
 
 ## MCU Definitions
 
@@ -118,15 +116,15 @@ MCU pins define all available alternate functions:
 Pins are resolved through the hardware chain with conflict detection:
 
 ```
-daisy-pod claims pin "d20" with function "gpio"
+my-panel claims pin "gp0" with function "gpio"
     ↓
-daisy-seed exposes "d20" → "PC1" with functions ["gpio", "adc"]
+raspberry-pi-pico exposes "gp0" → "GPIO0" with functions ["gpio", "spi", ...]
     ↓
-stm32h750 defines "PC1" → { gpio: { port: 2, pin: 1 }, adc: {...} }
+rp2040 defines "GPIO0" → { gpio: { port: 0, pin: 0 }, spi: {...} }
     ↓
-Resolver checks: PC1 not already claimed? ✓
+Resolver checks: GPIO0 not already claimed? ✓
     ↓
-Generated: sbl::hw::gpio::led1_red{2, 1, false}
+Generated: sbl::hw::gpio::led_r{0, 0, false}
 ```
 
 If the same MCU pin is claimed twice, the resolver fails with a conflict error.
@@ -156,10 +154,10 @@ JSON schemas are maintained in [sound-byte-libs/schema/](https://github.com/mjrs
 
 1. Create a directory under `modules/boards/` or `modules/ic/`
 2. Add a `hardware.json` with `module` schema
-3. Set `attaches_to` to reference the parent (e.g., `mainboards/daisy-seed`)
+3. Set `attaches_to` to reference the parent (e.g., `mainboards/raspberry-pi-pico`)
 4. Define pin and bus claims with explicit functions
 
-See existing definitions for examples.
+See the Raspberry Pi Pico README for an example module definition.
 
 ## License
 
