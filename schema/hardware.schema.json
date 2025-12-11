@@ -1,0 +1,242 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://soundbytelabs.net/schema/hardware.schema.json",
+  "title": "Sound Byte Libs Hardware Manifest",
+  "description": "Hardware node definition (board or module) using MCU pin names",
+  "type": "object",
+  "required": ["version", "board"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "const": "1.0"
+    },
+    "board": {
+      "type": "object",
+      "required": ["name", "revision"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Board identifier matching directory name",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "revision": {
+          "type": "string",
+          "description": "Hardware revision",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "mcu": {
+          "type": "string",
+          "description": "MCU identifier (for standalone boards)",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "attaches_to": {
+          "type": "string",
+          "description": "Parent board reference (source:path format, for modules)",
+          "pattern": "^[a-z][a-z0-9_-]*:boards/[a-z0-9-]+$"
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["mcu"],
+          "not": { "required": ["attaches_to"] }
+        },
+        {
+          "required": ["attaches_to"],
+          "not": { "required": ["mcu"] }
+        }
+      ]
+    },
+
+    "exposes": {
+      "type": "object",
+      "description": "Pins this board exposes to child modules",
+      "properties": {
+        "gpio": {
+          "type": "object",
+          "description": "GPIO pins exposed with logical names",
+          "additionalProperties": {
+            "$ref": "#/definitions/gpio_expose"
+          }
+        },
+        "adc": {
+          "type": "object",
+          "description": "ADC channels exposed with logical names",
+          "additionalProperties": {
+            "$ref": "#/definitions/adc_expose"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "claims": {
+      "type": "object",
+      "description": "Pins this board/module claims for use",
+      "properties": {
+        "gpio": {
+          "type": "array",
+          "description": "GPIO pins claimed",
+          "items": {
+            "$ref": "#/definitions/gpio_claim"
+          }
+        },
+        "adc": {
+          "type": "array",
+          "description": "ADC channels claimed",
+          "items": {
+            "$ref": "#/definitions/adc_claim"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "contains": {
+      "type": "object",
+      "description": "ICs and components on this board",
+      "additionalProperties": {
+        "$ref": "#/definitions/inline_component"
+      }
+    },
+
+    "config": {
+      "type": "object",
+      "description": "Board configuration",
+      "properties": {
+        "hse_mhz": {
+          "type": "integer",
+          "description": "External oscillator frequency in MHz",
+          "minimum": 1
+        },
+        "sysclk_mhz": {
+          "type": "integer",
+          "description": "System clock frequency in MHz",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+    "gpio_expose": {
+      "type": "object",
+      "description": "GPIO pin exposed to child modules",
+      "required": ["mcu_pin"],
+      "properties": {
+        "mcu_pin": {
+          "type": "string",
+          "description": "MCU pin name (e.g., GPIO25, PB12)"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "adc_expose": {
+      "type": "object",
+      "description": "ADC channel exposed to child modules",
+      "required": ["mcu_adc", "mcu_channel"],
+      "properties": {
+        "mcu_adc": {
+          "type": "integer",
+          "description": "MCU ADC peripheral number",
+          "minimum": 0
+        },
+        "mcu_channel": {
+          "type": "integer",
+          "description": "MCU ADC channel number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "gpio_claim": {
+      "type": "object",
+      "description": "GPIO pin claimed for application use",
+      "required": ["id", "direction"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Handle name (becomes sbl::hw::gpio::id)",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "pin": {
+          "type": "string",
+          "description": "Pin reference: MCU pin name (standalone) or logical name (module)"
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["in", "out"],
+          "description": "Pin direction"
+        },
+        "pull": {
+          "type": "string",
+          "enum": ["up", "down", "none"],
+          "description": "Internal pull resistor"
+        },
+        "active_low": {
+          "type": "boolean",
+          "description": "True if signal is active when LOW",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "adc_claim": {
+      "type": "object",
+      "description": "ADC channel claimed for application use",
+      "required": ["id", "pin"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Handle name (becomes sbl::hw::adc::id)",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "pin": {
+          "type": "string",
+          "description": "Pin reference: MCU ADC name or logical name from parent"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "inline_component": {
+      "type": "object",
+      "description": "IC/component on board (inline definition)",
+      "required": ["part"],
+      "properties": {
+        "part": {
+          "type": "string",
+          "description": "Part number"
+        },
+        "interface": {
+          "type": "string",
+          "description": "Communication interface (e.g., i2s, spi0)"
+        },
+        "address": {
+          "type": "string",
+          "description": "I2C address if applicable",
+          "pattern": "^0x[0-9a-fA-F]+$"
+        },
+        "size_mb": {
+          "type": "integer",
+          "description": "Memory size in MB"
+        },
+        "component": {
+          "type": "string",
+          "description": "Reference to component definition (source:components/name)"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

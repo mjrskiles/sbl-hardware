@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://soundbytelabs.net/schema/sbl.schema.json",
+  "title": "Sound Byte Libs Configuration",
+  "description": "Main configuration file for Sound Byte Libs projects",
+  "type": "object",
+  "required": ["version", "hardware"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "const": "1.0"
+    },
+    "hardware": {
+      "type": "object",
+      "description": "Hardware source and target configuration",
+      "required": ["sources", "target"],
+      "properties": {
+        "sources": {
+          "type": "array",
+          "description": "Hardware source definitions",
+          "items": {
+            "$ref": "#/definitions/source"
+          },
+          "minItems": 1
+        },
+        "target": {
+          "type": "string",
+          "description": "Target board/module reference (source:path format)",
+          "pattern": "^[a-z][a-z0-9_-]*:(boards|mcu)/[a-z0-9_-]+(/[a-z0-9_-]+)*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "build": {
+      "type": "object",
+      "description": "Build configuration options",
+      "properties": {
+        "cache_dir": {
+          "type": "string",
+          "description": "Cache directory path (supports ${BUILD_DIR} variable)",
+          "default": "${BUILD_DIR}/.sbl-cache"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+    "source": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Source identifier used in references",
+          "pattern": "^[a-z][a-z0-9_-]*$"
+        },
+        "github": {
+          "type": "string",
+          "description": "GitHub repository (owner/repo format)",
+          "pattern": "^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$"
+        },
+        "path": {
+          "type": "string",
+          "description": "Local filesystem path (for local sources)"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Git ref (tag, branch, or commit) for remote sources"
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["github"],
+          "not": { "required": ["path"] }
+        },
+        {
+          "required": ["path"],
+          "not": { "required": ["github"] }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/hardware.schema.json",
+  "version": "1.0",
+  "board": {
+    "name": "raspberry-pi-pico",
+    "revision": "1.0",
+    "mcu": "rp2040"
+  },
+  "claims": {
+    "gpio": [
+      {
+        "id": "status_led",
+        "pin": "GPIO25",
+        "direction": "out",
+        "active_low": false
+      }
+    ]
+  },
+  "config": {
+    "sysclk_mhz": 125
+  }
+}

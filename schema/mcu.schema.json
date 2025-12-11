@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://soundbytelabs.net/schema/mcu.schema.json",
+  "title": "Sound Byte Libs MCU Definition",
+  "description": "MCU metadata, driver location, and pin definitions",
+  "type": "object",
+  "required": ["version", "mcu", "driver"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "const": "1.0"
+    },
+    "mcu": {
+      "type": "string",
+      "description": "MCU identifier",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "family": {
+      "type": "string",
+      "description": "MCU family (e.g., rp2040, stm32h7)",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "vendor": {
+      "type": "string",
+      "description": "MCU vendor (e.g., raspberry-pi, st)",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "arch": {
+      "type": "string",
+      "description": "CPU architecture (e.g., arm-cortex-m0plus, arm-cortex-m7)",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "driver": {
+      "type": "string",
+      "description": "Relative path to driver directory",
+      "pattern": "^\\./[a-zA-Z0-9_/-]+$"
+    },
+    "gpio": {
+      "type": "object",
+      "description": "GPIO pin definitions (pin name -> port/pin)",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["port", "pin"],
+        "properties": {
+          "port": { "type": "integer", "minimum": 0 },
+          "pin": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "adc": {
+      "type": "object",
+      "description": "ADC channel definitions",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["adc", "channel"],
+        "properties": {
+          "adc": { "type": "integer", "minimum": 0 },
+          "channel": { "type": "integer", "minimum": 0 },
+          "gpio": { "type": "string", "description": "Associated GPIO pin name" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
