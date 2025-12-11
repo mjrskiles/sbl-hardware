@@ -84,7 +84,7 @@ sbl-hardware/
 
 ### Modules
 
-None yet - add your own!
+None yet
 
 ## MCU Definitions
 
