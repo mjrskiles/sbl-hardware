@@ -141,7 +141,7 @@ JSON schemas are maintained in [sound-byte-libs/schema/](https://github.com/mjrs
 | `module.schema.json` | Module manifests |
 | `sbl-lock.schema.json` | Lock file format |
 
-## Contributing
+## New hardware definitions
 
 ### Adding a Mainboard
 
