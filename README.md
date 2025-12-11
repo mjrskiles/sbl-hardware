@@ -4,7 +4,7 @@ Hardware definitions for Sound Byte Labs firmware projects.
 
 ## Overview
 
-This repository contains MCU drivers, board definitions, and JSON schemas for the Sound Byte Libs hardware resolution system. Use these definitions as a source in your `sbl.json` configuration.
+This repository contains MCU drivers, mainboard definitions, module definitions, and JSON schemas for the Sound Byte Libs hardware resolution system. Use these definitions as a source in your `sbl.json` configuration.
 
 ## Usage
 
@@ -12,7 +12,7 @@ Reference this repository in your project's `sbl.json`:
 
 ```json
 {
-  "version": "1.0",
+  "schemaVersion": "0.1",
   "hardware": {
     "sources": [
       {
@@ -21,7 +21,7 @@ Reference this repository in your project's `sbl.json`:
         "ref": "main"
       }
     ],
-    "target": "sbl:boards/daisy-pod"
+    "target": "sbl:modules/boards/daisy-pod"
   }
 }
 ```
@@ -30,7 +30,7 @@ Or use a local clone:
 
 ```json
 {
-  "version": "1.0",
+  "schemaVersion": "0.1",
   "hardware": {
     "sources": [
       {
@@ -38,7 +38,7 @@ Or use a local clone:
         "path": "../sbl-hardware"
       }
     ],
-    "target": "sbl:boards/raspberry-pi-pico"
+    "target": "sbl:mainboards/raspberry-pi-pico"
   }
 }
 ```
@@ -47,16 +47,20 @@ Or use a local clone:
 
 ```
 sbl-hardware/
-├── mcu/                    # MCU definitions
-│   ├── native/             # Native simulator
-│   ├── rp2040/             # Raspberry Pi RP2040
-│   └── stm32h750/          # STM32H750 (Daisy Seed)
-├── boards/                 # Board and module definitions
-│   ├── raspberry-pi-pico/  # Standalone board
-│   ├── sbl-simulator-0/    # Native simulator board
-│   ├── daisy-seed/         # Parent board (exposes pins)
-│   └── daisy-pod/          # Module (attaches to daisy-seed)
-└── schema/                 # JSON schemas for validation
+├── mcu/                          # MCU definitions (SBL-native only)
+│   ├── arm/                      # ARM Cortex-M MCUs
+│   │   ├── rp2040/               # Raspberry Pi RP2040
+│   │   └── stm32h750/            # STM32H750 (Daisy Seed)
+│   └── native/                   # Native simulator
+├── mainboards/                   # Primary boards running SBL applications
+│   ├── raspberry-pi-pico/        # Raspberry Pi Pico
+│   ├── daisy-seed/               # Electro-Smith Daisy Seed
+│   └── sbl-simulator-0/          # Native simulator mainboard
+├── modules/                      # Extension modules
+│   ├── boards/                   # Expansion PCBs
+│   │   └── daisy-pod/            # Electro-Smith Daisy Pod
+│   └── ic/                       # Complex ICs
+└── schema/                       # JSON schemas for validation
 ```
 
 ## Hardware Hierarchy
@@ -64,63 +68,98 @@ sbl-hardware/
 | Level | Description | Example |
 |-------|-------------|---------|
 | MCU | Silicon + driver + pin definitions | rp2040, stm32h750 |
-| Board | MCU carrier, can expose pins | raspberry-pi-pico, daisy-seed |
-| Module | Attaches to board, claims pins | daisy-pod |
+| Mainboard | Primary board running SBL, exposes pins | raspberry-pi-pico, daisy-seed |
+| Module | Attaches to mainboard/module, claims pins | daisy-pod |
+
+### Mainboard vs Module
+
+- **Mainboard**: Has an SBL-compatible MCU (ARM Cortex-M), runs the application, exposes pins to modules
+- **Module**: Attaches to a mainboard or another module, claims pins/buses for its components
 
 ## Available Targets
 
-### Standalone Boards
+### Mainboards
 
-- `sbl:boards/raspberry-pi-pico` - Raspberry Pi Pico (RP2040)
-- `sbl:boards/sbl-simulator-0` - Native simulator for development
+- `sbl:mainboards/raspberry-pi-pico` - Raspberry Pi Pico (RP2040)
+- `sbl:mainboards/daisy-seed` - Electro-Smith Daisy Seed (STM32H750)
+- `sbl:mainboards/sbl-simulator-0` - Native simulator for development
 
-### Modules (require parent board)
+### Modules
 
-- `sbl:boards/daisy-pod` - Electro-Smith Daisy Pod (attaches to daisy-seed)
-- `sbl:boards/daisy-seed` - Electro-Smith Daisy Seed (STM32H750)
+- `sbl:modules/boards/daisy-pod` - Electro-Smith Daisy Pod (attaches to daisy-seed)
 
 ## MCU Definitions
 
 Each MCU directory contains:
 
-- `mcu.json` - MCU metadata and pin definitions
+- `mcu.json` - MCU metadata, pin definitions with alternate functions, peripheral definitions
 - `driver/` - HAL driver implementation (placeholder)
 
-### Pin Resolution
+### Pin Functions
 
-Pins are resolved through the hardware chain:
+MCU pins define all available alternate functions:
+
+```json
+{
+  "GPIO0": {
+    "functions": {
+      "gpio": { "port": 0, "pin": 0 },
+      "spi": { "peripheral": "SPI0", "signal": "miso" },
+      "uart": { "peripheral": "UART0", "signal": "tx" },
+      "i2c": { "peripheral": "I2C0", "signal": "sda" },
+      "pwm": { "peripheral": "PWM0", "channel": 0 }
+    }
+  }
+}
+```
+
+### Pin Claim Resolution
+
+Pins are resolved through the hardware chain with conflict detection:
 
 ```
-daisy-pod claims "d20"
+daisy-pod claims pin "d20" with function "gpio"
     ↓
-daisy-seed exposes "d20" → "PC1"
+daisy-seed exposes "d20" → "PC1" with functions ["gpio", "adc"]
     ↓
-stm32h750 defines "PC1" → { port: 2, pin: 1 }
+stm32h750 defines "PC1" → { gpio: { port: 2, pin: 1 }, adc: {...} }
+    ↓
+Resolver checks: PC1 not already claimed? ✓
     ↓
 Generated: sbl::hw::gpio::led1_red{2, 1, false}
 ```
 
+If the same MCU pin is claimed twice, the resolver fails with a conflict error.
+
 ## Schemas
 
-JSON schemas for validation are in `schema/`:
+JSON schemas are maintained in [sound-byte-libs/schema/](https://github.com/mjrskiles/sound-byte-libs/tree/main/schema):
 
 | Schema | Purpose |
 |--------|---------|
 | `sbl.schema.json` | Main project configuration |
-| `mcu.schema.json` | MCU definition with pins |
-| `hardware.schema.json` | Board/module manifests |
+| `mcu.schema.json` | MCU definition with pin functions and peripherals |
+| `mainboard.schema.json` | Mainboard manifests |
+| `module.schema.json` | Module manifests |
 | `sbl-lock.schema.json` | Lock file format |
 
 ## Contributing
 
-To add a new board or module:
+### Adding a Mainboard
 
-1. Create a directory under `boards/`
-2. Add a `hardware.json` manifest
-3. If it's a module, set `attaches_to` to reference the parent board
-4. Define pin claims in the manifest
+1. Create a directory under `mainboards/`
+2. Add a `hardware.json` with `mainboard` schema
+3. Define exposed pins, ADC channels, and buses
+4. Set internal pin claims (e.g., onboard LED)
 
-See existing boards for examples.
+### Adding a Module
+
+1. Create a directory under `modules/boards/` or `modules/ic/`
+2. Add a `hardware.json` with `module` schema
+3. Set `attaches_to` to reference the parent (e.g., `mainboards/daisy-seed`)
+4. Define pin and bus claims with explicit functions
+
+See existing definitions for examples.
 
 ## License
 
