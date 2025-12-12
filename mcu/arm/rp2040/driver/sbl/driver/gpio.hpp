@@ -8,7 +8,7 @@
 #include "hardware/gpio.h"
 #include <cstdint>
 
-namespace sbl {
+namespace sbl::driver {
 
 /**
  * @brief GPIO pin modes
@@ -65,4 +65,4 @@ public:
     }
 };
 
-} // namespace sbl
+} // namespace sbl::driver

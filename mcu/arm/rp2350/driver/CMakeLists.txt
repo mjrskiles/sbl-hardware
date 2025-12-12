@@ -1,10 +1,17 @@
 # RP2350 Driver Library
 # Provides GPIO, Timer, and init wrappers around pico-sdk
+#
+# Headers are structured as:
+#   sbl/driver/gpio.hpp
+#   sbl/driver/timer.hpp
+#   sbl/driver/init.hpp
+#
+# Usage: #include <sbl/driver/gpio.hpp>
 
 add_library(sbl_rp2350_driver INTERFACE)
 
 target_include_directories(sbl_rp2350_driver INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}  # For <sbl/driver/*.hpp> includes
 )
 
 target_link_libraries(sbl_rp2350_driver INTERFACE

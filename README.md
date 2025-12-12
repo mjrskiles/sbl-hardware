@@ -80,6 +80,7 @@ sbl-hardware/
 ### Mainboards
 
 - `sbl:mainboards/raspberry-pi-pico` - Raspberry Pi Pico (RP2040)
+- `sbl:mainboards/daisy-seed` - Electrosmith Daisy Seed (STM32H750, bare-metal)
 - `sbl:mainboards/sbl-simulator-0` - Native simulator for development
 
 ### Modules
@@ -91,7 +92,26 @@ None yet
 Each MCU directory contains:
 
 - `mcu.json` - MCU metadata, pin definitions with alternate functions, peripheral definitions
-- `driver/` - HAL driver implementation (placeholder)
+- `driver/` - Bare-metal driver implementation
+  - `sbl/hw/reg/*.hpp` - SVD-generated register definitions (no vendor HAL)
+  - `sbl/driver/*.hpp` - High-level drivers using generated registers
+  - `startup.cpp` - Reset handler and vector table
+  - `*.ld` - Linker script for the MCU
+
+### SVD-Generated Registers
+
+Register headers are generated from official CMSIS-SVD files using `sound-byte-libs/tools/svd/`.
+This ensures register definitions match the silicon exactly, with no vendor HAL overhead.
+
+```cpp
+// Generated from SVD - no ST HAL, no CMSIS
+#include <sbl/hw/reg/gpio.hpp>
+#include <sbl/hw/reg/rcc.hpp>
+
+// Direct register access via generated structs
+sbl::hw::reg::periph::rcc->AHB4ENR |= (1u << 2);  // Enable GPIOC clock
+sbl::hw::reg::periph::gpioc->MODER |= (1u << 14); // PC7 output
+```
 
 ### Pin Functions
 

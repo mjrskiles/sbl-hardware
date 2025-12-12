@@ -6,7 +6,7 @@
 
 #include "pico/stdlib.h"
 
-namespace sbl {
+namespace sbl::driver {
 
 /**
  * @brief Initialize RP2350 board
@@ -17,4 +17,4 @@ inline void init() {
     stdio_init_all();
 }
 
-} // namespace sbl
+} // namespace sbl::driver

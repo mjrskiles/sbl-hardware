@@ -1,16 +1,16 @@
 /**
  * @file timer.hpp
- * @brief RP2040 timer driver wrapping pico-sdk
+ * @brief RP2350 timer driver wrapping pico-sdk
  */
 #pragma once
 
 #include "pico/stdlib.h"
 #include <cstdint>
 
-namespace sbl {
+namespace sbl::driver {
 
 /**
- * @brief Timer driver for RP2040
+ * @brief Timer driver for RP2350
  *
  * Static interface wrapping pico-sdk timing functions.
  */
@@ -45,4 +45,4 @@ public:
     }
 };
 
-} // namespace sbl
+} // namespace sbl::driver
