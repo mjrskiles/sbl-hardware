@@ -89,5 +89,9 @@
 
   "config": {
     "sysclk_mhz": 125
+  },
+
+  "sdk": {
+    "pico_board": "pico"
   }
 }

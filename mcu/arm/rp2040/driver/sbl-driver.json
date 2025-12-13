@@ -1,0 +1,5 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/sbl-driver.schema.json",
+  "sdk": "pico-sdk",
+  "library": "sbl_rp2040_driver"
+}

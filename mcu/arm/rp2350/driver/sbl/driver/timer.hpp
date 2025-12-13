@@ -46,3 +46,8 @@ public:
 };
 
 } // namespace sbl::driver
+
+// Compile-time interface validation
+#include <validation/timer_requirements.hpp>
+static_assert(sbl::validation::timer_driver_valid<sbl::driver::Timer>,
+              "RP2350 Timer driver incomplete");

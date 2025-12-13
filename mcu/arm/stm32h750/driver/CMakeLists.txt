@@ -7,16 +7,21 @@
 #   sbl/driver/init.hpp
 #   sbl/hw/reg/*.hpp (SVD-generated)
 #
-# Usage: #include <sbl/driver/gpio.hpp>
+# Usage: target_link_libraries(my_app PRIVATE sbl_stm32h750_driver)
+# This gives you headers, startup code, and linker configuration.
 
-# Header-only interface library for drivers
-add_library(sbl_stm32h750_driver INTERFACE)
+# Linker script path
+set(SBL_STM32H750_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/stm32h750.ld)
 
-target_include_directories(sbl_stm32h750_driver INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}  # For <sbl/driver/*.hpp> and <sbl/hw/reg/*.hpp>
+# Cortex-M7 compile/link flags
+set(SBL_STM32H750_CPU_FLAGS
+    -mcpu=cortex-m7
+    -mthumb
+    -mfpu=fpv5-d16
+    -mfloat-abi=hard
 )
 
-# Startup code library (compiled, not header-only)
+# Startup code (compiled)
 add_library(sbl_stm32h750_startup STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/startup.cpp
 )
@@ -25,62 +30,47 @@ target_include_directories(sbl_stm32h750_startup PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Linker script path (for use by applications)
-set(SBL_STM32H750_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/stm32h750.ld CACHE STRING "STM32H750 linker script")
-
-# Compile options for Cortex-M7 with FPU
 target_compile_options(sbl_stm32h750_startup PRIVATE
-    -mcpu=cortex-m7
-    -mthumb
-    -mfpu=fpv5-d16
-    -mfloat-abi=hard
+    ${SBL_STM32H750_CPU_FLAGS}
     -ffunction-sections
     -fdata-sections
     -fno-exceptions
     -fno-rtti
 )
 
-# Function to configure a target for STM32H750 bare-metal
-function(sbl_configure_stm32h750_target TARGET)
-    target_link_libraries(${TARGET} PRIVATE
-        sbl_stm32h750_driver
-        sbl_stm32h750_startup
-    )
+# Main driver library - "batteries included"
+# Links to this target gets you everything needed for bare-metal STM32H750
+add_library(sbl_stm32h750_driver INTERFACE)
 
-    target_compile_options(${TARGET} PRIVATE
-        -mcpu=cortex-m7
-        -mthumb
-        -mfpu=fpv5-d16
-        -mfloat-abi=hard
-        -ffunction-sections
-        -fdata-sections
-        -fno-exceptions
-        -fno-rtti
-        -Wall
-        -Wextra
-        -Os
-    )
+target_include_directories(sbl_stm32h750_driver INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}  # For <sbl/driver/*.hpp> and <sbl/hw/reg/*.hpp>
+)
 
-    target_link_options(${TARGET} PRIVATE
-        -mcpu=cortex-m7
-        -mthumb
-        -mfpu=fpv5-d16
-        -mfloat-abi=hard
-        -T${SBL_STM32H750_LINKER_SCRIPT}
-        -Wl,--gc-sections
-        -Wl,-Map=${TARGET}.map
-        --specs=nosys.specs
-        --specs=nano.specs
-        -lc
-        -lm
-        -lnosys
-    )
+# Linking to driver automatically links startup
+target_link_libraries(sbl_stm32h750_driver INTERFACE
+    sbl_stm32h750_startup
+)
 
-    # Generate .bin and .hex files
-    add_custom_command(TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${TARGET}> ${TARGET}.bin
-        COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${TARGET}> ${TARGET}.hex
-        COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${TARGET}>
-        COMMENT "Generating ${TARGET}.bin and ${TARGET}.hex"
-    )
-endfunction()
+# Propagate compile options to users
+target_compile_options(sbl_stm32h750_driver INTERFACE
+    ${SBL_STM32H750_CPU_FLAGS}
+    -ffunction-sections
+    -fdata-sections
+    -fno-exceptions
+    -fno-rtti
+    -Wall
+    -Wextra
+    -Os
+)
+
+# Propagate link options to users
+target_link_options(sbl_stm32h750_driver INTERFACE
+    ${SBL_STM32H750_CPU_FLAGS}
+    -T${SBL_STM32H750_LINKER_SCRIPT}
+    -Wl,--gc-sections
+    --specs=nosys.specs
+    --specs=nano.specs
+    -lc
+    -lm
+    -lnosys
+)

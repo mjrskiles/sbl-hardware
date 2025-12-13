@@ -51,11 +51,14 @@ Or use a local clone:
 sbl-hardware/
 ├── mcu/                          # MCU definitions (SBL-native only)
 │   ├── arm/                      # ARM Cortex-M MCUs
-│   │   ├── rp2040/               # Raspberry Pi RP2040
-│   │   └── stm32h750/            # STM32H750
+│   │   ├── rp2040/               # Raspberry Pi RP2040 (Cortex-M0+)
+│   │   ├── rp2350/               # Raspberry Pi RP2350 (Cortex-M33)
+│   │   └── stm32h750/            # STM32H750 (Cortex-M7)
 │   └── native/                   # Native simulator
 ├── mainboards/                   # Primary boards running SBL applications
-│   ├── raspberry-pi-pico/        # Raspberry Pi Pico
+│   ├── daisy-seed/               # Electrosmith Daisy Seed (STM32H750)
+│   ├── raspberry-pi-pico/        # Raspberry Pi Pico (RP2040)
+│   ├── raspberry-pi-pico-2/      # Raspberry Pi Pico 2 (RP2350)
 │   └── sbl-simulator-0/          # Native simulator mainboard
 └── modules/                      # Extension modules
     ├── boards/                   # Expansion PCBs
@@ -66,7 +69,7 @@ sbl-hardware/
 
 | Level | Description | Example |
 |-------|-------------|---------|
-| MCU | Silicon + driver + pin definitions | rp2040, stm32h750 |
+| MCU | Silicon + driver + pin definitions | rp2040, rp2350, stm32h750 |
 | Mainboard | Primary board running SBL, exposes pins | raspberry-pi-pico |
 | Module | Attaches to mainboard/module, claims pins | led-panel, dac-board |
 
@@ -79,9 +82,12 @@ sbl-hardware/
 
 ### Mainboards
 
-- `sbl:mainboards/raspberry-pi-pico` - Raspberry Pi Pico (RP2040)
-- `sbl:mainboards/daisy-seed` - Electrosmith Daisy Seed (STM32H750, bare-metal)
-- `sbl:mainboards/sbl-simulator-0` - Native simulator for development
+| Target | Board | MCU | Core |
+|--------|-------|-----|------|
+| `sbl:mainboards/raspberry-pi-pico` | Raspberry Pi Pico | RP2040 | Cortex-M0+ |
+| `sbl:mainboards/raspberry-pi-pico-2` | Raspberry Pi Pico 2 | RP2350 | Cortex-M33 |
+| `sbl:mainboards/daisy-seed` | Electrosmith Daisy Seed | STM32H750 | Cortex-M7 |
+| `sbl:mainboards/sbl-simulator-0` | Native simulator | x86/ARM host | - |
 
 ### Modules
 

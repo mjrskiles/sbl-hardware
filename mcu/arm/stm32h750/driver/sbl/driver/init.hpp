@@ -131,96 +131,13 @@ inline bool enable_hse() {
     periph::rcc->CR |= RCC_CR_HSEON;
 
     // Wait for HSE ready (with timeout)
-    for (uint32_t i = 0; i < 100000; ++i) {
+    // At 64 MHz, 500k iterations ≈ 50ms - plenty for crystal startup
+    for (uint32_t i = 0; i < 500'000; ++i) {
         if (periph::rcc->CR & RCC_CR_HSERDY) {
             return true;
         }
     }
     return false;  // HSE failed to start
-}
-
-/**
- * @brief Configure PLL1 for target frequency
- *
- * For Daisy Seed (16 MHz HSE) to get 480 MHz SYSCLK:
- * - DIVM1 = 4 → PLL input = 16/4 = 4 MHz
- * - DIVN1 = 240 → VCO = 4 * 240 = 960 MHz
- * - DIVP1 = 2 → PLL1_P = 960/2 = 480 MHz
- */
-inline void configure_pll1(uint32_t hse_mhz, uint32_t target_mhz) {
-    using namespace sbl::hw::reg;
-
-    // Disable PLL1 before configuring
-    periph::rcc->CR &= ~RCC_CR_PLL1ON;
-    while (periph::rcc->CR & RCC_CR_PLL1RDY) {
-        // Wait for PLL to stop
-    }
-
-    // Select HSE as PLL source
-    // DIVM1 = 4 (divider for PLL1 input)
-    uint32_t divm1 = hse_mhz / 4;  // Target ~4 MHz PLL input
-    if (divm1 < 1) divm1 = 1;
-    if (divm1 > 63) divm1 = 63;
-
-    uint32_t pll_input_mhz = hse_mhz / divm1;
-
-    periph::rcc->PLLCKSELR = RCC_PLLCKSELR_PLLSRC_HSE | (divm1 << 4);
-
-    // Configure PLL1 VCO and outputs
-    // VCO range: Wide (192-836 MHz) - but we need 960 MHz, so careful
-    // Actually H750 can do 150-420 or 192-960 MHz VCO ranges
-    // Input range: 4-8 MHz when DIVM gives us 4 MHz
-
-    // For 480 MHz: VCO = 960 MHz, DIVN = 240 (960/4), DIVP = 2
-    uint32_t vco_mhz = target_mhz * 2;  // 960 MHz
-    uint32_t divn = vco_mhz / pll_input_mhz;  // 240
-
-    // PLL1CFGR: Input range 4-8 MHz, wide VCO, enable P output
-    periph::rcc->PLLCFGR = RCC_PLLCFGR_PLL1RGE_4_8 | RCC_PLLCFGR_DIVP1EN;
-
-    // PLL1DIVR: DIVN (bits 0-8), DIVP (bits 9-15), DIVQ (bits 16-22), DIVR (bits 24-30)
-    // Values are actual divider - 1
-    uint32_t divp = 2;  // DIVP = 2 → 960/2 = 480 MHz
-    periph::rcc->PLL1DIVR = ((divn - 1) << 0) | ((divp - 1) << 9);
-
-    // Enable PLL1
-    periph::rcc->CR |= RCC_CR_PLL1ON;
-
-    // Wait for PLL1 ready
-    while ((periph::rcc->CR & RCC_CR_PLL1RDY) == 0) {
-        // Wait
-    }
-}
-
-/**
- * @brief Switch system clock to PLL1
- */
-inline void switch_to_pll1() {
-    using namespace sbl::hw::reg;
-
-    // Configure domain clocks before switching
-    // D1CFGR: D1CPRE (CPU prescaler), HPRE (AHB prescaler)
-    // For 480 MHz CPU: D1CPRE = 1, HPRE = 2 → HCLK = 240 MHz
-    periph::rcc->D1CFGR = (0 << 8) |  // D1CPRE = 1 (SYSCLK not divided)
-                          (8 << 0);   // HPRE = 2 (AHB = SYSCLK/2 = 240 MHz)
-
-    // D2CFGR: D2PPRE1, D2PPRE2 (APB1, APB2 prescalers)
-    periph::rcc->D2CFGR = (4 << 4) |  // D2PPRE1 = 2 → APB1 = 120 MHz
-                          (4 << 8);   // D2PPRE2 = 2 → APB2 = 120 MHz
-
-    // D3CFGR: D3PPRE (APB4 prescaler)
-    periph::rcc->D3CFGR = (4 << 4);   // D3PPRE = 2 → APB4 = 120 MHz
-
-    // Switch SYSCLK to PLL1
-    uint32_t cfgr = periph::rcc->CFGR;
-    cfgr &= ~(7u << 0);  // Clear SW bits
-    cfgr |= RCC_CFGR_SW_PLL1;
-    periph::rcc->CFGR = cfgr;
-
-    // Wait for switch to complete
-    while ((periph::rcc->CFGR & (7u << 3)) != RCC_CFGR_SWS_PLL1) {
-        // Wait
-    }
 }
 
 } // namespace detail
@@ -241,28 +158,68 @@ inline void switch_to_pll1() {
  */
 inline bool init(const ClockConfig& config = ClockConfig{}) {
     using namespace detail;
+    using namespace sbl::hw::reg;
 
-    // Configure power supply and voltage scaling first
+    // Init timer on HSI first (allows delays during clock setup if needed)
+    Timer::init(64'000'000);
+
+    // Power and flash config for target frequency
     configure_power();
-
-    // Set flash latency for target frequency
     configure_flash(config.sysclk_mhz);
 
-    // Enable HSE
+    // Try to start HSE
     if (!enable_hse()) {
-        return false;  // HSE failed
+        // HSE failed - stay on HSI
+        return false;
     }
 
-    // Configure and enable PLL1
-    configure_pll1(config.hse_mhz, config.sysclk_mhz);
+    // --- PLL1 Configuration ---
+    // 16 MHz HSE -> 4 MHz PLL input -> 960 MHz VCO -> 480 MHz SYSCLK
 
-    // Switch to PLL1
-    switch_to_pll1();
+    // Disable PLL1 before configuring
+    periph::rcc->CR &= ~RCC_CR_PLL1ON;
+    while (periph::rcc->CR & RCC_CR_PLL1RDY) {}
 
-    // Initialize SysTick with actual CPU frequency
-    Timer::init(config.sysclk_mhz * 1'000'000);
+    // PLL source = HSE, DIVM1 = 4 (16MHz / 4 = 4MHz PLL input)
+    uint32_t divm1 = config.hse_mhz / 4;
+    periph::rcc->PLLCKSELR = (2u << 0) | (divm1 << 4);
 
-    return true;
+    // PLL1 config: input range 4-8MHz (PLL1RGE=2), enable P output (DIVP1EN)
+    periph::rcc->PLLCFGR = (2u << 2) | (1u << 16);
+
+    // Calculate dividers for target frequency
+    // VCO = target * 2 = 960 MHz, DIVN = VCO / PLL_input = 960 / 4 = 240
+    uint32_t pll_input_mhz = config.hse_mhz / divm1;
+    uint32_t vco_mhz = config.sysclk_mhz * 2;
+    uint32_t divn = vco_mhz / pll_input_mhz;
+    uint32_t divp = 2;
+    periph::rcc->PLL1DIVR = ((divn - 1) << 0) | ((divp - 1) << 9);
+
+    // Enable PLL1 and wait for lock
+    periph::rcc->CR |= RCC_CR_PLL1ON;
+    for (uint32_t i = 0; i < 500000; ++i) {
+        if (periph::rcc->CR & RCC_CR_PLL1RDY) {
+            // PLL locked - configure bus dividers and switch
+
+            // D1: CPU=SYSCLK, AHB=SYSCLK/2 (240 MHz)
+            periph::rcc->D1CFGR = (0 << 8) | (8 << 0);
+            // D2: APB1=APB2=AHB/2 (120 MHz)
+            periph::rcc->D2CFGR = (4 << 4) | (4 << 8);
+            // D3: APB4=AHB/2 (120 MHz)
+            periph::rcc->D3CFGR = (4 << 4);
+
+            // Switch to PLL1
+            periph::rcc->CFGR = (periph::rcc->CFGR & ~7u) | 3u;
+            while ((periph::rcc->CFGR & (7u << 3)) != (3u << 3)) {}
+
+            // Reinit timer for actual frequency
+            Timer::init(config.sysclk_mhz * 1'000'000);
+            return true;
+        }
+    }
+
+    // PLL failed to lock - stay on HSI
+    return false;
 }
 
 /**

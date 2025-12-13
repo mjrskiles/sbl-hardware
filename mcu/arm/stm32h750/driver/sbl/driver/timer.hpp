@@ -64,11 +64,21 @@ public:
 
     /**
      * @brief Blocking delay in milliseconds
+     *
+     * Uses SysTick COUNTFLAG polling - simple and reliable, no interrupt
+     * handler required. Updates tick count for millis() accuracy.
      */
     static void delay_ms(uint32_t ms) {
-        uint32_t start = millis();
-        while ((millis() - start) < ms) {
-            // Busy wait
+        using namespace sbl::hw::reg;
+
+        while (ms > 0) {
+            // Wait for COUNTFLAG (set when counter reaches 0)
+            // Reading CTRL clears COUNTFLAG, so we check it each iteration
+            while ((periph::systick->CTRL & SysTick::COUNTFLAG) == 0) {
+                // Busy wait for 1ms tick
+            }
+            ++s_tick_count;  // Keep millis() accurate
+            --ms;
         }
     }
 
@@ -133,8 +143,16 @@ private:
 } // namespace sbl::driver
 
 // C-linkage SysTick handler for vector table
+// __attribute__((used)) forces emission even though nothing "calls" it directly
+// (the vector table references it by address, which the compiler doesn't see as a use)
 extern "C" {
+    __attribute__((used))
     inline void SysTick_Handler() {
         sbl::driver::Timer::systick_handler();
     }
 }
+
+// Compile-time interface validation
+#include <validation/timer_requirements.hpp>
+static_assert(sbl::validation::timer_driver_valid<sbl::driver::Timer>,
+              "STM32H750 Timer driver incomplete");

@@ -1,33 +1,107 @@
 /**
  * @file gpio.hpp
- * @brief STM32H750 GPIO driver using SVD-generated register definitions
+ * @brief STM32H750 GPIO driver - handle-first API
+ *
+ * Uses GpioHandle and PinMode from core lib for unified cross-platform interface.
+ * Uses SVD-generated register definitions - no vendor HAL.
+ * For raw register access, use sbl::hw::reg:: directly.
  */
 #pragma once
 
 #include <cstdint>
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
+#include <hal/gpio/driver.hpp>
 
 namespace sbl::driver {
 
-/**
- * @brief GPIO pin modes
- */
-enum class PinMode {
-    Input,
-    Output,
-    InputPullup,
-    InputPulldown
-};
+// Import canonical PinMode from core lib
+using sbl::gpio::PinMode;
 
 /**
  * @brief GPIO driver for STM32H750
  *
- * Uses SVD-generated register definitions from sbl::hw::reg.
- * Port numbers: 0=A, 1=B, 2=C, etc.
+ * Handle-first API for portable code across SBL-supported MCUs.
+ * Uses SVD-generated registers - no vendor HAL dependency.
+ * For direct register access, use sbl::hw::reg:: namespace.
  */
 class Gpio {
 public:
+    /**
+     * @brief Set pin mode
+     * @param handle GPIO handle from hardware.hpp
+     * @param mode Pin mode (from sbl::gpio::PinMode)
+     */
+    static void set_mode(const sbl::GpioHandle& handle, PinMode mode) {
+        enable_port_clock(handle.port);
+
+        auto gpio = port_regs(handle.port);
+
+        // Clear mode bits (2 bits per pin)
+        gpio->GPIO_MODER &= ~(0x3u << (handle.pin * 2));
+        // Clear pull bits (2 bits per pin)
+        gpio->GPIO_PUPDR &= ~(0x3u << (handle.pin * 2));
+
+        switch (mode) {
+            case PinMode::Output:
+                gpio->GPIO_MODER |= (0x1u << (handle.pin * 2));  // General purpose output
+                gpio->GPIO_OTYPER &= ~(1u << handle.pin);         // Push-pull
+                break;
+            case PinMode::Input:
+                // Mode 00 = input (already cleared)
+                break;
+            case PinMode::InputPullup:
+                gpio->GPIO_PUPDR |= (0x1u << (handle.pin * 2));  // Pull-up
+                break;
+            case PinMode::InputPulldown:
+                gpio->GPIO_PUPDR |= (0x2u << (handle.pin * 2));  // Pull-down
+                break;
+            case PinMode::OpenDrain:
+                gpio->GPIO_MODER |= (0x1u << (handle.pin * 2));  // General purpose output
+                gpio->GPIO_OTYPER |= (1u << handle.pin);          // Open-drain
+                break;
+            case PinMode::Analog:
+                gpio->GPIO_MODER |= (0x3u << (handle.pin * 2));  // Analog mode
+                break;
+        }
+    }
+
+    /**
+     * @brief Write logical value (handles active_low automatically)
+     * @param handle GPIO handle from hardware.hpp
+     * @param value Logical value (true = active, false = inactive)
+     */
+    static void write(const sbl::GpioHandle& handle, bool value) {
+        auto gpio = port_regs(handle.port);
+        bool physical = handle.effective_level(value);
+        if (physical) {
+            gpio->GPIO_BSRR = (1u << handle.pin);         // Set bit
+        } else {
+            gpio->GPIO_BSRR = (1u << (handle.pin + 16));  // Reset bit
+        }
+    }
+
+    /**
+     * @brief Read logical value (handles active_low automatically)
+     * @param handle GPIO handle from hardware.hpp
+     * @return Logical value (true = active, false = inactive)
+     */
+    static bool read(const sbl::GpioHandle& handle) {
+        auto gpio = port_regs(handle.port);
+        bool raw = (gpio->GPIO_IDR & (1u << handle.pin)) != 0;
+        return handle.active_low ? !raw : raw;
+    }
+
+    /**
+     * @brief Toggle pin output
+     * @param handle GPIO handle from hardware.hpp
+     */
+    static void toggle(const sbl::GpioHandle& handle) {
+        auto gpio = port_regs(handle.port);
+        gpio->GPIO_ODR ^= (1u << handle.pin);
+    }
+
+private:
     /**
      * @brief Enable GPIO port clock
      * @param port Port number (0=A, 1=B, etc.)
@@ -51,75 +125,11 @@ public:
         auto base = reinterpret_cast<uintptr_t>(periph::gpioa) + (port * GPIO_SPACING);
         return reinterpret_cast<volatile GPIOA_t*>(base);
     }
-
-    /**
-     * @brief Set pin mode
-     * @param port Port number (0=A, 1=B, etc.)
-     * @param pin Pin number (0-15)
-     * @param mode Pin mode
-     */
-    static void set_mode(uint32_t port, uint32_t pin, PinMode mode) {
-        enable_port_clock(port);
-
-        auto gpio = port_regs(port);
-
-        // Clear mode bits (2 bits per pin)
-        gpio->GPIO_MODER &= ~(0x3u << (pin * 2));
-        // Clear pull bits (2 bits per pin)
-        gpio->GPIO_PUPDR &= ~(0x3u << (pin * 2));
-
-        switch (mode) {
-            case PinMode::Output:
-                gpio->GPIO_MODER |= (0x1u << (pin * 2));  // General purpose output
-                gpio->GPIO_OTYPER &= ~(1u << pin);         // Push-pull
-                break;
-            case PinMode::Input:
-                // Mode 00 = input (already cleared)
-                break;
-            case PinMode::InputPullup:
-                gpio->GPIO_PUPDR |= (0x1u << (pin * 2));  // Pull-up
-                break;
-            case PinMode::InputPulldown:
-                gpio->GPIO_PUPDR |= (0x2u << (pin * 2));  // Pull-down
-                break;
-        }
-    }
-
-    /**
-     * @brief Write pin value
-     * @param port Port number (0=A, 1=B, etc.)
-     * @param pin Pin number (0-15)
-     * @param value true for high, false for low
-     */
-    static void write(uint32_t port, uint32_t pin, bool value) {
-        auto gpio = port_regs(port);
-        if (value) {
-            gpio->GPIO_BSRR = (1u << pin);         // Set bit
-        } else {
-            gpio->GPIO_BSRR = (1u << (pin + 16));  // Reset bit
-        }
-    }
-
-    /**
-     * @brief Read pin value
-     * @param port Port number (0=A, 1=B, etc.)
-     * @param pin Pin number (0-15)
-     * @return true if high, false if low
-     */
-    static bool read(uint32_t port, uint32_t pin) {
-        auto gpio = port_regs(port);
-        return (gpio->GPIO_IDR & (1u << pin)) != 0;
-    }
-
-    /**
-     * @brief Toggle pin value
-     * @param port Port number (0=A, 1=B, etc.)
-     * @param pin Pin number (0-15)
-     */
-    static void toggle(uint32_t port, uint32_t pin) {
-        auto gpio = port_regs(port);
-        gpio->GPIO_ODR ^= (1u << pin);
-    }
 };
 
 } // namespace sbl::driver
+
+// Compile-time interface validation
+#include <validation/gpio_requirements.hpp>
+static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
+              "STM32H750 GPIO driver incomplete");
