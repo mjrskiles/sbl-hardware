@@ -12,7 +12,7 @@
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/usart.hpp>
-#include <hal/uart/driver.hpp>
+#include <sbl/hal/uart/driver.hpp>
 
 namespace sbl::driver {
 
@@ -189,6 +189,6 @@ private:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <validation/uart_requirements.hpp>
+#include <sbl/validation/uart_requirements.hpp>
 static_assert(sbl::validation::uart_driver_valid<sbl::driver::Uart>,
               "STM32H750 UART driver incomplete");

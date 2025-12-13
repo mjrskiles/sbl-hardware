@@ -2,6 +2,7 @@
   "$schema": "https://soundbytelabs.net/schema/mcu.schema.json",
   "schemaVersion": "0.1",
   "mcu": "rp2350",
+  "manifestVersion": "1.0.0",
   "family": "rp2350",
   "vendor": "raspberry-pi",
   "arch": "arm-cortex-m33",

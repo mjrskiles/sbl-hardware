@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
-#include <hal/gpio/driver.hpp>
+#include <sbl/hal/gpio/driver.hpp>
 
 namespace sbl::driver {
 
@@ -130,6 +130,6 @@ private:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <validation/gpio_requirements.hpp>
+#include <sbl/validation/gpio_requirements.hpp>
 static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
               "STM32H750 GPIO driver incomplete");

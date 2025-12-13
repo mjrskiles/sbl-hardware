@@ -4,6 +4,7 @@
 
   "mainboard": {
     "name": "raspberry-pi-pico-2",
+    "manifestVersion": "1.0.0",
     "revision": "1.0",
     "mcu": "mcu/arm/rp2350"
   },

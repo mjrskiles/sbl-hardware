@@ -9,7 +9,7 @@
 
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
-#include <hal/gpio/driver.hpp>
+#include <sbl/hal/gpio/driver.hpp>
 
 namespace sbl::driver {
 
@@ -92,6 +92,6 @@ public:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <validation/gpio_requirements.hpp>
+#include <sbl/validation/gpio_requirements.hpp>
 static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
               "RP2040 GPIO driver incomplete");

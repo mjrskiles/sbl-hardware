@@ -11,7 +11,7 @@
 #include <cstddef>
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
-#include <hal/uart/driver.hpp>
+#include <sbl/hal/uart/driver.hpp>
 
 namespace sbl::driver {
 
@@ -95,6 +95,6 @@ private:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <validation/uart_requirements.hpp>
+#include <sbl/validation/uart_requirements.hpp>
 static_assert(sbl::validation::uart_driver_valid<sbl::driver::Uart>,
               "RP2040 UART driver incomplete");

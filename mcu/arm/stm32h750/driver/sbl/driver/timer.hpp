@@ -153,6 +153,6 @@ extern "C" {
 }
 
 // Compile-time interface validation
-#include <validation/timer_requirements.hpp>
+#include <sbl/validation/timer_requirements.hpp>
 static_assert(sbl::validation::timer_driver_valid<sbl::driver::Timer>,
               "STM32H750 Timer driver incomplete");

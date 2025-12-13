@@ -3,6 +3,7 @@
   "schemaVersion": "0.1",
   "mcu": {
     "name": "stm32h750",
+    "manifestVersion": "1.0.0",
     "family": "stm32h7",
     "vendor": "st",
     "arch": "arm-cortex-m7",
