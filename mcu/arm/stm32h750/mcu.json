@@ -12,7 +12,7 @@
       "dsp_extensions": false
     }
   },
-  "driver": "./driver",
+  "driver": ".",
 
   "pins": {
     "PA0":  { "functions": { "gpio": { "port": 0, "pin": 0 },  "adc": { "peripheral": "ADC1", "channel": 16 } } },

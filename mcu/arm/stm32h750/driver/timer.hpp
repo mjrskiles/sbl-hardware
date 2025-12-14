@@ -5,7 +5,8 @@
  * Provides delay functions using the ARM Cortex-M7 SysTick timer.
  * Uses SVD-generated Cortex-M peripheral definitions.
  */
-#pragma once
+#ifndef SBL_HW_DRIVER_TIMER_HPP_
+#define SBL_HW_DRIVER_TIMER_HPP_
 
 #include <cstdint>
 #include <sbl/hw/reg/cortex_m.hpp>
@@ -156,3 +157,5 @@ extern "C" {
 #include <sbl/validation/timer_requirements.hpp>
 static_assert(sbl::validation::timer_driver_valid<sbl::driver::Timer>,
               "STM32H750 Timer driver incomplete");
+
+#endif // SBL_HW_DRIVER_TIMER_HPP_

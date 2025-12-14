@@ -5,7 +5,9 @@
  * Minimal register definitions for USART1 debug output.
  * Based on STM32H750 Reference Manual (RM0433).
  */
-#pragma once
+
+#ifndef SBL_HW_REG_USART_HPP_
+#define SBL_HW_REG_USART_HPP_
 
 #include <cstdint>
 
@@ -65,3 +67,5 @@ namespace periph {
 }
 
 } // namespace sbl::hw::reg
+
+#endif // SBL_HW_REG_USART_HPP_

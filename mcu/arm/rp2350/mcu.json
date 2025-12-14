@@ -6,7 +6,7 @@
   "family": "rp2350",
   "vendor": "raspberry-pi",
   "arch": "arm-cortex-m33",
-  "driver": "./driver",
+  "driver": ".",
 
   "pins": {
     "GPIO0": {

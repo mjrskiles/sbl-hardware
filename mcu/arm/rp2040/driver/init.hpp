@@ -1,15 +1,17 @@
 /**
  * @file init.hpp
- * @brief RP2350 board initialization
+ * @brief RP2040 board initialization
  */
-#pragma once
+
+#ifndef SBL_HW_DRIVER_INIT_HPP_
+#define SBL_HW_DRIVER_INIT_HPP_
 
 #include "pico/stdlib.h"
 
 namespace sbl::driver {
 
 /**
- * @brief Initialize RP2350 board
+ * @brief Initialize RP2040 board
  *
  * Sets up stdio for USB/UART output.
  */
@@ -18,3 +20,5 @@ inline void init() {
 }
 
 } // namespace sbl::driver
+
+#endif // SBL_HW_DRIVER_INIT_HPP_

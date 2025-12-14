@@ -99,10 +99,11 @@ Each MCU directory contains:
 
 - `mcu.json` - MCU metadata, pin definitions with alternate functions, peripheral definitions
 - `driver/` - Bare-metal driver implementation
-  - `sbl/hw/reg/*.hpp` - SVD-generated register definitions (no vendor HAL)
-  - `sbl/driver/*.hpp` - High-level drivers using generated registers
+  - `gpio.hpp`, `timer.hpp`, `uart.hpp`, `init.hpp` - High-level drivers
+  - `reg/*.hpp` - SVD-generated register definitions (no vendor HAL)
   - `startup.cpp` - Reset handler and vector table
   - `*.ld` - Linker script for the MCU
+- `CMakeLists.txt` - Build integration (copies drivers to `<sbl/hw/driver/>` include path)
 
 ### SVD-Generated Registers
 
@@ -111,8 +112,8 @@ This ensures register definitions match the silicon exactly, with no vendor HAL 
 
 ```cpp
 // Generated from SVD - no ST HAL, no CMSIS
-#include <sbl/hw/reg/gpio.hpp>
-#include <sbl/hw/reg/rcc.hpp>
+#include <sbl/hw/driver/reg/gpio.hpp>
+#include <sbl/hw/driver/reg/rcc.hpp>
 
 // Direct register access via generated structs
 sbl::hw::reg::periph::rcc->AHB4ENR |= (1u << 2);  // Enable GPIOC clock

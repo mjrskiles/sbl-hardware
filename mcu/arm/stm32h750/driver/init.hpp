@@ -5,7 +5,8 @@
  * Configures the STM32H7 clock tree for 480 MHz operation using HSE.
  * No HAL dependencies - uses SVD-generated register definitions.
  */
-#pragma once
+#ifndef SBL_HW_DRIVER_INIT_HPP_
+#define SBL_HW_DRIVER_INIT_HPP_
 
 #include <cstdint>
 #include <sbl/hw/reg/rcc.hpp>
@@ -235,3 +236,5 @@ inline void init_hsi() {
 }
 
 } // namespace sbl::driver
+
+#endif // SBL_HW_DRIVER_INIT_HPP_

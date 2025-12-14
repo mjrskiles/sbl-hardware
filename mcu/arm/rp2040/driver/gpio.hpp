@@ -1,11 +1,13 @@
 /**
  * @file gpio.hpp
- * @brief RP2350 GPIO driver - handle-first API
+ * @brief RP2040 GPIO driver - handle-first API
  *
  * Uses GpioHandle and PinMode from core lib for unified cross-platform interface.
  * For raw pin access, use pico-sdk directly (gpio_put, etc.)
  */
-#pragma once
+
+#ifndef SBL_HW_DRIVER_GPIO_HPP_
+#define SBL_HW_DRIVER_GPIO_HPP_
 
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
@@ -17,7 +19,7 @@ namespace sbl::driver {
 using sbl::gpio::PinMode;
 
 /**
- * @brief GPIO driver for RP2350
+ * @brief GPIO driver for RP2040
  *
  * Handle-first API for portable code across SBL-supported MCUs.
  * For direct hardware access, use pico-sdk functions.
@@ -48,13 +50,13 @@ public:
                 gpio_pull_down(handle.pin);
                 break;
             case PinMode::OpenDrain:
-                // RP2350: Use output with open-drain behavior via pad control
+                // RP2040: Use output with open-drain behavior via pad control
                 // For now, configure as output - true open-drain requires pad config
                 gpio_set_dir(handle.pin, GPIO_OUT);
                 break;
             case PinMode::Analog:
-                // RP2350 has ADC on specific pins (GPIO26-29)
-                // Configure as high-impedance input for ADC use
+                // RP2040 has no internal ADC pins on GPIO (ADC is separate)
+                // Configure as high-impedance input
                 gpio_set_dir(handle.pin, GPIO_IN);
                 gpio_disable_pulls(handle.pin);
                 break;
@@ -94,4 +96,6 @@ public:
 // Compile-time interface validation
 #include <sbl/validation/gpio_requirements.hpp>
 static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
-              "RP2350 GPIO driver incomplete");
+              "RP2040 GPIO driver incomplete");
+
+#endif // SBL_HW_DRIVER_GPIO_HPP_

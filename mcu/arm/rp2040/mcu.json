@@ -6,7 +6,7 @@
   "family": "rp2040",
   "vendor": "raspberry-pi",
   "arch": "arm-cortex-m0plus",
-  "driver": "./driver",
+  "driver": ".",
 
   "pins": {
     "GPIO0": {

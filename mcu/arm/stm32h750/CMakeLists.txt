@@ -1,11 +1,10 @@
 # STM32H750 Driver Library
-# Provides GPIO, Timer, and init using SVD-generated register definitions
+# Provides GPIO, Timer, UART, and init using SVD-generated register definitions
 #
-# Headers are structured as:
-#   sbl/driver/gpio.hpp
-#   sbl/driver/timer.hpp
-#   sbl/driver/init.hpp
-#   sbl/hw/reg/*.hpp (SVD-generated)
+# Source files are in driver/ and reg/ but exposed as:
+#   <sbl/hw/driver/*.hpp>
+#   <sbl/hw/reg/*.hpp>
+# CMake copies them to the build include directory at configure time.
 #
 # Usage: target_link_libraries(my_app PRIVATE sbl_stm32h750_driver)
 # This gives you headers, startup code, and linker configuration.
@@ -21,13 +20,24 @@ set(SBL_STM32H750_CPU_FLAGS
     -mfloat-abi=hard
 )
 
+# Create include structure in build directory
+set(SBL_STM32H750_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
+file(MAKE_DIRECTORY ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
+file(MAKE_DIRECTORY ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
+
+# Copy driver and reg headers to build include structure
+file(GLOB SBL_STM32H750_DRIVER_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/driver/*.hpp)
+file(GLOB SBL_STM32H750_REG_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/reg/*.hpp)
+file(COPY ${SBL_STM32H750_DRIVER_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
+file(COPY ${SBL_STM32H750_REG_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
+
 # Startup code (compiled)
 add_library(sbl_stm32h750_startup STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/startup.cpp
 )
 
 target_include_directories(sbl_stm32h750_startup PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${SBL_STM32H750_INCLUDE_DIR}
 )
 
 target_compile_options(sbl_stm32h750_startup PRIVATE
@@ -43,7 +53,7 @@ target_compile_options(sbl_stm32h750_startup PRIVATE
 add_library(sbl_stm32h750_driver INTERFACE)
 
 target_include_directories(sbl_stm32h750_driver INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}  # For <sbl/driver/*.hpp> and <sbl/hw/reg/*.hpp>
+    ${SBL_STM32H750_INCLUDE_DIR}
 )
 
 # Linking to driver automatically links startup

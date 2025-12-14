@@ -1,11 +1,13 @@
 /**
  * @file uart.hpp
- * @brief RP2350 UART driver for debug output
+ * @brief RP2040 UART driver for debug output
  *
  * Uses UART0 on GP0 (TX) and GP1 (RX) for debug logging.
  * Wraps Pico SDK uart functions for SBL compatibility.
  */
-#pragma once
+
+#ifndef SBL_HW_DRIVER_UART_HPP_
+#define SBL_HW_DRIVER_UART_HPP_
 
 #include <cstdint>
 #include <cstddef>
@@ -16,7 +18,7 @@
 namespace sbl::driver {
 
 /**
- * @brief UART driver for RP2350
+ * @brief UART driver for RP2040
  *
  * Simple blocking UART for debug output.
  * Uses UART0 by default (GP0=TX, GP1=RX).
@@ -97,4 +99,6 @@ private:
 // Compile-time interface validation
 #include <sbl/validation/uart_requirements.hpp>
 static_assert(sbl::validation::uart_driver_valid<sbl::driver::Uart>,
-              "RP2350 UART driver incomplete");
+              "RP2040 UART driver incomplete");
+
+#endif // SBL_HW_DRIVER_UART_HPP_

@@ -5,7 +5,8 @@
  * Uses USART1 on PA9 (TX) and PA10 (RX) for debug logging.
  * Bare-metal implementation using SVD-generated register definitions.
  */
-#pragma once
+#ifndef SBL_HW_DRIVER_UART_HPP_
+#define SBL_HW_DRIVER_UART_HPP_
 
 #include <cstdint>
 #include <cstddef>
@@ -192,3 +193,5 @@ private:
 #include <sbl/validation/uart_requirements.hpp>
 static_assert(sbl::validation::uart_driver_valid<sbl::driver::Uart>,
               "STM32H750 UART driver incomplete");
+
+#endif // SBL_HW_DRIVER_UART_HPP_

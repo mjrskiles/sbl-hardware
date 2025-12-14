@@ -6,7 +6,8 @@
  * Uses SVD-generated register definitions - no vendor HAL.
  * For raw register access, use sbl::hw::reg:: directly.
  */
-#pragma once
+#ifndef SBL_HW_DRIVER_GPIO_HPP_
+#define SBL_HW_DRIVER_GPIO_HPP_
 
 #include <cstdint>
 #include <sbl/hw/reg/gpio.hpp>
@@ -133,3 +134,5 @@ private:
 #include <sbl/validation/gpio_requirements.hpp>
 static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
               "STM32H750 GPIO driver incomplete");
+
+#endif // SBL_HW_DRIVER_GPIO_HPP_
