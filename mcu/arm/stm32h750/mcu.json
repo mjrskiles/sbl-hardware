@@ -10,7 +10,17 @@
     "fpu": "fpv5-d16",
     "dsp_extensions": false
   },
-  "driver": ".",
+  "driver": "./driver",
+  "registers": "./reg",
+  "sdk": {
+    "type": "none",
+    "toolchain": {
+      "system": "Generic",
+      "processor": "arm",
+      "compiler": "arm-none-eabi-gcc"
+    },
+    "outputs": ["bin", "hex"]
+  },
 
   "pins": {
     "PA0":  { "functions": { "gpio": { "port": 0, "pin": 0 },  "adc": { "peripheral": "ADC1", "channel": 16 } } },

@@ -6,7 +6,34 @@
   "family": "rp2040",
   "vendor": "raspberry-pi",
   "arch": "arm-cortex-m0plus",
-  "driver": ".",
+  "driver": "./driver",
+  "sdk": {
+    "type": "pico-sdk",
+    "name": "Raspberry Pi Pico SDK",
+    "version": {
+      "min": "2.0.0"
+    },
+    "env": {
+      "required": [
+        {
+          "name": "PICO_SDK_PATH",
+          "description": "Path to Pico SDK installation",
+          "type": "path"
+        }
+      ],
+      "optional": [
+        {
+          "name": "PICO_BOARD",
+          "description": "Board identifier",
+          "default": "pico"
+        }
+      ]
+    },
+    "toolchain": {
+      "init_script": "$PICO_SDK_PATH/pico_sdk_init.cmake"
+    },
+    "outputs": ["uf2", "bin", "hex", "dis", "map"]
+  },
 
   "pins": {
     "GPIO0": {
