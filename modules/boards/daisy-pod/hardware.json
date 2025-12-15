@@ -1,0 +1,53 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/module.schema.json",
+  "schemaVersion": "0.1",
+  "module": {
+    "name": "daisy-pod",
+    "revision": "1.0",
+    "category": "boards",
+    "attaches_to": "mainboards/daisy-seed"
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "pin": "d22",
+        "function": "gpio",
+        "direction": "out",
+        "id": "led1"
+      },
+      {
+        "pin": "d23",
+        "function": "gpio",
+        "direction": "out",
+        "id": "led2"
+      },
+      {
+        "pin": "d26",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "id": "encoder_a"
+      },
+      {
+        "pin": "d27",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "id": "encoder_b"
+      },
+      {
+        "pin": "d28",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "encoder_click"
+      }
+    ],
+    "adc": [
+      { "pin": "a0", "id": "knob1" },
+      { "pin": "a1", "id": "knob2" }
+    ]
+  }
+}

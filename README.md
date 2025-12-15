@@ -62,6 +62,7 @@ sbl-hardware/
 │   └── sbl-simulator-0/          # Native simulator mainboard
 └── modules/                      # Extension modules
     ├── boards/                   # Expansion PCBs
+    │   └── daisy-pod/            # Electrosmith Daisy Pod (knobs, encoder, LEDs)
     └── ic/                       # Complex ICs (DACs, codecs, etc.)
 ```
 
@@ -91,7 +92,9 @@ sbl-hardware/
 
 ### Modules
 
-None yet
+| Target | Module | Attaches To | Features |
+|--------|--------|-------------|----------|
+| `sbl:modules/boards/daisy-pod` | Electrosmith Daisy Pod | daisy-seed | 2 LEDs, encoder, 2 knobs (ADC) |
 
 ## MCU Definitions
 
