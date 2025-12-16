@@ -85,6 +85,15 @@
         "direction": "out",
         "id": "status_led"
       }
+    ],
+    "uart": [
+      {
+        "id": "debug",
+        "mcu_peripheral": "UART0",
+        "tx_pin": "GPIO0",
+        "rx_pin": "GPIO1",
+        "baud": 115200
+      }
     ]
   },
 

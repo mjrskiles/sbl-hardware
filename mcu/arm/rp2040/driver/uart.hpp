@@ -2,7 +2,7 @@
  * @file uart.hpp
  * @brief RP2040 UART driver for debug output
  *
- * Uses UART0 on GP0 (TX) and GP1 (RX) for debug logging.
+ * Manifest-driven UART initialization using UartHandle.
  * Wraps Pico SDK uart functions for SBL compatibility.
  */
 
@@ -13,6 +13,7 @@
 #include <cstddef>
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
+#include <sbl/types.hpp>
 #include <sbl/hal/uart/driver.hpp>
 
 namespace sbl::driver {
@@ -21,26 +22,29 @@ namespace sbl::driver {
  * @brief UART driver for RP2040
  *
  * Simple blocking UART for debug output.
- * Uses UART0 by default (GP0=TX, GP1=RX).
+ * Pin configuration is resolved from hardware manifests via UartHandle.
  */
 class Uart {
 public:
-    // Default pins for UART0
-    static constexpr uint TX_PIN = 0;
-    static constexpr uint RX_PIN = 1;
-
     /**
-     * @brief Initialize UART at specified baud rate
-     * @param baud_rate Baud rate (default 115200)
+     * @brief Initialize UART using handle from hardware manifest
+     * @param handle UartHandle with resolved peripheral, pins, and baud
+     *
+     * Note: AF fields in handle are ignored on RP2040 (Pico SDK GPIO function).
+     * RP2040 uses GPIO pin numbers directly (tx_pin/rx_pin).
      */
-    static void init(uint32_t baud_rate = sbl::uart::BAUD_115200) {
-        // Initialize UART0
-        uart_init(uart0, baud_rate);
+    static void init(const sbl::UartHandle& handle) {
+        // Select UART peripheral based on handle
+        auto uart = (handle.peripheral == 0) ? uart0 : uart1;
 
-        // Set GPIO functions for UART
-        gpio_set_function(TX_PIN, GPIO_FUNC_UART);
-        gpio_set_function(RX_PIN, GPIO_FUNC_UART);
+        // Initialize UART at specified baud rate
+        uart_init(uart, handle.baud);
 
+        // Set GPIO functions for UART (Pico uses raw pin numbers)
+        gpio_set_function(handle.tx_pin, GPIO_FUNC_UART);
+        gpio_set_function(handle.rx_pin, GPIO_FUNC_UART);
+
+        s_uart = uart;
         s_initialized = true;
     }
 
@@ -50,7 +54,7 @@ public:
      */
     static void write_byte(uint8_t byte) {
         if (!s_initialized) return;
-        uart_putc_raw(uart0, byte);
+        uart_putc_raw(s_uart, byte);
     }
 
     /**
@@ -60,7 +64,7 @@ public:
      */
     static void write(const uint8_t* data, size_t len) {
         if (!s_initialized) return;
-        uart_write_blocking(uart0, data, len);
+        uart_write_blocking(s_uart, data, len);
     }
 
     /**
@@ -69,7 +73,7 @@ public:
      */
     static void write_string(const char* str) {
         if (!s_initialized) return;
-        uart_puts(uart0, str);
+        uart_puts(s_uart, str);
     }
 
     /**
@@ -78,7 +82,7 @@ public:
      */
     static bool available() {
         if (!s_initialized) return false;
-        return uart_is_readable(uart0);
+        return uart_is_readable(s_uart);
     }
 
     /**
@@ -87,11 +91,12 @@ public:
      */
     static uint8_t read_byte() {
         if (!s_initialized) return 0;
-        return uart_getc(uart0);
+        return uart_getc(s_uart);
     }
 
 private:
     static inline bool s_initialized = false;
+    static inline uart_inst_t* s_uart = nullptr;
 };
 
 } // namespace sbl::driver

@@ -161,7 +161,7 @@ If the same MCU pin is claimed twice, the resolver fails with a conflict error.
 
 ## Schemas
 
-JSON schemas are maintained in [sound-byte-libs/schema/](https://github.com/mjrskiles/sound-byte-libs/tree/main/schema):
+JSON schemas are generated from Pydantic models in [sound-byte-libs/sbl-schema/](https://github.com/mjrskiles/sound-byte-libs/tree/main/sbl-schema):
 
 | Schema | Purpose |
 |--------|---------|
@@ -170,6 +170,8 @@ JSON schemas are maintained in [sound-byte-libs/schema/](https://github.com/mjrs
 | `mainboard.schema.json` | Mainboard manifests |
 | `module.schema.json` | Module manifests |
 | `sbl-lock.schema.json` | Lock file format |
+
+Generate schemas: `sbl-schema generate` (outputs to `sbl-schema/generated/`)
 
 ## New hardware definitions
 

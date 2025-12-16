@@ -1,8 +1,8 @@
 /**
  * @file uart.hpp
- * @brief STM32H750 UART driver for debug output
+ * @brief STM32H750 UART driver
  *
- * Uses USART1 on PA9 (TX) and PA10 (RX) for debug logging.
+ * Manifest-driven UART initialization using UartHandle.
  * Bare-metal implementation using SVD-generated register definitions.
  */
 #ifndef SBL_HW_DRIVER_UART_HPP_
@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <sbl/types.hpp>
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/usart.hpp>
@@ -21,66 +22,164 @@ namespace sbl::driver {
  * @brief UART driver for STM32H750
  *
  * Simple blocking UART for debug output.
- * Uses USART1 on PA9 (TX) and PA10 (RX).
+ * Pin configuration is resolved from hardware manifests via UartHandle.
  *
+ * Supports USART1, USART2, USART3.
  * Note: Assumes system clock is configured (480 MHz typical for STM32H750).
- * USART1 is on APB2, clocked at 120 MHz by default.
+ * - USART1 is on APB2, clocked at 120 MHz
+ * - USART2/3 are on APB1L, clocked at 120 MHz
  */
 class Uart {
-public:
-    // USART1 pins on port A
-    static constexpr uint32_t TX_PIN = 9;
-    static constexpr uint32_t RX_PIN = 10;
-    static constexpr uint32_t PORT_A = 0;
-
-    // Alternate function 7 for USART1
-    static constexpr uint32_t AF_USART1 = 7;
+private:
+    static inline bool s_initialized = false;
+    static inline volatile sbl::hw::reg::USART_t* s_usart = nullptr;
 
     /**
-     * @brief Initialize UART at specified baud rate
-     * @param baud_rate Baud rate (default 115200)
+     * @brief Get GPIO peripheral pointer from port number
+     * @param port Port number (0=A, 1=B, 2=C, etc.)
+     */
+    static auto get_gpio_port(uint32_t port) {
+        using namespace sbl::hw::reg;
+        switch (port) {
+            case 0: return periph::gpioa;
+            case 1: return periph::gpiob;
+            case 2: return periph::gpioc;
+            case 3: return periph::gpiod;
+            case 4: return periph::gpioe;
+            case 5: return periph::gpiof;
+            case 6: return periph::gpiog;
+            default: return periph::gpioa;
+        }
+    }
+
+    /**
+     * @brief Get USART peripheral pointer from peripheral number
+     * @param peripheral 1=USART1, 2=USART2, 3=USART3
+     */
+    static volatile sbl::hw::reg::USART_t* get_usart(uint32_t peripheral) {
+        using namespace sbl::hw::reg;
+        switch (peripheral) {
+            case 1: return periph::usart1;
+            case 2: return periph::usart2;
+            case 3: return periph::usart3;
+            default: return periph::usart1;
+        }
+    }
+
+    /**
+     * @brief Configure a pin as alternate function
+     * @param gpio GPIO peripheral pointer
+     * @param pin Pin number within port
+     * @param af Alternate function number
+     */
+    static void configure_af_pin(decltype(sbl::hw::reg::periph::gpioa) gpio,
+                                 uint32_t pin, uint32_t af) {
+        // Set mode to alternate function (0b10)
+        gpio->GPIO_MODER &= ~(0x3u << (pin * 2));
+        gpio->GPIO_MODER |= (0x2u << (pin * 2));
+
+        // Set output type push-pull (0)
+        gpio->GPIO_OTYPER &= ~(1u << pin);
+
+        // Set speed to high (0b11)
+        gpio->GPIO_OSPEEDR |= (0x3u << (pin * 2));
+
+        // No pull-up/pull-down
+        gpio->GPIO_PUPDR &= ~(0x3u << (pin * 2));
+
+        // Set alternate function
+        // AFRL handles pins 0-7, AFRH handles pins 8-15
+        if (pin < 8) {
+            gpio->GPIO_AFRL &= ~(0xFu << (pin * 4));
+            gpio->GPIO_AFRL |= (af << (pin * 4));
+        } else {
+            uint32_t afrh_pin = pin - 8;
+            gpio->GPIO_AFRH &= ~(0xFu << (afrh_pin * 4));
+            gpio->GPIO_AFRH |= (af << (afrh_pin * 4));
+        }
+    }
+
+public:
+    /**
+     * @brief Initialize UART using handle from hardware manifest
+     * @param handle UartHandle with resolved peripheral, pins, AF, and baud
      *
      * Note: Assumes APB2 clock is 120 MHz (STM32H750 default after init).
      */
-    static void init(uint32_t baud_rate = sbl::uart::BAUD_115200) {
+    static void init(const sbl::UartHandle& handle) {
         using namespace sbl::hw::reg;
 
-        // Enable GPIOA clock (port A is bit 0)
-        periph::rcc->AHB4ENR |= (1u << PORT_A);
+        // Enable GPIO clocks for TX and RX ports
+        periph::rcc->AHB4ENR |= (1u << handle.tx_port);
+        periph::rcc->AHB4ENR |= (1u << handle.rx_port);
         volatile uint32_t dummy = periph::rcc->AHB4ENR;
 
-        // Enable USART1 clock (bit 4 of APB2ENR)
-        periph::rcc->APB2ENR |= RCC::APB2ENR_USART1EN;
-        dummy = periph::rcc->APB2ENR;
+        // Enable USART clock based on peripheral number
+        // USART1/6 are on APB2, USART2/3/7/8 are on APB1L
+        switch (handle.peripheral) {
+            case 1:
+                periph::rcc->APB2ENR |= RCC::APB2ENR_USART1EN;
+                dummy = periph::rcc->APB2ENR;
+                break;
+            case 2:
+                periph::rcc->APB1LENR |= RCC::APB1LENR_USART2EN;
+                dummy = periph::rcc->APB1LENR;
+                break;
+            case 3:
+                periph::rcc->APB1LENR |= RCC::APB1LENR_USART3EN;
+                dummy = periph::rcc->APB1LENR;
+                break;
+            case 6:
+                periph::rcc->APB2ENR |= RCC::APB2ENR_USART6EN;
+                dummy = periph::rcc->APB2ENR;
+                break;
+            default:
+                // Unsupported peripheral
+                return;
+        }
         (void)dummy;
 
-        // Configure PA9 (TX) as alternate function
-        configure_af_pin(TX_PIN);
+        // Get GPIO peripheral pointers based on port numbers
+        auto tx_gpio = get_gpio_port(handle.tx_port);
+        auto rx_gpio = get_gpio_port(handle.rx_port);
 
-        // Configure PA10 (RX) as alternate function
-        configure_af_pin(RX_PIN);
+        // Configure TX pin as alternate function
+        configure_af_pin(tx_gpio, handle.tx_pin, handle.tx_af);
+
+        // Configure RX pin as alternate function
+        configure_af_pin(rx_gpio, handle.rx_pin, handle.rx_af);
+
+        // Get USART peripheral and store for later use
+        s_usart = get_usart(handle.peripheral);
 
         // Disable USART during configuration
-        periph::usart1->CR1 = 0;
+        s_usart->CR1 = 0;
 
         // Set baud rate
         // BRR = fck / baud_rate (for oversampling by 16)
-        // APB2 clock is typically 120 MHz on STM32H750
-        constexpr uint32_t APB2_FREQ = 120'000'000;
-        periph::usart1->BRR = APB2_FREQ / baud_rate;
+        // USART1/6 use APB2 (120 MHz), USART2/3 use HSI kernel clock (64 MHz)
+        uint32_t usart_clk;
+        if (handle.peripheral == 1 || handle.peripheral == 6) {
+            usart_clk = 120'000'000;  // APB2
+        } else {
+            usart_clk = 64'000'000;   // HSI kernel clock (set in main)
+        }
+        s_usart->BRR = usart_clk / handle.baud;
 
         // CR2 and CR3 at reset values (1 stop bit, no flow control)
-        periph::usart1->CR2 = 0;
-        periph::usart1->CR3 = 0;
+        s_usart->CR2 = 0;
+        s_usart->CR3 = 0;
 
         // Enable USART, transmitter, and receiver
-        periph::usart1->CR1 = USART::UE | USART::TE | USART::RE;
+        s_usart->CR1 = USART::UE | USART::TE | USART::RE;
 
-        // Wait for transmit enable acknowledge
-        while ((periph::usart1->ISR & USART::TEACK) == 0) {
+        // Wait for transmit enable acknowledge (with timeout)
+        volatile uint32_t timeout = 100000;
+        while ((s_usart->ISR & USART::TEACK) == 0 && --timeout) {
             // Busy wait
         }
 
+        // Continue even if timeout - allows LED to blink for debugging
         s_initialized = true;
     }
 
@@ -89,16 +188,18 @@ public:
      * @param byte Byte to send
      */
     static void write_byte(uint8_t byte) {
-        if (!s_initialized) return;
+        if (!s_initialized || !s_usart) return;
 
         using namespace sbl::hw::reg;
 
-        // Wait for TXE (transmit data register empty)
-        while ((periph::usart1->ISR & USART::TXE) == 0) {
+        // Wait for TXE (transmit data register empty) with timeout
+        volatile uint32_t timeout = 10000;
+        while ((s_usart->ISR & USART::TXE) == 0 && --timeout) {
             // Busy wait
         }
+        if (timeout == 0) return;  // Give up on this byte
 
-        periph::usart1->TDR = byte;
+        s_usart->TDR = byte;
     }
 
     /**
@@ -127,9 +228,9 @@ public:
      * @return true if data waiting
      */
     static bool available() {
-        if (!s_initialized) return false;
+        if (!s_initialized || !s_usart) return false;
         using namespace sbl::hw::reg;
-        return (periph::usart1->ISR & USART::RXNE) != 0;
+        return (s_usart->ISR & USART::RXNE) != 0;
     }
 
     /**
@@ -137,53 +238,16 @@ public:
      * @return Received byte
      */
     static uint8_t read_byte() {
-        if (!s_initialized) return 0;
+        if (!s_initialized || !s_usart) return 0;
 
         using namespace sbl::hw::reg;
 
         // Wait for RXNE (read data register not empty)
-        while ((periph::usart1->ISR & USART::RXNE) == 0) {
+        while ((s_usart->ISR & USART::RXNE) == 0) {
             // Busy wait
         }
 
-        return static_cast<uint8_t>(periph::usart1->RDR);
-    }
-
-private:
-    static inline bool s_initialized = false;
-
-    /**
-     * @brief Configure a pin as alternate function for USART1
-     * @param pin Pin number (9 or 10 for TX/RX)
-     */
-    static void configure_af_pin(uint32_t pin) {
-        using namespace sbl::hw::reg;
-
-        auto gpio = periph::gpioa;
-
-        // Set mode to alternate function (0b10)
-        gpio->GPIO_MODER &= ~(0x3u << (pin * 2));
-        gpio->GPIO_MODER |= (0x2u << (pin * 2));
-
-        // Set output type push-pull (0)
-        gpio->GPIO_OTYPER &= ~(1u << pin);
-
-        // Set speed to high (0b11)
-        gpio->GPIO_OSPEEDR |= (0x3u << (pin * 2));
-
-        // No pull-up/pull-down
-        gpio->GPIO_PUPDR &= ~(0x3u << (pin * 2));
-
-        // Set alternate function to AF7 (USART1)
-        // AFRL handles pins 0-7, AFRH handles pins 8-15
-        if (pin < 8) {
-            gpio->GPIO_AFRL &= ~(0xFu << (pin * 4));
-            gpio->GPIO_AFRL |= (AF_USART1 << (pin * 4));
-        } else {
-            uint32_t afrh_pin = pin - 8;
-            gpio->GPIO_AFRH &= ~(0xFu << (afrh_pin * 4));
-            gpio->GPIO_AFRH |= (AF_USART1 << (afrh_pin * 4));
-        }
+        return static_cast<uint8_t>(s_usart->RDR);
     }
 };
 
