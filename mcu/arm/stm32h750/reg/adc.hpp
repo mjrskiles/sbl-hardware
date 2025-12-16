@@ -1,16 +1,16 @@
 /**
- * @file stm32h750.hpp
- * @brief Register definitions for STM32H750
+ * @file adc.hpp
+ * @brief Register definitions for STM32H750 - adc
  *
- * Generated from: stm32h750.svd
- * Generator: sbl-svd-tools
- * Generated: 2025-12-14T22:37:49.440693
+ * Generated from: stm32h750.svd.patched
+ * Generator: cecrops
+ * Generated: 2025-12-16T16:03:28.268765
  *
- * DO NOT EDIT - Regenerate from SVD source
+ * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
 
-#ifndef SBL_HW_REG_STM32H750_ADC1_ADC2_ADC3_HPP
-#define SBL_HW_REG_STM32H750_ADC1_ADC2_ADC3_HPP
+#ifndef SBL_HW_REG_STM32H750_ADC_HPP
+#define SBL_HW_REG_STM32H750_ADC_HPP
 
 #include <cstdint>
 
@@ -1658,4 +1658,4 @@ namespace periph {
 
 } // namespace sbl::hw::reg
 
-#endif // SBL_HW_REG_STM32H750_ADC1_ADC2_ADC3_HPP
+#endif // SBL_HW_REG_STM32H750_ADC_HPP

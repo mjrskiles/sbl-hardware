@@ -1,0 +1,58 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/cecrops.schema.json",
+  "schemaVersion": "0.1",
+
+  "mcu": "stm32h750",
+
+  "source": {
+    "url": "https://stm32-rs.github.io/stm32-rs/stm32h750.svd.patched",
+    "fallback": "https://raw.githubusercontent.com/stm32-rs/stm32-rs/master/svd/vendor/STMicro/STM32H750.svd"
+  },
+
+  "outputs": {
+    "rcc": {
+      "peripherals": ["RCC"],
+      "output": "reg/rcc.hpp"
+    },
+    "gpio": {
+      "peripherals": ["GPIOA", "GPIOB", "GPIOC", "GPIOD", "GPIOE", "GPIOF", "GPIOG", "GPIOH", "GPIOI", "GPIOJ", "GPIOK"],
+      "output": "reg/gpio.hpp"
+    },
+    "adc": {
+      "peripherals": ["ADC1", "ADC2", "ADC3", "ADC3_Common"],
+      "output": "reg/adc.hpp"
+    },
+    "flash": {
+      "peripherals": ["FLASH"],
+      "output": "reg/flash.hpp"
+    },
+    "pwr": {
+      "peripherals": ["PWR"],
+      "output": "reg/pwr.hpp"
+    }
+  },
+
+  "patches": {
+    "RCC": {
+      "description": "Fix register offsets per RM0433",
+      "registers": {
+        "CSR": {
+          "addressOffset": "0x78",
+          "reason": "SVD has 0x74, RM0433 Table 54 shows 0x78"
+        }
+      }
+    }
+  },
+
+  "manual": [
+    "reg/usart.hpp",
+    "reg/cortex_m.hpp"
+  ],
+
+  "options": {
+    "namespace": "sbl::hw::reg",
+    "include_guard_prefix": "SBL_HW_REG",
+    "generate_bit_constants": true,
+    "generate_peripheral_instances": true
+  }
+}

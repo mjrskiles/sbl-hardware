@@ -1,12 +1,12 @@
 /**
- * @file stm32h750.hpp
- * @brief Register definitions for STM32H750
+ * @file flash.hpp
+ * @brief Register definitions for STM32H750 - flash
  *
- * Generated from: stm32h750.svd
- * Generator: sbl-svd-tools
- * Generated: 2025-12-11T23:12:55.100469
+ * Generated from: stm32h750.svd.patched
+ * Generator: cecrops
+ * Generated: 2025-12-16T16:03:28.274639
  *
- * DO NOT EDIT - Regenerate from SVD source
+ * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
 
 #ifndef SBL_HW_REG_STM32H750_FLASH_HPP

@@ -1,12 +1,12 @@
 /**
- * @file stm32h750.hpp
- * @brief Register definitions for STM32H750
+ * @file rcc.hpp
+ * @brief Register definitions for STM32H750 - rcc
  *
- * Generated from: stm32h750.svd
- * Generator: sbl-svd-tools
- * Generated: 2025-12-11T23:12:54.654214
+ * Generated from: stm32h750.svd.patched
+ * Generator: cecrops
+ * Generated: 2025-12-16T16:03:28.262491
  *
- * DO NOT EDIT - Regenerate from SVD source
+ * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
 
 #ifndef SBL_HW_REG_STM32H750_RCC_HPP
@@ -48,8 +48,8 @@ struct RCC_t {
     volatile uint32_t CICR;  ///< RCC Clock Source Interrupt Clear           Register
     uint8_t _reserved5[4];
     volatile uint32_t BDCR;  ///< RCC Backup Domain Control           Register
+    uint8_t _reserved6[4];
     volatile uint32_t CSR;  ///< RCC Clock Control and Status           Register
-    // NOTE: No reserved gap here - CSR at 0x78, AHB3RSTR at 0x7C per RM0433
     volatile uint32_t AHB3RSTR;  ///< RCC AHB3 Reset Register
     volatile uint32_t AHB1RSTR;  ///< RCC AHB1 Peripheral Reset           Register
     volatile uint32_t AHB2RSTR;  ///< RCC AHB2 Peripheral Reset           Register
