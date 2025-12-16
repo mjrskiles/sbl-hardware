@@ -1,0 +1,20 @@
+# SVD Errata Patches for STM32H750
+#
+# This file corrects known errors in ST's SVD file (stm32h750.svd).
+# Applied by the sbl-svd-tools generator via --patches flag.
+#
+# Reference: RM0433 (STM32H742/743/750/753 Reference Manual)
+#
+# Format:
+#   PERIPHERAL:
+#     registers:
+#       REGISTER_NAME:
+#         addressOffset: 0xNN  # Correct offset
+#         _delete: true        # Remove bogus register
+
+RCC:
+  registers:
+    # SVD has CSR at 0x74, but RM0433 Table 54 shows it at 0x78
+    # This 4-byte error propagates to all subsequent registers
+    CSR:
+      addressOffset: 0x78  # Fix: SVD says 0x74, RM0433 says 0x78

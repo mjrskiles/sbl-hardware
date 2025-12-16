@@ -23,7 +23,7 @@ Reference this repository in your project's `sbl.json`:
         "ref": "main"
       }
     ],
-    "target": "sbl:mainboards/raspberry-pi-pico"
+    "target": "sbl:mainboards/raspberry-pi-pico-2"
   }
 }
 ```
@@ -40,7 +40,7 @@ Or use a local clone:
         "path": "../sbl-hardware"
       }
     ],
-    "target": "sbl:mainboards/raspberry-pi-pico"
+    "target": "sbl:mainboards/raspberry-pi-pico-2"
   }
 }
 ```
@@ -85,8 +85,8 @@ sbl-hardware/
 
 | Target | Board | MCU | Core |
 |--------|-------|-----|------|
-| `sbl:mainboards/raspberry-pi-pico` | Raspberry Pi Pico | RP2040 | Cortex-M0+ |
 | `sbl:mainboards/raspberry-pi-pico-2` | Raspberry Pi Pico 2 | RP2350 | Cortex-M33 |
+| `sbl:mainboards/raspberry-pi-pico` | Raspberry Pi Pico | RP2040 | Cortex-M0+ |
 | `sbl:mainboards/daisy-seed` | Electrosmith Daisy Seed | STM32H750 | Cortex-M7 |
 | `sbl:mainboards/sbl-simulator-0` | Native simulator | x86/ARM host | - |
 
@@ -110,8 +110,10 @@ Each MCU directory contains:
 
 ### SVD-Generated Registers
 
-Register headers are generated from official CMSIS-SVD files using `sound-byte-libs/tools/svd/`.
-This ensures register definitions match the silicon exactly, with no vendor HAL overhead.
+Register headers are generated from official CMSIS-SVD files, ensuring definitions match the silicon exactly with no vendor HAL overhead.
+
+**Current:** `sound-byte-libs/tools/svd/` with `svd-patches.yaml` for errata fixes
+**Planned:** [cecrops](https://github.com/mjrskiles/sound-byte-libs/blob/main/docs/planning/feature-designs/FDP-009-cecrops-svd-register-definition-generator.md) - manifest-driven generation with source tracking
 
 ```cpp
 // Generated from SVD - no ST HAL, no CMSIS

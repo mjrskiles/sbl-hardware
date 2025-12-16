@@ -24,10 +24,9 @@ namespace sbl::driver {
  * Simple blocking UART for debug output.
  * Pin configuration is resolved from hardware manifests via UartHandle.
  *
- * Supports USART1, USART2, USART3.
- * Note: Assumes system clock is configured (480 MHz typical for STM32H750).
- * - USART1 is on APB2, clocked at 120 MHz
- * - USART2/3 are on APB1L, clocked at 120 MHz
+ * Supports USART1, USART2, USART3, USART6.
+ * Note: STM32H7 USART kernel clock defaults to HSI (64 MHz).
+ * This is independent of APB bus clocks - USARTs have dedicated kernel clock muxes.
  */
 class Uart {
 private:
@@ -157,13 +156,10 @@ public:
 
         // Set baud rate
         // BRR = fck / baud_rate (for oversampling by 16)
-        // USART1/6 use APB2 (120 MHz), USART2/3 use HSI kernel clock (64 MHz)
-        uint32_t usart_clk;
-        if (handle.peripheral == 1 || handle.peripheral == 6) {
-            usart_clk = 120'000'000;  // APB2
-        } else {
-            usart_clk = 64'000'000;   // HSI kernel clock (set in main)
-        }
+        // STM32H7 USART kernel clock defaults to HSI (64 MHz), not APB clocks
+        // To change source, configure RCC_D2CCIP2R (but HSI is fine for debugging)
+        constexpr uint32_t usart_clk = 64'000'000;
+        s_usart->PRESC = 0;  // No prescaling (STM32H7 feature)
         s_usart->BRR = usart_clk / handle.baud;
 
         // CR2 and CR3 at reset values (1 stop bit, no flow control)

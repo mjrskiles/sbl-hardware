@@ -49,7 +49,7 @@ struct RCC_t {
     uint8_t _reserved5[4];
     volatile uint32_t BDCR;  ///< RCC Backup Domain Control           Register
     volatile uint32_t CSR;  ///< RCC Clock Control and Status           Register
-    uint8_t _reserved6[4];
+    // NOTE: No reserved gap here - CSR at 0x78, AHB3RSTR at 0x7C per RM0433
     volatile uint32_t AHB3RSTR;  ///< RCC AHB3 Reset Register
     volatile uint32_t AHB1RSTR;  ///< RCC AHB1 Peripheral Reset           Register
     volatile uint32_t AHB2RSTR;  ///< RCC AHB2 Peripheral Reset           Register
