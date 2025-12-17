@@ -112,8 +112,21 @@ Each MCU directory contains:
 
 Register headers are generated from official CMSIS-SVD files, ensuring definitions match the silicon exactly with no vendor HAL overhead.
 
-**Current:** `sound-byte-libs/tools/svd/` with `svd-patches.yaml` for errata fixes
-**Planned:** [cecrops](https://github.com/mjrskiles/sound-byte-libs/blob/main/docs/planning/feature-designs/FDP-009-cecrops-svd-register-definition-generator.md) - manifest-driven generation with source tracking
+**Tool:** [cecrops](https://github.com/mjrskiles/sound-byte-libs/blob/main/docs/planning/feature-designs/FDP-009-cecrops-svd-register-definition-generator.md) - manifest-driven SVD→C++ generator with integrated patching
+
+Each MCU that uses cecrops has a `cecrops.json` manifest:
+```json
+{
+  "svd_source": { "vendor_pack": "Keil.STM32H7xx_DFP", "file": "CMSIS/SVD/STM32H750x.svd" },
+  "output": { "peripherals": ["rcc", "gpio", "usart", "tim", "adc"] },
+  "patches": [{ "peripheral": "RCC", "action": "set_base_address", "value": "0x58024400" }]
+}
+```
+
+Generate register headers:
+```bash
+python -m cecrops generate sbl-hardware/mcu/arm/stm32h750
+```
 
 ```cpp
 // Generated from SVD - no ST HAL, no CMSIS

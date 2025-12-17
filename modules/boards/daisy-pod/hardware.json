@@ -11,16 +11,40 @@
   "claims": {
     "pins": [
       {
-        "pin": "d22",
+        "pin": "d20",
         "function": "gpio",
         "direction": "out",
-        "id": "led1"
+        "id": "led1_r"
+      },
+      {
+        "pin": "d19",
+        "function": "gpio",
+        "direction": "out",
+        "id": "led1_g"
+      },
+      {
+        "pin": "d18",
+        "function": "gpio",
+        "direction": "out",
+        "id": "led1_b"
+      },
+      {
+        "pin": "d17",
+        "function": "gpio",
+        "direction": "out",
+        "id": "led2_r"
+      },
+      {
+        "pin": "d24",
+        "function": "gpio",
+        "direction": "out",
+        "id": "led2_g"
       },
       {
         "pin": "d23",
         "function": "gpio",
         "direction": "out",
-        "id": "led2"
+        "id": "led2_b"
       },
       {
         "pin": "d26",

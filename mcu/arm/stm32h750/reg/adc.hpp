@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2025-12-16T16:03:28.268765
+ * Generated: 2025-12-16T17:57:44.078124
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -21,7 +21,6 @@ struct ADC3_t {
     volatile uint32_t ISR;  ///< ADC interrupt and status           register
     volatile uint32_t IER;  ///< ADC interrupt enable register
     volatile uint32_t CR;  ///< ADC control register
-    volatile uint32_t CCR;  ///< ADC common control register
     volatile uint32_t CFGR;  ///< ADC configuration register 1
     volatile uint32_t CFGR2;  ///< ADC configuration register 2
     volatile uint32_t SMPR1;  ///< ADC sampling time register 1
@@ -65,7 +64,6 @@ struct ADC1_t {
     volatile uint32_t ISR;  ///< ADC interrupt and status           register
     volatile uint32_t IER;  ///< ADC interrupt enable register
     volatile uint32_t CR;  ///< ADC control register
-    volatile uint32_t CCR;  ///< ADC common control register
     volatile uint32_t CFGR;  ///< ADC configuration register 1
     volatile uint32_t CFGR2;  ///< ADC configuration register 2
     volatile uint32_t SMPR1;  ///< ADC sampling time register 1
@@ -109,7 +107,6 @@ struct ADC2_t {
     volatile uint32_t ISR;  ///< ADC interrupt and status           register
     volatile uint32_t IER;  ///< ADC interrupt enable register
     volatile uint32_t CR;  ///< ADC control register
-    volatile uint32_t CCR;  ///< ADC common control register
     volatile uint32_t CFGR;  ///< ADC configuration register 1
     volatile uint32_t CFGR2;  ///< ADC configuration register 2
     volatile uint32_t SMPR1;  ///< ADC sampling time register 1
@@ -290,21 +287,6 @@ namespace ADC3 {
     inline constexpr uint32_t CR_ADCAL_Pos = 31;
     inline constexpr uint32_t CR_ADCAL_Msk = 0x80000000;
     inline constexpr uint32_t CR_ADCAL = (1U << 31);
-
-    // CCR fields
-    inline constexpr uint32_t CCR_CKMODE_Pos = 16;
-    inline constexpr uint32_t CCR_CKMODE_Msk = 0x00030000;
-    inline constexpr uint32_t CCR_PRESC_Pos = 18;
-    inline constexpr uint32_t CCR_PRESC_Msk = 0x003C0000;
-    inline constexpr uint32_t CCR_VREFEN_Pos = 22;
-    inline constexpr uint32_t CCR_VREFEN_Msk = 0x00400000;
-    inline constexpr uint32_t CCR_VREFEN = (1U << 22);
-    inline constexpr uint32_t CCR_VSENSEEN_Pos = 23;
-    inline constexpr uint32_t CCR_VSENSEEN_Msk = 0x00800000;
-    inline constexpr uint32_t CCR_VSENSEEN = (1U << 23);
-    inline constexpr uint32_t CCR_VBATEN_Pos = 24;
-    inline constexpr uint32_t CCR_VBATEN_Msk = 0x01000000;
-    inline constexpr uint32_t CCR_VBATEN = (1U << 24);
 
     // CFGR fields
     inline constexpr uint32_t CFGR_DMNGT_Pos = 0;
@@ -720,21 +702,6 @@ namespace ADC1 {
     inline constexpr uint32_t CR_ADCAL_Msk = 0x80000000;
     inline constexpr uint32_t CR_ADCAL = (1U << 31);
 
-    // CCR fields
-    inline constexpr uint32_t CCR_CKMODE_Pos = 16;
-    inline constexpr uint32_t CCR_CKMODE_Msk = 0x00030000;
-    inline constexpr uint32_t CCR_PRESC_Pos = 18;
-    inline constexpr uint32_t CCR_PRESC_Msk = 0x003C0000;
-    inline constexpr uint32_t CCR_VREFEN_Pos = 22;
-    inline constexpr uint32_t CCR_VREFEN_Msk = 0x00400000;
-    inline constexpr uint32_t CCR_VREFEN = (1U << 22);
-    inline constexpr uint32_t CCR_VSENSEEN_Pos = 23;
-    inline constexpr uint32_t CCR_VSENSEEN_Msk = 0x00800000;
-    inline constexpr uint32_t CCR_VSENSEEN = (1U << 23);
-    inline constexpr uint32_t CCR_VBATEN_Pos = 24;
-    inline constexpr uint32_t CCR_VBATEN_Msk = 0x01000000;
-    inline constexpr uint32_t CCR_VBATEN = (1U << 24);
-
     // CFGR fields
     inline constexpr uint32_t CFGR_DMNGT_Pos = 0;
     inline constexpr uint32_t CFGR_DMNGT_Msk = 0x00000003;
@@ -1148,21 +1115,6 @@ namespace ADC2 {
     inline constexpr uint32_t CR_ADCAL_Pos = 31;
     inline constexpr uint32_t CR_ADCAL_Msk = 0x80000000;
     inline constexpr uint32_t CR_ADCAL = (1U << 31);
-
-    // CCR fields
-    inline constexpr uint32_t CCR_CKMODE_Pos = 16;
-    inline constexpr uint32_t CCR_CKMODE_Msk = 0x00030000;
-    inline constexpr uint32_t CCR_PRESC_Pos = 18;
-    inline constexpr uint32_t CCR_PRESC_Msk = 0x003C0000;
-    inline constexpr uint32_t CCR_VREFEN_Pos = 22;
-    inline constexpr uint32_t CCR_VREFEN_Msk = 0x00400000;
-    inline constexpr uint32_t CCR_VREFEN = (1U << 22);
-    inline constexpr uint32_t CCR_VSENSEEN_Pos = 23;
-    inline constexpr uint32_t CCR_VSENSEEN_Msk = 0x00800000;
-    inline constexpr uint32_t CCR_VSENSEEN = (1U << 23);
-    inline constexpr uint32_t CCR_VBATEN_Pos = 24;
-    inline constexpr uint32_t CCR_VBATEN_Msk = 0x01000000;
-    inline constexpr uint32_t CCR_VBATEN = (1U << 24);
 
     // CFGR fields
     inline constexpr uint32_t CFGR_DMNGT_Pos = 0;

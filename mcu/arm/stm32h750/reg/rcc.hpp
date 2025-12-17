@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2025-12-16T16:03:28.262491
+ * Generated: 2025-12-16T17:57:44.065471
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -48,7 +48,6 @@ struct RCC_t {
     volatile uint32_t CICR;  ///< RCC Clock Source Interrupt Clear           Register
     uint8_t _reserved5[4];
     volatile uint32_t BDCR;  ///< RCC Backup Domain Control           Register
-    uint8_t _reserved6[4];
     volatile uint32_t CSR;  ///< RCC Clock Control and Status           Register
     volatile uint32_t AHB3RSTR;  ///< RCC AHB3 Reset Register
     volatile uint32_t AHB1RSTR;  ///< RCC AHB1 Peripheral Reset           Register
@@ -60,9 +59,9 @@ struct RCC_t {
     volatile uint32_t APB2RSTR;  ///< RCC APB2 Peripheral Reset           Register
     volatile uint32_t APB4RSTR;  ///< RCC APB4 Peripheral Reset           Register
     volatile uint32_t GCR;  ///< RCC Global Control Register
-    uint8_t _reserved7[4];
+    uint8_t _reserved6[4];
     volatile uint32_t D3AMR;  ///< RCC D3 Autonomous mode           Register
-    uint8_t _reserved8[36];
+    uint8_t _reserved7[36];
     volatile uint32_t RSR;  ///< RCC Reset Status Register
     volatile uint32_t AHB3ENR;  ///< RCC AHB3 Clock Register
     volatile uint32_t AHB1ENR;  ///< RCC AHB1 Clock Register
@@ -73,7 +72,7 @@ struct RCC_t {
     volatile uint32_t APB1HENR;  ///< RCC APB1 Clock Register
     volatile uint32_t APB2ENR;  ///< RCC APB2 Clock Register
     volatile uint32_t APB4ENR;  ///< RCC APB4 Clock Register
-    uint8_t _reserved9[4];
+    uint8_t _reserved8[4];
     volatile uint32_t AHB3LPENR;  ///< RCC AHB3 Sleep Clock Register
     volatile uint32_t AHB1LPENR;  ///< RCC AHB1 Sleep Clock Register
     volatile uint32_t AHB2LPENR;  ///< RCC AHB2 Sleep Clock Register
@@ -83,7 +82,7 @@ struct RCC_t {
     volatile uint32_t APB1HLPENR;  ///< RCC APB1 High Sleep Clock           Register
     volatile uint32_t APB2LPENR;  ///< RCC APB2 Sleep Clock Register
     volatile uint32_t APB4LPENR;  ///< RCC APB4 Sleep Clock Register
-    uint8_t _reserved10[16];
+    uint8_t _reserved9[16];
     volatile uint32_t C1_RSR;  ///< RCC Reset Status Register
     volatile uint32_t C1_AHB3ENR;  ///< RCC AHB3 Clock Register
     volatile uint32_t C1_AHB1ENR;  ///< RCC AHB1 Clock Register
@@ -94,7 +93,7 @@ struct RCC_t {
     volatile uint32_t C1_APB1HENR;  ///< RCC APB1 Clock Register
     volatile uint32_t C1_APB2ENR;  ///< RCC APB2 Clock Register
     volatile uint32_t C1_APB4ENR;  ///< RCC APB4 Clock Register
-    uint8_t _reserved11[4];
+    uint8_t _reserved10[4];
     volatile uint32_t C1_AHB3LPENR;  ///< RCC AHB3 Sleep Clock Register
     volatile uint32_t C1_AHB1LPENR;  ///< RCC AHB1 Sleep Clock Register
     volatile uint32_t C1_AHB2LPENR;  ///< RCC AHB2 Sleep Clock Register

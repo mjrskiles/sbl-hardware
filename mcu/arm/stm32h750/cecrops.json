@@ -29,16 +29,52 @@
     "pwr": {
       "peripherals": ["PWR"],
       "output": "reg/pwr.hpp"
+    },
+    "dma": {
+      "peripherals": ["DMA1", "DMA2", "DMAMUX1", "DMAMUX2", "BDMA"],
+      "output": "reg/dma.hpp"
+    },
+    "sai": {
+      "peripherals": ["SAI1", "SAI2", "SAI3", "SAI4"],
+      "output": "reg/sai.hpp"
     }
   },
 
   "patches": {
     "RCC": {
-      "description": "Fix register offsets per RM0433",
+      "description": "Fix register offsets - SVD has spurious 4-byte gap after CSR",
       "registers": {
-        "CSR": {
+        "AHB3RSTR": {
           "addressOffset": "0x78",
-          "reason": "SVD has 0x74, RM0433 Table 54 shows 0x78"
+          "cascade": true,
+          "reason": "SVD has 0x7C with 4-byte gap after CSR; cascade shifts all following registers"
+        }
+      }
+    },
+    "ADC1": {
+      "description": "Remove CCR - belongs in ADC_Common, not individual ADCs",
+      "registers": {
+        "CCR": {
+          "delete": true,
+          "reason": "CCR is at ADC12_Common base+0x08, not in individual ADC peripherals"
+        }
+      }
+    },
+    "ADC2": {
+      "description": "Remove CCR - belongs in ADC_Common, not individual ADCs",
+      "registers": {
+        "CCR": {
+          "delete": true,
+          "reason": "CCR is at ADC12_Common base+0x08, not in individual ADC peripherals"
+        }
+      }
+    },
+    "ADC3": {
+      "description": "Remove CCR - belongs in ADC_Common, not individual ADCs",
+      "registers": {
+        "CCR": {
+          "delete": true,
+          "reason": "CCR is at ADC3_Common base+0x08, not in individual ADC peripherals"
         }
       }
     }
