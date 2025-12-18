@@ -1,0 +1,77 @@
+/*
+ * tusb_config.h - TinyUSB configuration for RP2350 (Pico 2)
+ *
+ * MCU-specific TinyUSB configuration for Raspberry Pi Pico 2.
+ * Uses the same USB driver as RP2040 via Pico SDK's tinyusb_device.
+ */
+
+#ifndef TUSB_CONFIG_H
+#define TUSB_CONFIG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+//--------------------------------------------------------------------
+// COMMON CONFIGURATION
+//--------------------------------------------------------------------
+
+// RP2350 uses same USB driver as RP2040
+#define CFG_TUSB_MCU OPT_MCU_RP2040
+
+// No RTOS
+#define CFG_TUSB_OS OPT_OS_NONE
+
+// Debug level: 0=none, 1=error, 2=warn, 3=info
+#ifndef CFG_TUSB_DEBUG
+#define CFG_TUSB_DEBUG 0
+#endif
+
+// Memory alignment for DMA
+#define CFG_TUSB_MEM_ALIGN __attribute__((aligned(4)))
+
+//--------------------------------------------------------------------
+// DEVICE CONFIGURATION
+//--------------------------------------------------------------------
+
+#define CFG_TUD_ENABLED 1
+
+// USB port 0 in device mode at full speed
+#define CFG_TUSB_RHPORT0_MODE (OPT_MODE_DEVICE | OPT_MODE_FULL_SPEED)
+
+// Use default speed for the MCU
+#define CFG_TUD_MAX_SPEED OPT_MODE_DEFAULT_SPEED
+
+// Endpoint 0 size
+#define CFG_TUD_ENDPOINT0_SIZE 64
+
+//--------------------------------------------------------------------
+// DEVICE CLASS CONFIGURATION
+//--------------------------------------------------------------------
+
+// Enable CDC (Communications Device Class)
+#define CFG_TUD_CDC 1
+
+// Disable other classes
+#define CFG_TUD_MSC 0
+#define CFG_TUD_HID 0
+#define CFG_TUD_MIDI 0
+#define CFG_TUD_AUDIO 0
+#define CFG_TUD_VENDOR 0
+
+//--------------------------------------------------------------------
+// CDC CLASS CONFIGURATION
+//--------------------------------------------------------------------
+
+// CDC FIFO sizes
+#define CFG_TUD_CDC_RX_BUFSIZE 256
+#define CFG_TUD_CDC_TX_BUFSIZE 256
+
+// Endpoint buffer size (must be power of 2, max 64 for full-speed)
+#define CFG_TUD_CDC_EP_BUFSIZE 64
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // TUSB_CONFIG_H

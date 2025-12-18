@@ -18,6 +18,10 @@ extern "C" {
     extern uint32_t _sbss;        // Start of .bss section
     extern uint32_t _ebss;        // End of .bss section
 
+    // System core clock - required by TinyUSB
+    // Daisy Seed runs at 480MHz but boots with HSI (64MHz) until PLL init
+    uint32_t SystemCoreClock = 64000000;
+
     // Main entry point
     int main();
 
@@ -56,7 +60,10 @@ extern "C" {
     void DMA1_Stream5_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
     void DMA1_Stream6_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
     void ADC_IRQHandler()               __attribute__((weak, alias("Default_Handler")));
-    // ... additional handlers can be added as needed
+
+    // USB OTG interrupt handlers - defined in usb.hpp (linked with TinyUSB)
+    void OTG_HS_IRQHandler();  // USB1 - position 77
+    void OTG_FS_IRQHandler();  // USB2 - position 101
 }
 
 /**
@@ -170,7 +177,8 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(PendSV_Handler),
     reinterpret_cast<void*>(SysTick_Handler),
 
-    // STM32H7 peripheral interrupts (first 16)
+    // STM32H7 peripheral interrupts
+    // Full table up to USB OTG FS at position 101
     reinterpret_cast<void*>(WWDG_IRQHandler),           // 0
     reinterpret_cast<void*>(PVD_AVD_IRQHandler),        // 1
     reinterpret_cast<void*>(TAMP_STAMP_IRQHandler),     // 2
@@ -190,6 +198,87 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(DMA1_Stream5_IRQHandler),   // 16
     reinterpret_cast<void*>(DMA1_Stream6_IRQHandler),   // 17
     reinterpret_cast<void*>(ADC_IRQHandler),            // 18
-    // Additional interrupt handlers would continue here...
-    // Full STM32H7 has 150+ interrupts, add as needed
+    reinterpret_cast<void*>(Default_Handler),           // 19
+    reinterpret_cast<void*>(Default_Handler),           // 20
+    reinterpret_cast<void*>(Default_Handler),           // 21
+    reinterpret_cast<void*>(Default_Handler),           // 22
+    reinterpret_cast<void*>(Default_Handler),           // 23
+    reinterpret_cast<void*>(Default_Handler),           // 24
+    reinterpret_cast<void*>(Default_Handler),           // 25
+    reinterpret_cast<void*>(Default_Handler),           // 26
+    reinterpret_cast<void*>(Default_Handler),           // 27
+    reinterpret_cast<void*>(Default_Handler),           // 28
+    reinterpret_cast<void*>(Default_Handler),           // 29
+    reinterpret_cast<void*>(Default_Handler),           // 30
+    reinterpret_cast<void*>(Default_Handler),           // 31
+    reinterpret_cast<void*>(Default_Handler),           // 32
+    reinterpret_cast<void*>(Default_Handler),           // 33
+    reinterpret_cast<void*>(Default_Handler),           // 34
+    reinterpret_cast<void*>(Default_Handler),           // 35
+    reinterpret_cast<void*>(Default_Handler),           // 36
+    reinterpret_cast<void*>(Default_Handler),           // 37
+    reinterpret_cast<void*>(Default_Handler),           // 38
+    reinterpret_cast<void*>(Default_Handler),           // 39
+    reinterpret_cast<void*>(Default_Handler),           // 40
+    reinterpret_cast<void*>(Default_Handler),           // 41
+    reinterpret_cast<void*>(Default_Handler),           // 42
+    reinterpret_cast<void*>(Default_Handler),           // 43
+    reinterpret_cast<void*>(Default_Handler),           // 44
+    reinterpret_cast<void*>(Default_Handler),           // 45
+    reinterpret_cast<void*>(Default_Handler),           // 46
+    reinterpret_cast<void*>(Default_Handler),           // 47
+    reinterpret_cast<void*>(Default_Handler),           // 48
+    reinterpret_cast<void*>(Default_Handler),           // 49
+    reinterpret_cast<void*>(Default_Handler),           // 50
+    reinterpret_cast<void*>(Default_Handler),           // 51
+    reinterpret_cast<void*>(Default_Handler),           // 52
+    reinterpret_cast<void*>(Default_Handler),           // 53
+    reinterpret_cast<void*>(Default_Handler),           // 54
+    reinterpret_cast<void*>(Default_Handler),           // 55
+    reinterpret_cast<void*>(Default_Handler),           // 56
+    reinterpret_cast<void*>(Default_Handler),           // 57
+    reinterpret_cast<void*>(Default_Handler),           // 58
+    reinterpret_cast<void*>(Default_Handler),           // 59
+    reinterpret_cast<void*>(Default_Handler),           // 60
+    reinterpret_cast<void*>(Default_Handler),           // 61
+    reinterpret_cast<void*>(Default_Handler),           // 62
+    reinterpret_cast<void*>(Default_Handler),           // 63
+    reinterpret_cast<void*>(Default_Handler),           // 64
+    reinterpret_cast<void*>(Default_Handler),           // 65
+    reinterpret_cast<void*>(Default_Handler),           // 66
+    reinterpret_cast<void*>(Default_Handler),           // 67
+    reinterpret_cast<void*>(Default_Handler),           // 68
+    reinterpret_cast<void*>(Default_Handler),           // 69
+    reinterpret_cast<void*>(Default_Handler),           // 70
+    reinterpret_cast<void*>(Default_Handler),           // 71
+    reinterpret_cast<void*>(Default_Handler),           // 72
+    reinterpret_cast<void*>(Default_Handler),           // 73
+    reinterpret_cast<void*>(Default_Handler),           // 74
+    reinterpret_cast<void*>(Default_Handler),           // 75
+    reinterpret_cast<void*>(Default_Handler),           // 76
+    reinterpret_cast<void*>(OTG_HS_IRQHandler),         // 77 - USB1 OTG HS
+    reinterpret_cast<void*>(Default_Handler),           // 78
+    reinterpret_cast<void*>(Default_Handler),           // 79
+    reinterpret_cast<void*>(Default_Handler),           // 80
+    reinterpret_cast<void*>(Default_Handler),           // 81
+    reinterpret_cast<void*>(Default_Handler),           // 82
+    reinterpret_cast<void*>(Default_Handler),           // 83
+    reinterpret_cast<void*>(Default_Handler),           // 84
+    reinterpret_cast<void*>(Default_Handler),           // 85
+    reinterpret_cast<void*>(Default_Handler),           // 86
+    reinterpret_cast<void*>(Default_Handler),           // 87
+    reinterpret_cast<void*>(Default_Handler),           // 88
+    reinterpret_cast<void*>(Default_Handler),           // 89
+    reinterpret_cast<void*>(Default_Handler),           // 90
+    reinterpret_cast<void*>(Default_Handler),           // 91
+    reinterpret_cast<void*>(Default_Handler),           // 92
+    reinterpret_cast<void*>(Default_Handler),           // 93
+    reinterpret_cast<void*>(Default_Handler),           // 94
+    reinterpret_cast<void*>(Default_Handler),           // 95
+    reinterpret_cast<void*>(Default_Handler),           // 96
+    reinterpret_cast<void*>(Default_Handler),           // 97
+    reinterpret_cast<void*>(Default_Handler),           // 98
+    reinterpret_cast<void*>(Default_Handler),           // 99
+    reinterpret_cast<void*>(Default_Handler),           // 100
+    reinterpret_cast<void*>(OTG_FS_IRQHandler),         // 101 - USB2 OTG FS (Daisy Seed PA11/PA12)
 };

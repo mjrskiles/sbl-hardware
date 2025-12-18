@@ -12,8 +12,13 @@
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/pwr.hpp>
 #include <sbl/hw/reg/flash.hpp>
+#include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/cortex_m.hpp>
 #include "timer.hpp"
+
+// SystemCoreClock - required by TinyUSB and other CMSIS-compatible code
+// Updated by init() when clock configuration changes
+extern "C" inline uint32_t SystemCoreClock = 64'000'000;  // Default to HSI
 
 namespace sbl::driver {
 
@@ -65,6 +70,22 @@ constexpr uint32_t PWR_D3CR_VOSRDY = (1u << 13);
 // FLASH_ACR bit definitions
 constexpr uint32_t FLASH_ACR_LATENCY_Msk = 0xFu;
 constexpr uint32_t FLASH_ACR_WRHIGHFREQ_Pos = 4;
+
+// PLL3 bit definitions (for USB clock)
+constexpr uint32_t RCC_CR_PLL3ON = (1u << 28);
+constexpr uint32_t RCC_CR_PLL3RDY = (1u << 29);
+constexpr uint32_t RCC_PLLCFGR_PLL3RGE_Pos = 10;
+constexpr uint32_t RCC_PLLCFGR_PLL3RGE_4_8 = (2u << 10);  // Input 4-8 MHz
+constexpr uint32_t RCC_PLLCFGR_DIVQ3EN = (1u << 23);       // Enable Q output
+
+// USB clock source selection
+constexpr uint32_t RCC_D2CCIP2R_USBSEL_Pos = 20;
+constexpr uint32_t RCC_D2CCIP2R_USBSEL_Msk = (3u << 20);
+constexpr uint32_t RCC_D2CCIP2R_USBSEL_PLL3Q = (2u << 20);  // PLL3Q for USB
+
+// USB peripheral clock enable
+constexpr uint32_t RCC_AHB1ENR_USB1OTGHSEN = (1u << 25);
+constexpr uint32_t RCC_AHB1ENR_USB1OTGHSULPIEN = (1u << 26);
 
 /**
  * @brief Configure power supply and voltage scaling
@@ -141,6 +162,140 @@ inline bool enable_hse() {
     return false;  // HSE failed to start
 }
 
+/**
+ * @brief Configure PLL3 to provide 48 MHz USB clock
+ *
+ * PLL3 config: 16 MHz HSE -> 4 MHz input -> 192 MHz VCO -> 48 MHz Q output
+ * This must be called AFTER HSE is enabled.
+ *
+ * @param hse_mhz HSE frequency in MHz (typically 16 for Daisy Seed)
+ * @return true if PLL3 locked successfully
+ */
+inline bool configure_pll3_usb(uint32_t hse_mhz) {
+    using namespace sbl::hw::reg;
+
+    // Disable PLL3 before configuring
+    periph::rcc->CR &= ~RCC_CR_PLL3ON;
+    while (periph::rcc->CR & RCC_CR_PLL3RDY) {}
+
+    // Configure PLL3 dividers in PLLCKSELR
+    // DIVM3 = HSE/4 = 4 MHz PLL input (same as PLL1)
+    uint32_t divm3 = hse_mhz / 4;
+    uint32_t pllckselr = periph::rcc->PLLCKSELR;
+    pllckselr &= ~(0x3Fu << 20);  // Clear DIVM3 field
+    pllckselr |= (divm3 << 20);   // Set DIVM3
+    periph::rcc->PLLCKSELR = pllckselr;
+
+    // Configure PLL3 in PLLCFGR
+    // PLL3RGE = 4-8 MHz input range, enable Q output
+    uint32_t pllcfgr = periph::rcc->PLLCFGR;
+    pllcfgr &= ~(3u << RCC_PLLCFGR_PLL3RGE_Pos);  // Clear PLL3RGE
+    pllcfgr |= RCC_PLLCFGR_PLL3RGE_4_8;           // Set 4-8 MHz range
+    pllcfgr |= RCC_PLLCFGR_DIVQ3EN;               // Enable Q output
+    periph::rcc->PLLCFGR = pllcfgr;
+
+    // Configure PLL3 dividers for 48 MHz output
+    // VCO = 4 MHz * 48 = 192 MHz, Q = VCO / 4 = 48 MHz
+    // DIVN3 = 48 (N multiplier), DIVQ3 = 4 (Q divider)
+    uint32_t divn3 = 48;
+    uint32_t divq3 = 4;
+    periph::rcc->PLL3DIVR = ((divn3 - 1) << 0) | ((divq3 - 1) << 16);
+
+    // Enable PLL3 and wait for lock
+    periph::rcc->CR |= RCC_CR_PLL3ON;
+    for (uint32_t i = 0; i < 500000; ++i) {
+        if (periph::rcc->CR & RCC_CR_PLL3RDY) {
+            return true;
+        }
+    }
+    return false;  // PLL3 failed to lock
+}
+
+/**
+ * @brief Select PLL3Q as USB clock source
+ */
+inline void select_usb_clock_pll3() {
+    using namespace sbl::hw::reg;
+
+    uint32_t d2ccip2r = periph::rcc->D2CCIP2R;
+    d2ccip2r &= ~RCC_D2CCIP2R_USBSEL_Msk;
+    d2ccip2r |= RCC_D2CCIP2R_USBSEL_PLL3Q;
+    periph::rcc->D2CCIP2R = d2ccip2r;
+}
+
+/**
+ * @brief Enable USB1 OTG HS peripheral clock
+ */
+inline void enable_usb1_clock() {
+    using namespace sbl::hw::reg;
+    periph::rcc->AHB1ENR |= RCC_AHB1ENR_USB1OTGHSEN;
+    // Small delay for clock to stabilize
+    volatile uint32_t dummy = periph::rcc->AHB1ENR;
+    (void)dummy;
+}
+
+// USB2 OTG FS clock enable (used by Daisy Seed PA11/PA12)
+constexpr uint32_t RCC_AHB1ENR_USB2OTGHSEN = (1u << 27);
+
+/**
+ * @brief Enable USB2 OTG FS peripheral clock
+ */
+inline void enable_usb2_clock() {
+    using namespace sbl::hw::reg;
+    periph::rcc->AHB1ENR |= RCC_AHB1ENR_USB2OTGHSEN;
+    // Longer delay for USB clock to stabilize before core can be accessed
+    for (volatile int i = 0; i < 100000; ++i) {
+        __asm__ volatile("nop");
+    }
+}
+
+/**
+ * @brief Configure PA11/PA12 as USB DM/DP pins
+ *
+ * Configures:
+ * - PA11 as USB2 DM (alternate function 10)
+ * - PA12 as USB2 DP (alternate function 10)
+ * - Push-pull, no pull, very high speed
+ */
+inline void configure_usb_gpio() {
+    using namespace sbl::hw::reg;
+
+    // Enable GPIOA clock
+    periph::rcc->AHB4ENR |= (1u << 0);  // GPIOAEN
+    volatile uint32_t dummy = periph::rcc->AHB4ENR;
+    (void)dummy;
+
+    // PA11 and PA12 configuration
+    // MODER: Alternate function (10b)
+    // OSPEEDR: Very high speed (11b)
+    // PUPDR: No pull (00b)
+    // AFRH: AF10 for PA11 and PA12
+
+    // Set PA11, PA12 to alternate function mode
+    uint32_t moder = periph::gpioa->GPIO_MODER;
+    moder &= ~((3u << (11 * 2)) | (3u << (12 * 2)));  // Clear bits
+    moder |= (2u << (11 * 2)) | (2u << (12 * 2));     // Set to AF mode
+    periph::gpioa->GPIO_MODER = moder;
+
+    // Set to very high speed
+    uint32_t ospeedr = periph::gpioa->GPIO_OSPEEDR;
+    ospeedr |= (3u << (11 * 2)) | (3u << (12 * 2));
+    periph::gpioa->GPIO_OSPEEDR = ospeedr;
+
+    // No pull-up/pull-down
+    uint32_t pupdr = periph::gpioa->GPIO_PUPDR;
+    pupdr &= ~((3u << (11 * 2)) | (3u << (12 * 2)));
+    periph::gpioa->GPIO_PUPDR = pupdr;
+
+    // Set alternate function to AF10 (USB2 OTG FS)
+    // PA11 is in AFRH (pins 8-15), bit positions [15:12]
+    // PA12 is in AFRH (pins 8-15), bit positions [19:16]
+    uint32_t afrh = periph::gpioa->GPIO_AFRH;
+    afrh &= ~((0xFu << ((11 - 8) * 4)) | (0xFu << ((12 - 8) * 4)));
+    afrh |= (10u << ((11 - 8) * 4)) | (10u << ((12 - 8) * 4));  // AF10
+    periph::gpioa->GPIO_AFRH = afrh;
+}
+
 } // namespace detail
 
 /**
@@ -213,6 +368,9 @@ inline bool init(const ClockConfig& config = ClockConfig{}) {
             periph::rcc->CFGR = (periph::rcc->CFGR & ~7u) | 3u;
             while ((periph::rcc->CFGR & (7u << 3)) != (3u << 3)) {}
 
+            // Update SystemCoreClock for CMSIS-compatible code (e.g., TinyUSB)
+            SystemCoreClock = config.sysclk_mhz * 1'000'000;
+
             // Reinit timer for actual frequency
             Timer::init(config.sysclk_mhz * 1'000'000);
             return true;
@@ -233,6 +391,110 @@ inline void init_hsi() {
     // Default HSI is already running at 64 MHz
     // Just initialize the timer
     Timer::init(64'000'000);
+}
+
+/**
+ * @brief Configure USB2 OTG FS peripheral for device mode
+ *
+ * Configures the DWC2 USB controller for device mode without VBUS sensing.
+ * This is required for boards like Daisy Seed where VBUS isn't connected
+ * to the USB peripheral.
+ */
+inline void configure_usb2_device_mode() {
+    // USB2_OTG_FS base address and register offsets
+    constexpr uint32_t USB2_BASE = 0x40080000UL;
+    constexpr uint32_t GOTGCTL_OFFSET = 0x000;
+    constexpr uint32_t GUSBCFG_OFFSET = 0x00C;
+    constexpr uint32_t GCCFG_OFFSET = 0x038;
+
+    volatile uint32_t& GOTGCTL = *reinterpret_cast<volatile uint32_t*>(USB2_BASE + GOTGCTL_OFFSET);
+    volatile uint32_t& GUSBCFG = *reinterpret_cast<volatile uint32_t*>(USB2_BASE + GUSBCFG_OFFSET);
+    volatile uint32_t& GCCFG = *reinterpret_cast<volatile uint32_t*>(USB2_BASE + GCCFG_OFFSET);
+
+    // Disable VBUS sensing (GCCFG.VBDEN = 0)
+    GCCFG &= ~(1u << 21);
+
+    // Enable internal FS PHY (GCCFG.PWRDWN = 1, active high enables PHY)
+    GCCFG |= (1u << 16);
+
+    // Force B-session valid (bypass VBUS detection)
+    // GOTGCTL.BVALOEN = 1 (enable override)
+    // GOTGCTL.BVALOVAL = 1 (force valid)
+    GOTGCTL |= (1u << 6) | (1u << 7);
+
+    // Force device mode (GUSBCFG.FDMOD = 1)
+    GUSBCFG |= (1u << 30);
+
+    // Wait for mode change to take effect
+    for (volatile int i = 0; i < 100000; ++i) {
+        __asm__ volatile("nop");
+    }
+}
+
+/**
+ * @brief Enable USB2 OTG FS interrupt in NVIC
+ *
+ * USB2_OTG_FS is IRQ 101 (external interrupt 101)
+ */
+inline void enable_usb2_nvic() {
+    // NVIC registers
+    // ISER[n] enables interrupts 32*n to 32*n+31
+    // IRQ 101 is in ISER[3] (96-127), bit 101-96 = 5
+    constexpr uint32_t NVIC_ISER_BASE = 0xE000E100UL;
+    constexpr uint32_t IRQ_NUM = 101;
+    constexpr uint32_t ISER_INDEX = IRQ_NUM / 32;  // 3
+    constexpr uint32_t ISER_BIT = IRQ_NUM % 32;    // 5
+
+    volatile uint32_t& NVIC_ISER3 = *reinterpret_cast<volatile uint32_t*>(NVIC_ISER_BASE + ISER_INDEX * 4);
+    NVIC_ISER3 = (1u << ISER_BIT);
+
+    // Also set priority (optional but good practice)
+    // NVIC_IPR[n] sets priority for interrupt n
+    constexpr uint32_t NVIC_IPR_BASE = 0xE000E400UL;
+    volatile uint8_t& NVIC_IPR101 = *reinterpret_cast<volatile uint8_t*>(NVIC_IPR_BASE + IRQ_NUM);
+    NVIC_IPR101 = 0x40;  // Priority 4 (lower number = higher priority)
+}
+
+/**
+ * @brief Initialize USB clocks and peripheral (USB2 OTG FS on PA11/PA12)
+ *
+ * Configures:
+ * - PLL3 for 48 MHz USB clock
+ * - USB2 OTG FS peripheral clock
+ * - PA11/PA12 as USB DM/DP (AF10)
+ * - USB peripheral for device mode (no VBUS sensing)
+ * - NVIC interrupt enable
+ *
+ * Must be called AFTER init() to ensure HSE is running.
+ * This is for Daisy Seed and similar boards using USB2 on PA11/PA12.
+ *
+ * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed)
+ * @return true if USB clock setup successful
+ */
+inline bool init_usb(uint32_t hse_mhz = 16) {
+    using namespace detail;
+
+    // Configure PLL3 for 48 MHz USB clock
+    if (!configure_pll3_usb(hse_mhz)) {
+        return false;
+    }
+
+    // Select PLL3Q as USB clock source
+    select_usb_clock_pll3();
+
+    // Configure PA11/PA12 as USB DM/DP
+    configure_usb_gpio();
+
+    // Enable USB2 peripheral clock (PA11/PA12 use USB2_OTG_FS)
+    enable_usb2_clock();
+
+    // Configure USB peripheral for device mode without VBUS sensing
+    configure_usb2_device_mode();
+
+    // NOTE: NVIC enable temporarily disabled for debugging
+    // enable_usb2_nvic();
+
+    return true;
 }
 
 } // namespace sbl::driver
