@@ -36,8 +36,12 @@ extern "C" {
 
 #define CFG_TUD_ENABLED 1
 
-// USB port 0 (USB2_OTG_FS on PA11/PA12) in device mode at full speed
+// USB device on PA11/PA12 (USB1_OTG_HS running in FS mode with internal PHY)
+// Our sbl_usb_shim.h remaps Port 0 to USB1_OTG_HS (0x40040000), so use RHPORT0
 #define CFG_TUSB_RHPORT0_MODE (OPT_MODE_DEVICE | OPT_MODE_FULL_SPEED)
+
+// Use port 0 for device mode (mapped to USB1_OTG_HS via shim)
+#define BOARD_TUD_RHPORT 0
 
 // Use default speed for the MCU
 #define CFG_TUD_MAX_SPEED OPT_MODE_DEFAULT_SPEED

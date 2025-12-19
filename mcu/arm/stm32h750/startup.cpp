@@ -61,9 +61,15 @@ extern "C" {
     void DMA1_Stream6_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
     void ADC_IRQHandler()               __attribute__((weak, alias("Default_Handler")));
 
-    // USB OTG interrupt handlers - defined in usb.hpp (linked with TinyUSB)
-    void OTG_HS_IRQHandler();  // USB1 - position 77
-    void OTG_FS_IRQHandler();  // USB2 - position 101
+    // USB OTG interrupt handlers
+    // USB1_OTG_HS (at 0x40040000) - NOT used by Daisy Seed
+    void OTG_HS_EP1_OUT_IRQHandler() __attribute__((weak, alias("Default_Handler")));
+    void OTG_HS_EP1_IN_IRQHandler()  __attribute__((weak, alias("Default_Handler")));
+    void OTG_HS_IRQHandler()         __attribute__((weak, alias("Default_Handler")));
+
+    // USB2_OTG_FS (at 0x40080000) - USED by Daisy Seed on PA11/PA12!
+    // USB2 only has one IRQ (101), no separate EP1 IRQs. Positions 99-100 are other peripherals.
+    void OTG_FS_IRQHandler();  // USB2 main - position 101 (defined in usb_irq.cpp)
 }
 
 /**
@@ -253,9 +259,9 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 71
     reinterpret_cast<void*>(Default_Handler),           // 72
     reinterpret_cast<void*>(Default_Handler),           // 73
-    reinterpret_cast<void*>(Default_Handler),           // 74
-    reinterpret_cast<void*>(Default_Handler),           // 75
-    reinterpret_cast<void*>(Default_Handler),           // 76
+    reinterpret_cast<void*>(OTG_HS_EP1_OUT_IRQHandler),  // 74 - USB1 EP1 OUT
+    reinterpret_cast<void*>(OTG_HS_EP1_IN_IRQHandler),  // 75 - USB1 EP1 IN
+    reinterpret_cast<void*>(Default_Handler),           // 76 - USB1 WKUP (unused)
     reinterpret_cast<void*>(OTG_HS_IRQHandler),         // 77 - USB1 OTG HS
     reinterpret_cast<void*>(Default_Handler),           // 78
     reinterpret_cast<void*>(Default_Handler),           // 79
@@ -278,7 +284,7 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 96
     reinterpret_cast<void*>(Default_Handler),           // 97
     reinterpret_cast<void*>(Default_Handler),           // 98
-    reinterpret_cast<void*>(Default_Handler),           // 99
-    reinterpret_cast<void*>(Default_Handler),           // 100
-    reinterpret_cast<void*>(OTG_FS_IRQHandler),         // 101 - USB2 OTG FS (Daisy Seed PA11/PA12)
+    reinterpret_cast<void*>(Default_Handler),           // 99 - Reserved (not USB2)
+    reinterpret_cast<void*>(Default_Handler),           // 100 - Reserved (not USB2)
+    reinterpret_cast<void*>(OTG_FS_IRQHandler),         // 101 - USB2 OTG FS (used by Daisy Seed!)
 };
