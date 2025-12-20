@@ -69,7 +69,7 @@ extern "C" {
 
     // USB2_OTG_FS (at 0x40080000) - USED by Daisy Seed on PA11/PA12!
     // USB2 only has one IRQ (101), no separate EP1 IRQs. Positions 99-100 are other peripherals.
-    void OTG_FS_IRQHandler();  // USB2 main - position 101 (defined in usb_irq.cpp)
+    void OTG_FS_IRQHandler() __attribute__((weak, alias("Default_Handler")));  // USB2 main - position 101
 }
 
 /**
