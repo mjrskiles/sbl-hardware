@@ -39,38 +39,46 @@ extern uint32_t SystemCoreClock;
 // USB OTG Base Addresses
 // ============================================================================
 // STM32H750 has two USB OTG controllers:
-//   - USB1_OTG_HS at 0x40040000 (High-Speed with ULPI PHY support)
-//   - USB2_OTG_FS at 0x40080000 (Full-Speed with internal PHY, PA11/PA12)
+//   - USB1_OTG_HS at 0x40040000 (can run HS with ULPI or FS with internal PHY)
+//   - USB2_OTG_FS at 0x40080000 (FS only with internal PHY)
 //
-// TinyUSB naming convention (for STM32 consistency):
-//   - RHPort0 = "OTG_FS" = USB2_OTG_FS (0x40080000) - Daisy Seed uses this
-//   - RHPort1 = "OTG_HS" = USB1_OTG_HS (0x40040000)
+// IMPORTANT: Daisy Seed (LQFP100) uses USB2_OTG_FS on PA11/PA12!
+// The DFU bootloader uses USB2, and our firmware must match.
+//
+// TinyUSB RHPort mapping for Daisy Seed:
+//   - RHPort0 = USB2_OTG_FS (0x40080000) - PA11/PA12
 
 #define USB1_OTG_HS_PERIPH_BASE   0x40040000UL
 #define USB2_OTG_FS_PERIPH_BASE   0x40080000UL
 
-// Tell TinyUSB that STM32H750 has two USB controllers (USB2_OTG_FS exists)
-// This prevents dwc2_stm32.h from remapping FS→USB1
-#define USB2_OTG_FS               ((void*)USB2_OTG_FS_PERIPH_BASE)
+// Tell TinyUSB that USB2 exists on this chip - prevents remapping FS to HS
+// TinyUSB's dwc2_stm32.h checks for this macro
+#define USB2_OTG_FS               1
 
-// TinyUSB expects these names (guard against redefinition by dwc2_stm32.h)
-#ifndef USB_OTG_FS_PERIPH_BASE
-#define USB_OTG_FS_PERIPH_BASE    USB2_OTG_FS_PERIPH_BASE
-#endif
-#ifndef USB_OTG_HS_PERIPH_BASE
-#define USB_OTG_HS_PERIPH_BASE    USB1_OTG_HS_PERIPH_BASE
-#endif
-
-// For H7 boards with single USB, TinyUSB maps FS to USB1
-// But Daisy Seed has USB2 on PA11/PA12, so we use the standard mapping
+// For Daisy Seed, RHPort0 is USB2_OTG_FS at 0x40080000
+// TinyUSB's dwc2_stm32.h uses USB_OTG_FS_PERIPH_BASE for port 0
+#define USB_OTG_FS_PERIPH_BASE    USB2_OTG_FS_PERIPH_BASE  // Port 0 = USB2!
+#define USB_OTG_HS_PERIPH_BASE    USB1_OTG_HS_PERIPH_BASE  // Port 1 = USB1 (unused)
 
 // ============================================================================
 // IRQ Numbers
 // ============================================================================
 // These must match the vector table positions in startup.cpp
+// STM32H750 USB IRQ numbers:
+//   USB1_OTG_HS: EP1_OUT=74, EP1_IN=75, WKUP=76, main=77
+//   USB2_OTG_FS: main=101 (single interrupt, no separate EP1 IRQs)
+//
+// We use USB2_OTG_FS for Daisy Seed, so OTG_FS_IRQn = 101
 typedef enum {
-    OTG_FS_IRQn = 101,  // USB2_OTG_FS interrupt (position 101 in vector table)
-    OTG_HS_IRQn = 77,   // USB1_OTG_HS interrupt (position 77 in vector table)
+    // USB1_OTG_HS (at 0x40040000) - NOT used by Daisy Seed
+    OTG_HS_EP1_OUT_IRQn = 74,
+    OTG_HS_EP1_IN_IRQn = 75,
+    OTG_HS_WKUP_IRQn = 76,
+    OTG_HS_IRQn = 77,
+
+    // USB2_OTG_FS (at 0x40080000) - used by Daisy Seed on PA11/PA12
+    // USB2 only has one interrupt, not separate EP1 IRQs
+    OTG_FS_IRQn = 101,         // USB2 Main interrupt
 } IRQn_Type;
 
 // ============================================================================

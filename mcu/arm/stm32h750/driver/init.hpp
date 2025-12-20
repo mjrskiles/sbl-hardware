@@ -83,12 +83,27 @@ constexpr uint32_t RCC_D2CCIP2R_USBSEL_Pos = 20;
 constexpr uint32_t RCC_D2CCIP2R_USBSEL_Msk = (3u << 20);
 constexpr uint32_t RCC_D2CCIP2R_USBSEL_PLL3Q = (2u << 20);  // PLL3Q for USB
 
-// USB peripheral clock enable
-constexpr uint32_t RCC_AHB1ENR_USB1OTGHSEN = (1u << 25);
-constexpr uint32_t RCC_AHB1ENR_USB1OTGHSULPIEN = (1u << 26);
+// USB peripheral clock enable bits in RCC_AHB1ENR
+// Note: STM32H750 has USB1_OTG_HS (bit 25) and USB2_OTG_FS (bit 27)
+// Daisy Seed uses USB2_OTG_FS on PA11/PA12
+constexpr uint32_t RCC_AHB1ENR_USB2OTGFSEN = (1u << 27);
+
+// SYSCFG registers (not yet in cecrops-generated headers)
+constexpr uint32_t SYSCFG_BASE = 0x58000400UL;
+constexpr uint32_t SYSCFG_PWRCR_OFFSET = 0x04;
+constexpr uint32_t SYSCFG_PWRCR_ODEN = (1u << 0);  // Overdrive enable for VOS0
 
 /**
- * @brief Configure power supply and voltage scaling
+ * @brief Configure power supply and voltage scaling for 480 MHz (VOS0)
+ *
+ * STM32H750 at 480 MHz requires VOS0 (overdrive mode). The sequence is:
+ * 1. Set VOS1 in PWR_D3CR
+ * 2. Wait for VOSRDY
+ * 3. Enable SYSCFG clock
+ * 4. Set ODEN bit in SYSCFG_PWRCR
+ * 5. Wait for ACTVOSRDY in PWR_CSR1
+ *
+ * VOS1 only supports up to 400 MHz - this was the bug!
  */
 inline void configure_power() {
     using namespace sbl::hw::reg;
@@ -97,15 +112,29 @@ inline void configure_power() {
     periph::pwr->PWR_CR3 |= PWR_CR3_LDOEN;
     periph::pwr->PWR_CR3 &= ~PWR_CR3_SCUEN;  // Disable SMPS
 
-    // Set voltage scaling to VOS1 (needed for 480 MHz)
+    // Step 1: Set voltage scaling to VOS1 (prerequisite for VOS0)
     uint32_t d3cr = periph::pwr->PWR_D3CR;
     d3cr &= ~PWR_D3CR_VOS_Msk;
-    d3cr |= PWR_D3CR_VOS_SCALE1;
+    d3cr |= PWR_D3CR_VOS_SCALE1;  // VOS1 = bits 15:14 = 11
     periph::pwr->PWR_D3CR = d3cr;
 
-    // Wait for voltage scaling ready
+    // Step 2: Wait for VOS1 ready
     while ((periph::pwr->PWR_D3CR & PWR_D3CR_VOSRDY) == 0) {
         // Wait
+    }
+
+    // Step 3: Enable SYSCFG clock (needed to access SYSCFG_PWRCR)
+    periph::rcc->APB4ENR |= RCC::APB4ENR_SYSCFGEN;
+    volatile uint32_t dummy = periph::rcc->APB4ENR;  // Read-back for clock sync
+    (void)dummy;
+
+    // Step 4: Enable overdrive (VOS0) via SYSCFG_PWRCR.ODEN
+    volatile uint32_t& SYSCFG_PWRCR = *reinterpret_cast<volatile uint32_t*>(SYSCFG_BASE + SYSCFG_PWRCR_OFFSET);
+    SYSCFG_PWRCR |= SYSCFG_PWRCR_ODEN;
+
+    // Step 5: Wait for VOS0 active (ACTVOSRDY in PWR_CSR1)
+    while ((periph::pwr->PWR_CSR1 & PWR::PWR_CSR1_ACTVOSRDY) == 0) {
+        // Wait for overdrive to stabilize
     }
 }
 
@@ -116,7 +145,7 @@ inline void configure_flash(uint32_t sysclk_mhz) {
     using namespace sbl::hw::reg;
 
     // Flash latency depends on frequency and voltage scale
-    // At VOS1 (1.15-1.26V): 4 wait states for 400-480 MHz
+    // At VOS0 (overdrive): 4 wait states for 450-480 MHz
     uint32_t latency;
     if (sysclk_mhz <= 70) {
         latency = 0;
@@ -178,6 +207,9 @@ inline bool configure_pll3_usb(uint32_t hse_mhz) {
     periph::rcc->CR &= ~RCC_CR_PLL3ON;
     while (periph::rcc->CR & RCC_CR_PLL3RDY) {}
 
+    // Small delay after disabling PLL to ensure register writes are accepted
+    for (volatile int i = 0; i < 100; ++i) { __asm__ volatile("nop"); }
+
     // Configure PLL3 dividers in PLLCKSELR
     // DIVM3 = HSE/4 = 4 MHz PLL input (same as PLL1)
     uint32_t divm3 = hse_mhz / 4;
@@ -188,11 +220,23 @@ inline bool configure_pll3_usb(uint32_t hse_mhz) {
 
     // Configure PLL3 in PLLCFGR
     // PLL3RGE = 4-8 MHz input range, enable Q output
+    // IMPORTANT: Read-modify-write to preserve PLL1 settings
     uint32_t pllcfgr = periph::rcc->PLLCFGR;
     pllcfgr &= ~(3u << RCC_PLLCFGR_PLL3RGE_Pos);  // Clear PLL3RGE
     pllcfgr |= RCC_PLLCFGR_PLL3RGE_4_8;           // Set 4-8 MHz range
     pllcfgr |= RCC_PLLCFGR_DIVQ3EN;               // Enable Q output
     periph::rcc->PLLCFGR = pllcfgr;
+
+    // Memory barrier to ensure write completes before continuing
+    __asm__ volatile("dsb" ::: "memory");
+    __asm__ volatile("isb");
+
+    // Verify DIVQ3EN was actually set (debugging: some STM32H7 have errata)
+    if ((periph::rcc->PLLCFGR & RCC_PLLCFGR_DIVQ3EN) == 0) {
+        // Try direct write if read-modify-write failed
+        periph::rcc->PLLCFGR |= RCC_PLLCFGR_DIVQ3EN;
+        __asm__ volatile("dsb" ::: "memory");
+    }
 
     // Configure PLL3 dividers for 48 MHz output
     // VCO = 4 MHz * 48 = 192 MHz, Q = VCO / 4 = 48 MHz
@@ -223,26 +267,13 @@ inline void select_usb_clock_pll3() {
     periph::rcc->D2CCIP2R = d2ccip2r;
 }
 
-/**
- * @brief Enable USB1 OTG HS peripheral clock
- */
-inline void enable_usb1_clock() {
-    using namespace sbl::hw::reg;
-    periph::rcc->AHB1ENR |= RCC_AHB1ENR_USB1OTGHSEN;
-    // Small delay for clock to stabilize
-    volatile uint32_t dummy = periph::rcc->AHB1ENR;
-    (void)dummy;
-}
-
-// USB2 OTG FS clock enable (used by Daisy Seed PA11/PA12)
-constexpr uint32_t RCC_AHB1ENR_USB2OTGHSEN = (1u << 27);
 
 /**
  * @brief Enable USB2 OTG FS peripheral clock
  */
 inline void enable_usb2_clock() {
     using namespace sbl::hw::reg;
-    periph::rcc->AHB1ENR |= RCC_AHB1ENR_USB2OTGHSEN;
+    periph::rcc->AHB1ENR |= RCC_AHB1ENR_USB2OTGFSEN;
     // Longer delay for USB clock to stabilize before core can be accessed
     for (volatile int i = 0; i < 100000; ++i) {
         __asm__ volatile("nop");
@@ -394,6 +425,30 @@ inline void init_hsi() {
 }
 
 /**
+ * @brief Enable USB 3.3V internal power supply
+ *
+ * STM32H7 has an internal 3.3V supply for the USB transceiver.
+ * This MUST be enabled before USB can work.
+ */
+inline void enable_usb_power() {
+    using namespace sbl::hw::reg;
+
+    // PWR_CR3.USB33DEN (bit 24) enables internal 3.3V supply for USB
+    constexpr uint32_t PWR_CR3_USB33DEN = (1u << 24);
+    periph::pwr->PWR_CR3 |= PWR_CR3_USB33DEN;
+
+    // Wait for USB 3.3V regulator ready (PWR_CR3.USB33RDY bit 26)
+    // Should stabilize in a few microseconds, use generous timeout
+    constexpr uint32_t PWR_CR3_USB33RDY = (1u << 26);
+    for (volatile uint32_t i = 0; i < 100000; ++i) {
+        if (periph::pwr->PWR_CR3 & PWR_CR3_USB33RDY) {
+            return;  // Regulator ready
+        }
+    }
+    // Continue anyway - may work without explicit ready bit
+}
+
+/**
  * @brief Configure USB2 OTG FS peripheral for device mode
  *
  * Configures the DWC2 USB controller for device mode without VBUS sensing.
@@ -459,11 +514,14 @@ inline void enable_usb2_nvic() {
  * @brief Initialize USB clocks and peripheral (USB2 OTG FS on PA11/PA12)
  *
  * Configures:
+ * - USB 3.3V internal power supply
  * - PLL3 for 48 MHz USB clock
  * - USB2 OTG FS peripheral clock
  * - PA11/PA12 as USB DM/DP (AF10)
- * - USB peripheral for device mode (no VBUS sensing)
  * - NVIC interrupt enable
+ *
+ * NOTE: USB core configuration (VBUS bypass, device mode) is handled by TinyUSB.
+ * We only set up clocks, GPIO, and enable the peripheral.
  *
  * Must be called AFTER init() to ensure HSE is running.
  * This is for Daisy Seed and similar boards using USB2 on PA11/PA12.
@@ -473,6 +531,9 @@ inline void enable_usb2_nvic() {
  */
 inline bool init_usb(uint32_t hse_mhz = 16) {
     using namespace detail;
+
+    // Enable USB 3.3V internal power supply (MUST be first!)
+    enable_usb_power();
 
     // Configure PLL3 for 48 MHz USB clock
     if (!configure_pll3_usb(hse_mhz)) {
@@ -488,11 +549,14 @@ inline bool init_usb(uint32_t hse_mhz = 16) {
     // Enable USB2 peripheral clock (PA11/PA12 use USB2_OTG_FS)
     enable_usb2_clock();
 
-    // Configure USB peripheral for device mode without VBUS sensing
-    configure_usb2_device_mode();
+    // NOTE: Don't configure USB core here - TinyUSB's dcd_init() handles:
+    // - GCCFG (PHY power, VBUS detection disable)
+    // - GOTGCTL (B-session valid override for VBUS bypass)
+    // - GUSBCFG (device mode forcing)
+    // Doing it here can conflict with TinyUSB's initialization sequence.
 
-    // NOTE: NVIC enable temporarily disabled for debugging
-    // enable_usb2_nvic();
+    // Enable USB2 interrupt in NVIC
+    enable_usb2_nvic();
 
     return true;
 }
