@@ -20,7 +20,9 @@
 
 // SystemCoreClock - required by TinyUSB and other CMSIS-compatible code
 // Updated by init() when clock configuration changes
-extern "C" inline uint32_t SystemCoreClock = 64'000'000;  // Default to HSI
+extern "C" {
+inline uint32_t SystemCoreClock = 64'000'000;  // Default to HSI
+}
 
 namespace sbl::driver {
 
