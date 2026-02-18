@@ -11,8 +11,9 @@
  */
 
 #include "tusb.h"
-#include "init.hpp"  // For init_usb()
-#include "timer.hpp" // For millis()
+#include "init.hpp"         // For init_usb()
+#include "timer.hpp"        // For millis()
+#include <sbl/hw/reg/usb_otg.hpp>  // For periph::usb2_global, GCCFG::, GOTGCTL::
 
 // TinyUSB requires a millisecond timer callback
 extern "C" inline uint32_t tusb_time_millis_api(void) {
@@ -31,20 +32,15 @@ namespace detail {
  * tusb_init() because TinyUSB's dcd_init() may reset these registers.
  */
 inline void apply_vbus_bypass() {
-    constexpr uint32_t USB2_BASE = 0x40080000UL;
-    constexpr uint32_t GOTGCTL_OFFSET = 0x000;
-    constexpr uint32_t GCCFG_OFFSET = 0x038;
+    using namespace sbl::hw::reg;
 
-    volatile uint32_t& GOTGCTL = *reinterpret_cast<volatile uint32_t*>(USB2_BASE + GOTGCTL_OFFSET);
-    volatile uint32_t& GCCFG = *reinterpret_cast<volatile uint32_t*>(USB2_BASE + GCCFG_OFFSET);
+    auto* usb = periph::usb2_global;
 
-    // Disable VBUS sensing (GCCFG.VBDEN = 0)
-    GCCFG &= ~(1u << 21);
+    // Disable VBUS sensing
+    usb->GCCFG &= ~GCCFG::VBDEN;
 
     // Force B-session valid (bypass VBUS detection)
-    // GOTGCTL.BVALOEN = 1 (enable override)
-    // GOTGCTL.BVALOVAL = 1 (force valid)
-    GOTGCTL |= (1u << 6) | (1u << 7);
+    usb->GOTGCTL |= GOTGCTL::BVALOEN | GOTGCTL::BVALOVAL;
 }
 
 } // namespace detail

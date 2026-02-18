@@ -1,24 +1,20 @@
 /**
  * @file sbl_usb_shim.h
- * @brief Sound Byte Labs bare-metal USB shim for TinyUSB
- *
- * This provides the minimal CMSIS-style definitions that TinyUSB's DWC2
- * driver expects, WITHOUT using ST's HAL or official CMSIS device headers.
+ * @brief Minimal CMSIS-style shim for TinyUSB's DWC2 driver
  *
  * TinyUSB includes "stm32h7xx.h" expecting ST's CMSIS header. We provide
- * a redirect in tinyusb-compat/ that points here instead.
+ * a redirect in tinyusb-compat/ that points here instead. This file
+ * contains ONLY what TinyUSB's DWC2 portable driver actually references.
  *
- * Contents:
- * - SystemCoreClock variable
- * - USB OTG base addresses (USB1 at 0x40040000, USB2 at 0x40080000)
- * - IRQ numbers (OTG_FS_IRQn, OTG_HS_IRQn)
- * - NVIC functions (NVIC_EnableIRQ, NVIC_DisableIRQ)
- * - SCB cache maintenance stubs
- * - RCC sleep mode bit definitions
- * - USB register bit definitions (VBUS, mode forcing)
+ * This is a C header (included by TinyUSB C sources). SBL's own C++ code
+ * should use the proper register headers instead:
+ *   - NVIC/SCB:    <sbl/hw/reg/cortex_m.hpp>
+ *   - IRQ numbers: <sbl/hw/reg/irq.hpp>
+ *   - USB OTG:     <sbl/hw/reg/usb_otg.hpp>
+ *   - RCC:         <sbl/hw/reg/rcc.hpp>
  *
  * This is NOT ST code. All definitions are derived from public ARM Cortex-M
- * documentation and the STM32H750 reference manual.
+ * documentation and the STM32H750 reference manual (RM0433).
  */
 #ifndef SBL_USB_SHIM_H_
 #define SBL_USB_SHIM_H_
@@ -30,100 +26,78 @@ extern "C" {
 #endif
 
 // ============================================================================
-// System Core Clock (required by TinyUSB for timing)
+// System Core Clock (required by TinyUSB for PHY timing calculations)
 // ============================================================================
-// Defined in init.cpp or your application - typically 480 MHz for STM32H750
 extern uint32_t SystemCoreClock;
 
 // ============================================================================
 // USB OTG Base Addresses
 // ============================================================================
 // STM32H750 has two USB OTG controllers:
-//   - USB1_OTG_HS at 0x40040000 (can run HS with ULPI or FS with internal PHY)
+//   - USB1_OTG_HS at 0x40040000 (HS with ULPI or FS with internal PHY)
 //   - USB2_OTG_FS at 0x40080000 (FS only with internal PHY)
 //
-// IMPORTANT: Daisy Seed (LQFP100) uses USB2_OTG_FS on PA11/PA12!
-// The DFU bootloader uses USB2, and our firmware must match.
-//
-// TinyUSB RHPort mapping for Daisy Seed:
-//   - RHPort0 = USB2_OTG_FS (0x40080000) - PA11/PA12
+// Daisy Seed (LQFP100) uses USB2_OTG_FS on PA11/PA12.
 
 #define USB1_OTG_HS_PERIPH_BASE   0x40040000UL
 #define USB2_OTG_FS_PERIPH_BASE   0x40080000UL
 
-// Tell TinyUSB that USB2 exists on this chip - prevents remapping FS to HS
-// TinyUSB's dwc2_stm32.h checks for this macro
+// Tell TinyUSB that USB2 exists on this chip — prevents remapping FS to HS.
+// TinyUSB's dwc2_stm32.h checks: #if (! defined USB2_OTG_FS)
 #define USB2_OTG_FS               1
 
-// For Daisy Seed, RHPort0 is USB2_OTG_FS at 0x40080000
-// TinyUSB's dwc2_stm32.h uses USB_OTG_FS_PERIPH_BASE for port 0
-#define USB_OTG_FS_PERIPH_BASE    USB2_OTG_FS_PERIPH_BASE  // Port 0 = USB2!
-#define USB_OTG_HS_PERIPH_BASE    USB1_OTG_HS_PERIPH_BASE  // Port 1 = USB1 (unused)
+// TinyUSB port mapping (dwc2_stm32.h uses these names):
+#define USB_OTG_FS_PERIPH_BASE    USB2_OTG_FS_PERIPH_BASE  // Port 0 = USB2
+#define USB_OTG_HS_PERIPH_BASE    USB1_OTG_HS_PERIPH_BASE  // Port 1 = USB1
 
 // ============================================================================
-// IRQ Numbers
+// IRQ Numbers (TinyUSB controller table references these)
 // ============================================================================
-// These must match the vector table positions in startup.cpp
-// STM32H750 USB IRQ numbers:
-//   USB1_OTG_HS: EP1_OUT=74, EP1_IN=75, WKUP=76, main=77
-//   USB2_OTG_FS: main=101 (single interrupt, no separate EP1 IRQs)
-//
-// We use USB2_OTG_FS for Daisy Seed, so OTG_FS_IRQn = 101
+// Canonical source: reg/irq.hpp (sbl::hw::reg::IRQn)
+// This C enum provides the subset TinyUSB needs with CMSIS naming.
 typedef enum {
-    // USB1_OTG_HS (at 0x40040000) - NOT used by Daisy Seed
     OTG_HS_EP1_OUT_IRQn = 74,
-    OTG_HS_EP1_IN_IRQn = 75,
-    OTG_HS_WKUP_IRQn = 76,
-    OTG_HS_IRQn = 77,
-
-    // USB2_OTG_FS (at 0x40080000) - used by Daisy Seed on PA11/PA12
-    // USB2 only has one interrupt, not separate EP1 IRQs
-    OTG_FS_IRQn = 101,         // USB2 Main interrupt
+    OTG_HS_EP1_IN_IRQn  = 75,
+    OTG_HS_WKUP_IRQn    = 76,
+    OTG_HS_IRQn          = 77,
+    OTG_FS_IRQn          = 101,  // USB2_OTG_FS (Daisy Seed)
 } IRQn_Type;
 
 // ============================================================================
-// NVIC Functions (from CMSIS core_cm7.h)
+// NVIC (TinyUSB calls NVIC_EnableIRQ / NVIC_DisableIRQ)
 // ============================================================================
+// Canonical source: reg/cortex_m.hpp (sbl::hw::reg::NVIC_t)
 #define NVIC_BASE           0xE000E100UL
 #define NVIC                ((NVIC_Type*)NVIC_BASE)
 
 typedef struct {
-    volatile uint32_t ISER[8];       // Interrupt Set Enable
+    volatile uint32_t ISER[8];
     uint32_t RESERVED0[24];
-    volatile uint32_t ICER[8];       // Interrupt Clear Enable
+    volatile uint32_t ICER[8];
     uint32_t RESERVED1[24];
-    volatile uint32_t ISPR[8];       // Interrupt Set Pending
+    volatile uint32_t ISPR[8];
     uint32_t RESERVED2[24];
-    volatile uint32_t ICPR[8];       // Interrupt Clear Pending
+    volatile uint32_t ICPR[8];
     uint32_t RESERVED3[24];
-    volatile uint32_t IABR[8];       // Interrupt Active Bit
+    volatile uint32_t IABR[8];
     uint32_t RESERVED4[56];
-    volatile uint8_t  IP[240];       // Interrupt Priority
+    volatile uint8_t  IP[240];
     uint32_t RESERVED5[644];
-    volatile uint32_t STIR;          // Software Trigger Interrupt
+    volatile uint32_t STIR;
 } NVIC_Type;
 
 static inline void NVIC_EnableIRQ(IRQn_Type IRQn) {
-    if ((int32_t)IRQn >= 0) {
-        NVIC->ISER[(uint32_t)IRQn >> 5] = (1UL << ((uint32_t)IRQn & 0x1FUL));
-    }
+    NVIC->ISER[(uint32_t)IRQn >> 5] = (1UL << ((uint32_t)IRQn & 0x1FUL));
 }
 
 static inline void NVIC_DisableIRQ(IRQn_Type IRQn) {
-    if ((int32_t)IRQn >= 0) {
-        NVIC->ICER[(uint32_t)IRQn >> 5] = (1UL << ((uint32_t)IRQn & 0x1FUL));
-    }
-}
-
-static inline void NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority) {
-    if ((int32_t)IRQn >= 0) {
-        NVIC->IP[(uint32_t)IRQn] = (uint8_t)((priority << 4) & 0xFFUL);
-    }
+    NVIC->ICER[(uint32_t)IRQn >> 5] = (1UL << ((uint32_t)IRQn & 0x1FUL));
 }
 
 // ============================================================================
-// SCB (System Control Block) for cache operations
+// SCB + D-Cache maintenance (TinyUSB checks cache status and cleans buffers)
 // ============================================================================
+// Canonical source: reg/cortex_m.hpp (sbl::hw::reg::SCB_t)
 #define SCB_BASE            0xE000ED00UL
 #define SCB                 ((SCB_Type*)SCB_BASE)
 
@@ -151,92 +125,48 @@ typedef struct {
     volatile uint32_t CPACR;
 } SCB_Type;
 
-#define SCB_CCR_DC_Msk      (1UL << 16)  // Data cache enable bit
+#define SCB_CCR_DC_Msk      (1UL << 16)
 
-// Cache line size for STM32H7
-#define __SCB_DCACHE_LINE_SIZE  32
-
-// Cache maintenance functions (simplified - full CMSIS has more)
-static inline void SCB_EnableICache(void) {
-    // Implementation would go here if needed
-}
-
-static inline void SCB_EnableDCache(void) {
-    // Implementation would go here if needed
-}
-
+// D-Cache maintenance stubs — TinyUSB calls these for DMA buffer coherency.
+// TODO: Implement real cache maintenance using DCCMVAC/DCIMVAC registers
+// when DMA-based USB transfers are enabled.
 static inline void SCB_CleanDCache_by_Addr(uint32_t *addr, int32_t dsize) {
-    // Clean D-Cache by address - simplified stub
-    // Full implementation would use DCCMVAC register
-    (void)addr;
-    (void)dsize;
+    (void)addr; (void)dsize;
     __asm volatile ("dsb sy" ::: "memory");
 }
 
 static inline void SCB_InvalidateDCache_by_Addr(void *addr, int32_t dsize) {
-    // Invalidate D-Cache by address - simplified stub
-    (void)addr;
-    (void)dsize;
+    (void)addr; (void)dsize;
     __asm volatile ("dsb sy" ::: "memory");
 }
 
 static inline void SCB_CleanInvalidateDCache_by_Addr(uint32_t *addr, int32_t dsize) {
-    // Clean and invalidate D-Cache by address - simplified stub
-    (void)addr;
-    (void)dsize;
+    (void)addr; (void)dsize;
     __asm volatile ("dsb sy" ::: "memory");
 }
 
 // ============================================================================
-// RCC Definitions (for TinyUSB sleep mode clock gating)
+// RCC fragment (TinyUSB disables USB ULPI low-power clock gating)
 // ============================================================================
 #define RCC_BASE            0x58024400UL
 #define RCC                 ((RCC_Shim_Type*)RCC_BASE)
 
-// Minimal RCC struct for TinyUSB's needs
 typedef struct {
-    uint32_t RESERVED0[32];          // Skip to AHB1LPENR at offset 0x80
-    volatile uint32_t AHB1LPENR;     // Offset 0x80
+    uint32_t RESERVED0[32];          // Padding to AHB1LPENR at offset 0x80
+    volatile uint32_t AHB1LPENR;
 } RCC_Shim_Type;
 
-// Bit definitions for AHB1LPENR (low-power mode clock enable)
 #define RCC_AHB1LPENR_USB1OTGHSLPEN_Pos     25
-#define RCC_AHB1LPENR_USB1OTGHSLPEN         (1UL << RCC_AHB1LPENR_USB1OTGHSLPEN_Pos)
+#define RCC_AHB1LPENR_USB1OTGHSLPEN         (1UL << 25)
 #define RCC_AHB1LPENR_USB1OTGHSULPILPEN_Pos 26
-#define RCC_AHB1LPENR_USB1OTGHSULPILPEN     (1UL << RCC_AHB1LPENR_USB1OTGHSULPILPEN_Pos)
+#define RCC_AHB1LPENR_USB1OTGHSULPILPEN     (1UL << 26)
 #define RCC_AHB1LPENR_USB2OTGFSLPEN_Pos     27
-#define RCC_AHB1LPENR_USB2OTGFSLPEN         (1UL << RCC_AHB1LPENR_USB2OTGFSLPEN_Pos)
+#define RCC_AHB1LPENR_USB2OTGFSLPEN         (1UL << 27)
 #define RCC_AHB1LPENR_USB2OTGFSULPILPEN_Pos 28
-#define RCC_AHB1LPENR_USB2OTGFSULPILPEN     (1UL << RCC_AHB1LPENR_USB2OTGFSULPILPEN_Pos)
+#define RCC_AHB1LPENR_USB2OTGFSULPILPEN     (1UL << 28)
 
 // ============================================================================
-// USB OTG Register Bit Definitions
-// ============================================================================
-// These are used by TinyUSB's DWC2 driver for VBUS sensing configuration
-
-// GCCFG register bits
-#ifndef USB_OTG_GCCFG_VBDEN
-#define USB_OTG_GCCFG_VBDEN         (1UL << 21)  // VBUS detection enable
-#endif
-#ifndef STM32_GCCFG_PWRDWN
-#define STM32_GCCFG_PWRDWN          (1UL << 16)  // Power down (enable internal FS PHY)
-#endif
-
-// GOTGCTL register bits
-#define USB_OTG_GOTGCTL_BVALOEN     (1UL << 6)   // B-device session valid override enable
-#define USB_OTG_GOTGCTL_BVALOVAL    (1UL << 7)   // B-device session valid override value
-
-// GUSBCFG register bits
-#define USB_OTG_GUSBCFG_FDMOD       (1UL << 30)  // Force device mode
-#define USB_OTG_GUSBCFG_FHMOD       (1UL << 29)  // Force host mode
-
-// ============================================================================
-// Unique Device ID (used by TinyUSB for serial number)
-// ============================================================================
-#define UID_BASE            0x1FF1E800UL
-
-// ============================================================================
-// NOP for delays
+// NOP intrinsic (TinyUSB uses in delay loops)
 // ============================================================================
 #ifndef __NOP
 #define __NOP() __asm volatile ("nop")
