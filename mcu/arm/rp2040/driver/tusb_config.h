@@ -1,8 +1,7 @@
 /*
- * tusb_config.h - TinyUSB configuration for RP2350 (Pico 2)
+ * tusb_config.h - TinyUSB configuration for RP2040 (Pico)
  *
- * MCU-specific TinyUSB configuration for Raspberry Pi Pico 2.
- * Uses the same USB driver as RP2040 via Pico SDK's tinyusb_device.
+ * MCU-specific TinyUSB configuration for Raspberry Pi Pico.
  */
 
 #ifndef TUSB_CONFIG_H
@@ -16,7 +15,6 @@ extern "C" {
 // COMMON CONFIGURATION
 //--------------------------------------------------------------------
 
-// RP2350 uses same USB driver as RP2040
 #define CFG_TUSB_MCU OPT_MCU_RP2040
 
 // No RTOS
