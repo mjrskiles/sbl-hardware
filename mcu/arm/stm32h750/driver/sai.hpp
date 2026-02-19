@@ -8,7 +8,7 @@
  * SAI1 Block A = Master TX (to DAC), DMA1 Stream 0, DMAMUX request 87
  * SAI1 Block B = Slave RX (from ADC), DMA1 Stream 1, DMAMUX request 88
  *
- * Audio format: 24-bit data in 32-bit slots, stereo (2 slots per frame), I2S protocol.
+ * Audio format: 24-bit MSB-Justified, stereo (2 × 32-bit slots per frame).
  * DMA operates in circular mode with half-transfer + transfer-complete interrupts
  * for double-buffered audio processing.
  *
@@ -36,8 +36,8 @@ namespace sbl::driver {
  * Called from DMA ISR context with pointers to the current half-buffer.
  * Buffers contain interleaved stereo samples: [L0, R0, L1, R1, ...]
  *
- * @param tx_buf  Fill with samples to send to DAC (24-bit left-justified in int32_t)
- * @param rx_buf  Samples received from ADC (24-bit left-justified in int32_t)
+ * @param tx_buf  Fill with samples to send to DAC (24-bit signed in int32_t)
+ * @param rx_buf  Samples received from ADC (24-bit signed in int32_t)
  * @param frames  Number of stereo frames (= block_size from AudioConfig)
  */
 using AudioCallback = void(*)(int32_t* tx_buf, const int32_t* rx_buf, uint16_t frames);
@@ -157,13 +157,17 @@ private:
     static inline uint32_t s_buf_samples = MAX_BUF_SAMPLES;
 
     /**
-     * @brief Configure SAI1 Block A as Master TX (I2S)
+     * @brief Configure SAI1 Block A as Master TX (MSB-Justified)
      *
-     * MODE=00 (Master TX), PRTCFG=00 (Free protocol), DS=101 (24-bit),
-     * MCKDIV=0, DMAEN=1, OUTDRIV=1
+     * MODE=00 (Master TX), PRTCFG=00 (Free protocol), DS=110 (24-bit),
+     * MCKDIV=0, DMAEN=1, MCKEN=1
      *
-     * Frame: 64-bit (2 × 32-bit slots), FS active 32 bits, I2S convention
+     * Frame: 64-bit (2 × 32-bit slots), FS active 32 bits, MSB-Justified
      * Slots: 32-bit width, 2 slots enabled
+     *
+     * AK4556 uses MSB-Justified format (not standard I2S):
+     *   - Data starts immediately at LRCK transition (FSOFF=0)
+     *   - LRCK low = left channel (FSPOL=0)
      */
     static void configure_block_a() {
         using namespace sbl::hw::reg;
@@ -175,28 +179,28 @@ private:
         // Flush FIFO
         periph::sai1->SAI_ACR2 |= SAI1::SAI_ACR2_FFLUSH;
 
-        // CR1: Master TX, free protocol, 24-bit data, DMA enabled, output drive
+        // CR1: Master TX, free protocol, 24-bit data, DMA enabled
         uint32_t cr1 = 0;
         cr1 |= (0u << SAI1::SAI_ACR1_MODE_Pos);     // 00 = Master TX
         cr1 |= (0u << SAI1::SAI_ACR1_PRTCFG_Pos);   // 00 = Free protocol
-        cr1 |= (5u << SAI1::SAI_ACR1_DS_Pos);        // 101 = 24-bit data
+        cr1 |= (6u << SAI1::SAI_ACR1_DS_Pos);        // 110 = 24-bit data
         cr1 |= SAI1::SAI_ACR1_DMAEN;                  // DMA enabled
-        cr1 |= SAI1::SAI_ACR1_OUTDRIV;                // Drive outputs immediately
-        // MCKDIV=0, NOMCK=0 → MCLK = SAI_CK (12.288 MHz from PLL2P)
+        cr1 |= (1u << 27);                             // MCKEN: enable MCLK output (Rev V+)
+        // MCKDIV=0, NODIV=0 → MCLK = SAI_CK (12.288 MHz from PLL2P)
         periph::sai1->SAI_ACR1 = cr1;
 
-        // Frame config: 64-bit frame, FS active for 32 bits, channel ID, FS offset
+        // Frame config: 64-bit frame, FS active 32 bits, MSB-Justified
         uint32_t frcr = 0;
         frcr |= (63u << SAI1::SAI_AFRCR_FRL_Pos);    // Frame length = 64 bits (FRL+1)
         frcr |= (31u << SAI1::SAI_AFRCR_FSALL_Pos);   // FS active = 32 bits (FSALL+1)
         frcr |= SAI1::SAI_AFRCR_FSDEF;                 // FS = channel identification
-        // FSPOL=0 → FS active low (I2S convention: low = left channel)
-        frcr |= SAI1::SAI_AFRCR_FSOFF;                 // FS asserted 1 bit before first data
+        // FSPOL=0 → FS active low (left channel when low)
+        // FSOFF=0 → FS coincides with first data bit (MSB-Justified)
         periph::sai1->SAI_AFRCR = frcr;
 
         // Slot config: 32-bit slots, 2 slots, both enabled
         uint32_t slotr = 0;
-        slotr |= (1u << SAI1::SAI_ASLOTR_SLOTSZ_Pos);  // 01 = 32-bit slot width
+        slotr |= (2u << SAI1::SAI_ASLOTR_SLOTSZ_Pos);  // 10 = 32-bit slot width
         slotr |= (1u << SAI1::SAI_ASLOTR_NBSLOT_Pos);   // NBSLOT = 1 (2 slots, N-1)
         slotr |= (0x3u << SAI1::SAI_ASLOTR_SLOTEN_Pos); // Enable slots 0 and 1
         periph::sai1->SAI_ASLOTR = slotr;
@@ -222,22 +226,22 @@ private:
         uint32_t cr1 = 0;
         cr1 |= (3u << SAI1::SAI_BCR1_MODE_Pos);       // 11 = Slave RX
         cr1 |= (0u << SAI1::SAI_BCR1_PRTCFG_Pos);     // 00 = Free protocol
-        cr1 |= (5u << SAI1::SAI_BCR1_DS_Pos);          // 101 = 24-bit data
+        cr1 |= (6u << SAI1::SAI_BCR1_DS_Pos);          // 110 = 24-bit data
         cr1 |= (1u << SAI1::SAI_BCR1_SYNCEN_Pos);      // 01 = Sync with sub-block A
         cr1 |= SAI1::SAI_BCR1_DMAEN;                    // DMA enabled
         periph::sai1->SAI_BCR1 = cr1;
 
-        // Frame config — same as Block A
+        // Frame config — same as Block A (MSB-Justified)
         uint32_t frcr = 0;
         frcr |= (63u << SAI1::SAI_BFRCR_FRL_Pos);
         frcr |= (31u << SAI1::SAI_BFRCR_FSALL_Pos);
         frcr |= SAI1::SAI_BFRCR_FSDEF;
-        frcr |= SAI1::SAI_BFRCR_FSOFF;
+        // FSOFF=0 → MSB-Justified (same as Block A)
         periph::sai1->SAI_BFRCR = frcr;
 
         // Slot config — same as Block A
         uint32_t slotr = 0;
-        slotr |= (1u << SAI1::SAI_BSLOTR_SLOTSZ_Pos);
+        slotr |= (2u << SAI1::SAI_BSLOTR_SLOTSZ_Pos);  // 10 = 32-bit slot width
         slotr |= (1u << SAI1::SAI_BSLOTR_NBSLOT_Pos);
         slotr |= (0x3u << SAI1::SAI_BSLOTR_SLOTEN_Pos);
         periph::sai1->SAI_BSLOTR = slotr;
