@@ -1,5 +1,5 @@
 # STM32H750 Driver Library
-# Provides GPIO, Timer, UART, and init using SVD-generated register definitions
+# Provides GPIO, Timer, UART, DMA, and init using SVD-generated register definitions
 #
 # Source files are in driver/ and reg/ but exposed as:
 #   <sbl/hw/driver/*.hpp>

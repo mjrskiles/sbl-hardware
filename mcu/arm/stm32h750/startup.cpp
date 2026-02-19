@@ -61,6 +61,19 @@ extern "C" {
     void DMA1_Stream6_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
     void ADC_IRQHandler()               __attribute__((weak, alias("Default_Handler")));
 
+    // DMA1 stream 7 (IRQ 47, non-contiguous with streams 0-6)
+    void DMA1_Stream7_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+
+    // DMA2 streams (IRQs 56-60, 68-70)
+    void DMA2_Stream0_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream1_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream2_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream3_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream4_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream5_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream6_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream7_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+
     // USB OTG interrupt handlers
     // USB1_OTG_HS (at 0x40040000) - NOT used by Daisy Seed
     void OTG_HS_EP1_OUT_IRQHandler() __attribute__((weak, alias("Default_Handler")));
@@ -232,7 +245,7 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 44
     reinterpret_cast<void*>(Default_Handler),           // 45
     reinterpret_cast<void*>(Default_Handler),           // 46
-    reinterpret_cast<void*>(Default_Handler),           // 47
+    reinterpret_cast<void*>(DMA1_Stream7_IRQHandler),    // 47 - DMA1 stream 7
     reinterpret_cast<void*>(Default_Handler),           // 48
     reinterpret_cast<void*>(Default_Handler),           // 49
     reinterpret_cast<void*>(Default_Handler),           // 50
@@ -241,11 +254,11 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 53
     reinterpret_cast<void*>(Default_Handler),           // 54
     reinterpret_cast<void*>(Default_Handler),           // 55
-    reinterpret_cast<void*>(Default_Handler),           // 56
-    reinterpret_cast<void*>(Default_Handler),           // 57
-    reinterpret_cast<void*>(Default_Handler),           // 58
-    reinterpret_cast<void*>(Default_Handler),           // 59
-    reinterpret_cast<void*>(Default_Handler),           // 60
+    reinterpret_cast<void*>(DMA2_Stream0_IRQHandler),    // 56 - DMA2 stream 0
+    reinterpret_cast<void*>(DMA2_Stream1_IRQHandler),    // 57 - DMA2 stream 1
+    reinterpret_cast<void*>(DMA2_Stream2_IRQHandler),    // 58 - DMA2 stream 2
+    reinterpret_cast<void*>(DMA2_Stream3_IRQHandler),    // 59 - DMA2 stream 3
+    reinterpret_cast<void*>(DMA2_Stream4_IRQHandler),    // 60 - DMA2 stream 4
     reinterpret_cast<void*>(Default_Handler),           // 61
     reinterpret_cast<void*>(Default_Handler),           // 62
     reinterpret_cast<void*>(Default_Handler),           // 63
@@ -253,9 +266,9 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 65
     reinterpret_cast<void*>(Default_Handler),           // 66
     reinterpret_cast<void*>(Default_Handler),           // 67
-    reinterpret_cast<void*>(Default_Handler),           // 68
-    reinterpret_cast<void*>(Default_Handler),           // 69
-    reinterpret_cast<void*>(Default_Handler),           // 70
+    reinterpret_cast<void*>(DMA2_Stream5_IRQHandler),    // 68 - DMA2 stream 5
+    reinterpret_cast<void*>(DMA2_Stream6_IRQHandler),    // 69 - DMA2 stream 6
+    reinterpret_cast<void*>(DMA2_Stream7_IRQHandler),    // 70 - DMA2 stream 7
     reinterpret_cast<void*>(Default_Handler),           // 71
     reinterpret_cast<void*>(Default_Handler),           // 72
     reinterpret_cast<void*>(Default_Handler),           // 73

@@ -156,9 +156,23 @@ public:
 
         // Set baud rate
         // BRR = fck / baud_rate (for oversampling by 16)
-        // STM32H7 USART kernel clock defaults to HSI (64 MHz), not APB clocks
-        // To change source, configure RCC_D2CCIP2R (but HSI is fine for debugging)
-        constexpr uint32_t usart_clk = 64'000'000;
+        // STM32H7 USART2/3/4/5/7/8 kernel clock source is in RCC_D2CCIP2R.USART234578SEL
+        // Reset default is 00 = rcc_pclk1 (APB1 clock), NOT HSI.
+        // Force kernel clock to HSI (64 MHz) for predictable baud regardless of PLL config.
+        {
+            // USART234578SEL bits [2:0] of D2CCIP2R: 00=pclk1, 01=pll2q, 10=pll3q, 11=hsi, 100=csi, 101=lse
+            // USART16SEL bits [5:3]: same encoding for USART1/6 on APB2
+            uint32_t d2ccip2r = periph::rcc->D2CCIP2R;
+            if (handle.peripheral == 1 || handle.peripheral == 6) {
+                d2ccip2r &= ~RCC::D2CCIP2R_USART16SEL_Msk;
+                d2ccip2r |= (3u << RCC::D2CCIP2R_USART16SEL_Pos);  // HSI
+            } else {
+                d2ccip2r &= ~RCC::D2CCIP2R_USART234578SEL_Msk;
+                d2ccip2r |= (3u << RCC::D2CCIP2R_USART234578SEL_Pos);  // HSI
+            }
+            periph::rcc->D2CCIP2R = d2ccip2r;
+        }
+        constexpr uint32_t usart_clk = 64'000'000;  // HSI
         s_usart->PRESC = 0;  // No prescaling (STM32H7 feature)
         s_usart->BRR = usart_clk / handle.baud;
 
