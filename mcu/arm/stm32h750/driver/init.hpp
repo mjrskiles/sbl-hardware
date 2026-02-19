@@ -16,6 +16,7 @@
 #include <sbl/hw/reg/cortex_m.hpp>
 #include <sbl/hw/reg/usb_otg.hpp>
 #include <sbl/hw/reg/irq.hpp>
+#include <sbl/hw/reg/sai.hpp>
 #include "timer.hpp"
 
 // SystemCoreClock - required by TinyUSB and other CMSIS-compatible code
@@ -242,6 +243,164 @@ inline void select_usb_clock_pll3() {
     periph::rcc->D2CCIP2R = d2ccip2r;
 }
 
+
+// RCC_D2CCIP1R.SAI1SEL field value (RM0433 §8.7.14)
+constexpr uint32_t D2CCIP1R_SAI1SEL_PLL2P = (1u << RCC::D2CCIP1R_SAI1SEL_Pos); // PLL2P for SAI1
+
+// RCC_PLLCFGR.PLL2RGE field value (RM0433 §8.7.11)
+constexpr uint32_t PLLCFGR_PLL2RGE_4_8 = (2u << RCC::PLLCFGR_PLL2RGE_Pos);   // Input 4-8 MHz
+
+/**
+ * @brief Configure PLL2 fractional mode for audio clocks
+ *
+ * PLL2 produces 12.288 MHz for 48 kHz audio (256×Fs MCLK).
+ *
+ * Config: 16 MHz HSE → /4 → 4 MHz → ×196.608 (fractional) → 786.432 MHz VCO → /64 → 12.288 MHz
+ *   DIVN2 = 196 (integer), FRACN2 = 4981 → N_eff = 196 + 4981/8192 = 196.6078
+ *   VCO = 4 × 196.6078 = 786.431 MHz, PLL2P = 786.431/64 = 12.288 MHz (<1 ppm error)
+ *
+ * Must be called AFTER init() (HSE must be running).
+ */
+inline bool configure_pll2_audio(uint32_t hse_mhz = 16) {
+    using namespace sbl::hw::reg;
+
+    // Disable PLL2 before configuring
+    periph::rcc->CR &= ~RCC::CR_PLL2ON;
+    while (periph::rcc->CR & RCC::CR_PLL2RDY) {}
+
+    // Small delay after disabling PLL
+    for (volatile int i = 0; i < 100; ++i) { __asm__ volatile("nop"); }
+
+    // Configure PLL2 prescaler in PLLCKSELR (shared register — preserve PLL1/3)
+    uint32_t divm2 = hse_mhz / 4;  // 4 MHz PLL input
+    uint32_t pllckselr = periph::rcc->PLLCKSELR;
+    pllckselr &= ~RCC::PLLCKSELR_DIVM2_Msk;
+    pllckselr |= (divm2 << RCC::PLLCKSELR_DIVM2_Pos);
+    periph::rcc->PLLCKSELR = pllckselr;
+
+    // Configure PLL2 in PLLCFGR (shared register — preserve PLL1/3)
+    // PLL2RGE = 4-8 MHz, PLL2VCOSEL = 0 (wide VCO 192-836 MHz), FRACEN, DIVP2EN
+    uint32_t pllcfgr = periph::rcc->PLLCFGR;
+    pllcfgr &= ~(RCC::PLLCFGR_PLL2RGE_Msk | RCC::PLLCFGR_PLL2VCOSEL_Msk);
+    pllcfgr |= PLLCFGR_PLL2RGE_4_8;        // 4-8 MHz input range
+    pllcfgr |= RCC::PLLCFGR_PLL2FRACEN;     // Enable fractional mode
+    pllcfgr |= RCC::PLLCFGR_DIVP2EN;        // Enable P output
+    periph::rcc->PLLCFGR = pllcfgr;
+
+    __asm__ volatile("dsb" ::: "memory");
+    __asm__ volatile("isb");
+
+    // Set integer dividers: DIVN2=196-1=195, DIVP2=64-1=63
+    periph::rcc->PLL2DIVR = (195u << RCC::PLL2DIVR_DIVN2_Pos)
+                           | (63u << RCC::PLL2DIVR_DIVP2_Pos);
+
+    // Set fractional part: FRACN2=4981 → 12.288 MHz output
+    periph::rcc->PLL2FRACR = (4981u << RCC::PLL2FRACR_FRACN2_Pos);
+
+    // Enable PLL2 and wait for lock
+    periph::rcc->CR |= RCC::CR_PLL2ON;
+    for (uint32_t i = 0; i < 500'000; ++i) {
+        if (periph::rcc->CR & RCC::CR_PLL2RDY) {
+            return true;
+        }
+    }
+    return false;  // PLL2 failed to lock
+}
+
+/**
+ * @brief Select PLL2P as SAI1 clock source
+ */
+inline void select_sai1_clock_pll2p() {
+    using namespace sbl::hw::reg;
+
+    uint32_t d2ccip1r = periph::rcc->D2CCIP1R;
+    d2ccip1r &= ~RCC::D2CCIP1R_SAI1SEL_Msk;
+    d2ccip1r |= D2CCIP1R_SAI1SEL_PLL2P;
+    periph::rcc->D2CCIP1R = d2ccip1r;
+}
+
+/**
+ * @brief Configure SAI1 GPIO pins (PE2-PE6) as AF6
+ *
+ * Daisy Seed SAI1 connections:
+ *   PE2 = MCLK (AF6), PE3 = SD_B/RX (AF6), PE4 = FS (AF6)
+ *   PE5 = SCK (AF6),  PE6 = SD_A/TX (AF6)
+ */
+inline void configure_sai_gpio() {
+    using namespace sbl::hw::reg;
+
+    // Enable GPIOE clock
+    periph::rcc->AHB4ENR |= RCC::AHB4ENR_GPIOEEN;
+    volatile uint32_t dummy = periph::rcc->AHB4ENR;
+    (void)dummy;
+
+    // Configure PE2, PE3, PE4, PE5, PE6 as alternate function mode (10b)
+    uint32_t moder = periph::gpioe->GPIO_MODER;
+    for (uint8_t pin = 2; pin <= 6; ++pin) {
+        moder &= ~(3u << (pin * 2));
+        moder |= (2u << (pin * 2));     // AF mode
+    }
+    periph::gpioe->GPIO_MODER = moder;
+
+    // Very high speed for all SAI pins
+    uint32_t ospeedr = periph::gpioe->GPIO_OSPEEDR;
+    for (uint8_t pin = 2; pin <= 6; ++pin) {
+        ospeedr |= (3u << (pin * 2));
+    }
+    periph::gpioe->GPIO_OSPEEDR = ospeedr;
+
+    // No pull-up/pull-down
+    uint32_t pupdr = periph::gpioe->GPIO_PUPDR;
+    for (uint8_t pin = 2; pin <= 6; ++pin) {
+        pupdr &= ~(3u << (pin * 2));
+    }
+    periph::gpioe->GPIO_PUPDR = pupdr;
+
+    // Set alternate function 6 for PE2-PE6 (all in AFRL — pins 0-7)
+    uint32_t afrl = periph::gpioe->GPIO_AFRL;
+    for (uint8_t pin = 2; pin <= 6; ++pin) {
+        afrl &= ~(0xFu << (pin * 4));
+        afrl |= (6u << (pin * 4));      // AF6 = SAI1
+    }
+    periph::gpioe->GPIO_AFRL = afrl;
+}
+
+/**
+ * @brief Assert AK4556 codec reset (PB11 high)
+ *
+ * The AK4556 is hardware-configured — just hold reset high and it runs
+ * in its default I2S mode.
+ */
+inline void codec_reset_release() {
+    using namespace sbl::hw::reg;
+
+    // Enable GPIOB clock
+    periph::rcc->AHB4ENR |= RCC::AHB4ENR_GPIOBEN;
+    volatile uint32_t dummy = periph::rcc->AHB4ENR;
+    (void)dummy;
+
+    // PB11 as general-purpose output (01b)
+    uint32_t moder = periph::gpiob->GPIO_MODER;
+    moder &= ~(3u << (11 * 2));
+    moder |= (1u << (11 * 2));
+    periph::gpiob->GPIO_MODER = moder;
+
+    // Drive PB11 low first (hold codec in reset)
+    periph::gpiob->GPIO_BSRR = (1u << (11 + 16));  // Reset (low)
+
+    // Brief reset pulse (~1ms)
+    for (volatile uint32_t i = 0; i < 100'000; ++i) {
+        __asm__ volatile("nop");
+    }
+
+    // Release reset (high)
+    periph::gpiob->GPIO_BSRR = (1u << 11);  // Set (high)
+
+    // Give codec time to initialize (~1ms)
+    for (volatile uint32_t i = 0; i < 100'000; ++i) {
+        __asm__ volatile("nop");
+    }
+}
 
 /**
  * @brief Enable USB2 OTG FS peripheral clock
@@ -516,6 +675,47 @@ inline bool init_usb(uint32_t hse_mhz = 16) {
 
     // Enable USB2 interrupt in NVIC
     enable_usb2_nvic();
+
+    return true;
+}
+
+/**
+ * @brief Initialize audio subsystem (PLL2, SAI GPIO, codec reset)
+ *
+ * Configures:
+ * - PLL2 fractional mode for 12.288 MHz audio MCLK (48 kHz × 256)
+ * - SAI1 clock source = PLL2P
+ * - SAI1 GPIO pins (PE2-PE6, AF6)
+ * - SAI1 peripheral clock
+ * - AK4556 codec reset release (PB11)
+ *
+ * Must be called AFTER init() to ensure HSE is running.
+ *
+ * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed)
+ * @return true if audio clock setup successful
+ */
+inline bool init_audio(uint32_t hse_mhz = 16) {
+    using namespace detail;
+    using namespace sbl::hw::reg;
+
+    // Configure PLL2 for audio clock
+    if (!configure_pll2_audio(hse_mhz)) {
+        return false;
+    }
+
+    // Select PLL2P as SAI1 clock source
+    select_sai1_clock_pll2p();
+
+    // Configure SAI1 GPIO (PE2-PE6 as AF6)
+    configure_sai_gpio();
+
+    // Enable SAI1 peripheral clock
+    periph::rcc->APB2ENR |= RCC::APB2ENR_SAI1EN;
+    volatile uint32_t dummy = periph::rcc->APB2ENR;
+    (void)dummy;
+
+    // Release codec from reset (PB11 high)
+    codec_reset_release();
 
     return true;
 }

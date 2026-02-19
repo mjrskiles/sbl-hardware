@@ -103,6 +103,9 @@ Each MCU directory contains:
 - `mcu.json` - MCU metadata, pin definitions with alternate functions, peripheral definitions
 - `driver/` - Bare-metal driver implementation
   - `gpio.hpp`, `timer.hpp`, `uart.hpp`, `init.hpp` - High-level drivers
+  - `sai.hpp` - SAI/I2S audio driver with DMA (STM32H7)
+  - `dma.hpp`, `dma_buffer.hpp` - DMA controller and buffer placement (STM32H7)
+  - `adc.hpp` - ADC driver (STM32H7)
   - `reg/*.hpp` - SVD-generated register definitions (no vendor HAL)
   - `startup.cpp` - Reset handler and vector table
   - `*.ld` - Linker script for the MCU
