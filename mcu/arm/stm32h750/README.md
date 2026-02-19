@@ -8,7 +8,7 @@ STMicroelectronics STM32H750 high-performance ARM Cortex-M7 microcontroller.
 |--------|--------|
 | Schema | v0.1 |
 | Pin definitions | Complete (PA, PB, PC, PD, PG with alt functions) |
-| Peripherals | GPIO, Timer, UART, ADC, USB OTG |
+| Peripherals | GPIO, Timer, UART, ADC, DMA, SAI/I2S, USB OTG |
 | Driver | Bare-metal, SVD-generated registers |
 | Testing | Validated on Daisy Seed hardware |
 
@@ -31,10 +31,15 @@ Bare-metal drivers with no vendor HAL dependencies:
 | Driver | File | Status |
 |--------|------|--------|
 | System init (480 MHz clock tree) | `driver/init.hpp` | Complete |
+| Audio init (PLL2, SAI GPIO, codec reset) | `driver/init.hpp` | Complete |
 | GPIO | `driver/gpio.hpp` | Complete |
 | Timer (SysTick) | `driver/timer.hpp` | Complete |
-| UART (USART1, polling) | `driver/uart.hpp` | Complete |
+| UART (USART3, polling) | `driver/uart.hpp` | Complete |
 | ADC (ADC1, polling) | `driver/adc.hpp` | Complete |
+| DMA (streams, circular, callbacks) | `driver/dma.hpp` | Complete |
+| DMA buffer placement macros | `driver/dma_buffer.hpp` | Complete |
+| DMA IRQ dispatch | `driver/dma_irq.cpp` | Complete |
+| SAI/I2S (full-duplex, DMA, MSB-Justified) | `driver/sai.hpp` | Complete |
 | USB OTG (device mode setup) | `driver/usb.hpp` | Complete |
 | USB IRQ handler | `driver/usb_irq.cpp` | Complete |
 
@@ -48,9 +53,10 @@ SVD-generated C++ register definitions via cecrops (`cecrops.json`):
 | `reg/gpio.hpp` | GPIO ports A-K | cecrops (SVD) |
 | `reg/pwr.hpp` | Power control | cecrops (SVD) |
 | `reg/flash.hpp` | Flash controller | cecrops (SVD) |
-| `reg/usart.hpp` | USART/UART | cecrops (SVD) |
-| `reg/tim.hpp` | Timers | cecrops (SVD) |
+| `reg/usart.hpp` | USART/UART | Manual |
 | `reg/adc.hpp` | ADC | cecrops (SVD) |
+| `reg/dma.hpp` | DMA1/2, DMAMUX, BDMA | cecrops (SVD) |
+| `reg/sai.hpp` | SAI1-4 | cecrops (SVD) |
 | `reg/cortex_m.hpp` | NVIC, SysTick, SCB | Manual |
 | `reg/usb_otg.hpp` | USB OTG FS/HS | Manual (SVD structurally broken) |
 | `reg/irq.hpp` | IRQ number enum | Manual |

@@ -1,6 +1,6 @@
-# RP2040 MCU Definition
+# RP2350 MCU Definition
 
-Raspberry Pi RP2040 dual-core ARM Cortex-M0+ microcontroller.
+Raspberry Pi RP2350 dual-core ARM Cortex-M33 microcontroller.
 
 ## Status
 
@@ -11,16 +11,16 @@ Raspberry Pi RP2040 dual-core ARM Cortex-M0+ microcontroller.
 | Alternate functions | Complete |
 | Peripherals | Complete |
 | Driver | Complete (Pico SDK wrappers) |
-| Testing | Validated on Raspberry Pi Pico hardware |
+| Testing | Validated on Raspberry Pi Pico 2 hardware |
 
 ## Specifications
 
 | Property | Value |
 |----------|-------|
-| Architecture | ARM Cortex-M0+ (dual core) |
-| Max Clock | 133 MHz |
+| Architecture | ARM Cortex-M33 (dual core) |
+| Max Clock | 150 MHz |
 | Flash | External (via QSPI) |
-| SRAM | 264 KB |
+| SRAM | 520 KB |
 | GPIO | 30 pins (GPIO0-29) |
 | ADC | 12-bit, 4 channels + internal temp |
 
@@ -32,20 +32,16 @@ Raspberry Pi RP2040 dual-core ARM Cortex-M0+ microcontroller.
 | I2C | 2 | I2C0, I2C1 - flexible pin mapping |
 | UART | 2 | UART0, UART1 |
 | PWM | 8 | PWM0-7, 16 channels total (A/B per slice) |
-| PIO | 2 | Programmable I/O state machines |
+| PIO | 3 | PIO0-2 (one more than RP2040) |
 | ADC | 1 | 4 external channels (GPIO26-29) |
 
-## Pin Alternate Functions
+## Differences from RP2040
 
-The RP2040 has highly flexible pin mapping. Most GPIO pins support multiple peripheral functions. See `mcu.json` for the complete mapping.
-
-Example (GPIO0):
-- GPIO
-- SPI0 MISO
-- UART0 TX
-- I2C0 SDA
-- PWM0 Channel A
-- PIO0/PIO1
+- ARM Cortex-M33 core (vs M0+ on RP2040) with hardware float and DSP extensions
+- 520 KB SRAM (vs 264 KB)
+- 150 MHz default clock (vs 133 MHz)
+- 3 PIO blocks (vs 2)
+- Security features (ARM TrustZone, secure boot)
 
 ## Usage
 
@@ -54,13 +50,13 @@ Reference this MCU from a mainboard definition:
 ```json
 {
   "mainboard": {
-    "name": "my-rp2040-board",
-    "mcu": "mcu/arm/rp2040"
+    "name": "my-rp2350-board",
+    "mcu": "mcu/arm/rp2350"
   }
 }
 ```
 
 ## References
 
-- [RP2040 Datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
-- [Raspberry Pi Pico Datasheet](https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf)
+- [RP2350 Datasheet](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf)
+- [Raspberry Pi Pico 2 Datasheet](https://datasheets.raspberrypi.com/pico/pico-2-datasheet.pdf)
