@@ -1,12 +1,18 @@
 /**
  * @file adc.hpp
- * @brief STM32H750 ADC driver - polling mode
+ * @brief STM32H750 ADC driver - polling and DMA scan modes
  *
- * Single-channel polling-mode ADC driver for STM32H7.
+ * ADC driver for STM32H7 with two acquisition strategies:
+ * - Polling: Single-channel blocking reads via configure_channel/start/wait/read
+ * - DMA scan: Multi-channel continuous scan with circular DMA (zero CPU overhead)
+ *
  * Uses SVD-generated register definitions - no vendor HAL.
  *
- * Supports ADC1, ADC2, and ADC3 peripherals with 16-bit resolution.
- * For Daisy Seed, ADC inputs are typically on ADC1.
+ * DMA scan uses DMA1 Stream 2 (streams 0-1 reserved for SAI audio).
+ * DMAMUX request ID 9 = ADC1.
+ *
+ * Note: Polling and DMA scan cannot coexist on the same ADC peripheral.
+ * Call stop_dma_scan() before using polling functions if DMA was started.
  */
 #ifndef SBL_HW_DRIVER_ADC_HPP_
 #define SBL_HW_DRIVER_ADC_HPP_
@@ -14,6 +20,7 @@
 #include <cstdint>
 #include <sbl/hw/reg/adc.hpp>
 #include <sbl/hw/reg/rcc.hpp>
+#include <sbl/hw/driver/dma.hpp>
 #include <sbl/hal/adc/driver.hpp>
 
 namespace sbl::driver {
@@ -171,7 +178,164 @@ public:
      */
     static constexpr uint8_t resolution_bits() { return 16; }
 
+    // ========================================================================
+    // DMA scan mode — continuous multi-channel with circular DMA
+    // ========================================================================
+
+    /**
+     * @brief Start continuous DMA scan of multiple ADC channels
+     *
+     * Configures ADC1 for continuous scan mode with circular DMA. The DMA
+     * writes one 16-bit result per channel into the buffer, then wraps.
+     * Read buffer[i] anytime for the latest value of channel i.
+     *
+     * Uses DMA1 Stream 2 (DMAMUX request 9 = ADC1).
+     *
+     * @param channels    Array of AdcHandle (all must be on ADC1)
+     * @param num_channels Number of channels (1–16)
+     * @param buffer      DMA-accessible buffer, must have num_channels elements.
+     *                    Use SBL_DMA_BUFFER for placement in RAM_D2.
+     * @param sample_time Sampling duration for all channels (default: Slow)
+     */
+    static void start_dma_scan(const sbl::AdcHandle* channels, uint8_t num_channels,
+                               uint16_t* buffer,
+                               SampleTime sample_time = SampleTime::Slow) {
+        using namespace sbl::hw::reg;
+        auto* adc = periph::adc1;
+
+        // Zero the buffer (DMA section has no flash LMA, may contain garbage)
+        for (uint8_t i = 0; i < num_channels; ++i) {
+            buffer[i] = 0;
+        }
+
+        // Stop any ongoing conversion
+        if (adc->CR & ADC1::CR_ADSTART) {
+            adc->CR |= ADC1::CR_ADSTP;
+            while (adc->CR & ADC1::CR_ADSTART) {}
+        }
+
+        // Configure sample times and pre-select all channels
+        uint32_t pcsel = 0;
+        for (uint8_t i = 0; i < num_channels; ++i) {
+            uint32_t ch = channels[i].channel;
+            pcsel |= (1u << ch);
+
+            uint32_t smp = sample_time_to_cycles(sample_time);
+            if (ch < 10) {
+                uint32_t shift = ch * 3;
+                adc->SMPR1 = (adc->SMPR1 & ~(0x7u << shift)) | (smp << shift);
+            } else {
+                uint32_t shift = (ch - 10) * 3;
+                adc->SMPR2 = (adc->SMPR2 & ~(0x7u << shift)) | (smp << shift);
+            }
+        }
+        adc->PCSEL = pcsel;
+
+        // Build sequence registers SQR1–SQR4
+        configure_sequence(adc, channels, num_channels);
+
+        // Configure CFGR: circular DMA, continuous, overwrite on overrun
+        // DMNGT=0b11 (DMA circular), CONT=1, OVRMOD=1
+        // Must clear DISCEN (incompatible with circular DMA)
+        // Preserve RES bits from init
+        uint32_t cfgr = adc->CFGR;
+        cfgr &= ADC1::CFGR_RES_Msk;  // Keep only resolution
+        cfgr |= (0x3u << ADC1::CFGR_DMNGT_Pos);  // DMA circular mode
+        cfgr |= ADC1::CFGR_CONT;                  // Continuous conversion
+        cfgr |= ADC1::CFGR_OVRMOD;                // Overwrite on overrun
+        adc->CFGR = cfgr;
+
+        // Configure DMA1 Stream 2 for ADC1
+        constexpr DmaStream dma_stream{1, 2};
+        Dma::enable_clock(1);
+
+        DmaConfig dma_cfg{};
+        dma_cfg.direction     = DmaDirection::PeriphToMemory;
+        dma_cfg.periph_width  = DmaDataWidth::HalfWord;  // 16-bit ADC result
+        dma_cfg.memory_width  = DmaDataWidth::HalfWord;
+        dma_cfg.priority      = DmaPriority::Medium;
+        dma_cfg.circular      = true;
+        dma_cfg.periph_increment = false;
+        dma_cfg.memory_increment = true;
+        // No interrupts — just poll the buffer
+
+        Dma::configure(dma_stream, dma_cfg,
+                       const_cast<void*>(static_cast<const volatile void*>(&adc->DR)),
+                       static_cast<volatile void*>(buffer),
+                       num_channels);
+
+        // Route DMAMUX: request 9 = ADC1
+        Dma::set_request(dma_stream, 9);
+
+        // Enable DMA first, then start ADC
+        Dma::enable(dma_stream);
+        adc->CR |= ADC1::CR_ADSTART;
+    }
+
+    /**
+     * @brief Stop DMA scan mode
+     *
+     * Stops ADC conversion and disables DMA. After calling this,
+     * polling functions can be used again.
+     */
+    static void stop_dma_scan() {
+        using namespace sbl::hw::reg;
+        auto* adc = periph::adc1;
+        constexpr DmaStream dma_stream{1, 2};
+
+        // Stop ADC conversion
+        if (adc->CR & ADC1::CR_ADSTART) {
+            adc->CR |= ADC1::CR_ADSTP;
+            while (adc->CR & ADC1::CR_ADSTART) {}
+        }
+
+        // Disable DMA stream
+        Dma::disable(dma_stream);
+
+        // Clear CONT and DMNGT to restore polling-compatible state
+        adc->CFGR &= ~(ADC1::CFGR_CONT | ADC1::CFGR_DMNGT_Msk | ADC1::CFGR_OVRMOD);
+    }
+
 private:
+    /**
+     * @brief Build SQR1–SQR4 sequence registers for multi-channel scan
+     *
+     * SQR1: L[3:0] at bits 0–3, then SQ1–SQ4 at bits 6,12,18,24
+     * SQR2: SQ5–SQ9 at bits 0,6,12,18,24
+     * SQR3: SQ10–SQ14 at bits 0,6,12,18,24
+     * SQR4: SQ15–SQ16 at bits 0,6
+     */
+    static void configure_sequence(volatile sbl::hw::reg::ADC3_t* adc,
+                                   const sbl::AdcHandle* channels, uint8_t num_channels) {
+        // SQR1: L = num_channels - 1 in bits [3:0], then SQ1-SQ4
+        uint32_t sqr1 = (num_channels - 1u) & 0xFu;
+        for (uint8_t i = 0; i < num_channels && i < 4; ++i) {
+            sqr1 |= (channels[i].channel & 0x1Fu) << (6 + i * 6);
+        }
+        adc->SQR1 = sqr1;
+
+        // SQR2: SQ5-SQ9 (channels[4]..channels[8])
+        uint32_t sqr2 = 0;
+        for (uint8_t i = 4; i < num_channels && i < 9; ++i) {
+            sqr2 |= (channels[i].channel & 0x1Fu) << ((i - 4) * 6);
+        }
+        adc->SQR2 = sqr2;
+
+        // SQR3: SQ10-SQ14 (channels[9]..channels[13])
+        uint32_t sqr3 = 0;
+        for (uint8_t i = 9; i < num_channels && i < 14; ++i) {
+            sqr3 |= (channels[i].channel & 0x1Fu) << ((i - 9) * 6);
+        }
+        adc->SQR3 = sqr3;
+
+        // SQR4: SQ15-SQ16 (channels[14]..channels[15])
+        uint32_t sqr4 = 0;
+        for (uint8_t i = 14; i < num_channels && i < 16; ++i) {
+            sqr4 |= (channels[i].channel & 0x1Fu) << ((i - 14) * 6);
+        }
+        adc->SQR4 = sqr4;
+    }
+
     /**
      * @brief Initialize a single ADC peripheral
      */

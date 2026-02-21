@@ -136,9 +136,15 @@ private:
     // Maximum buffer size: 48 samples × 2 channels × 2 halves = 192 int32_t
     static constexpr uint32_t MAX_BUF_SAMPLES = 48 * 2 * 2;
 
-    // DMA buffers in RAM_D2 (non-cacheable, DMA-safe)
-    SBL_DMA_BUFFER static inline int32_t s_tx_buf[MAX_BUF_SAMPLES];
-    SBL_DMA_BUFFER static inline int32_t s_rx_buf[MAX_BUF_SAMPLES];
+    // DMA buffers in RAM_D2 (non-cacheable, DMA-safe).
+    // Uses .dma_buffer.sai subsection to avoid COMDAT conflict with
+    // file-scope SBL_DMA_BUFFER variables (static inline = COMDAT,
+    // file-scope static = non-COMDAT, GCC rejects mixing in same section).
+    // Linker script wildcard *(.dma_buffer*) catches both.
+    __attribute__((section(".dma_buffer.sai"), aligned(32)))
+    static inline int32_t s_tx_buf[MAX_BUF_SAMPLES];
+    __attribute__((section(".dma_buffer.sai"), aligned(32)))
+    static inline int32_t s_rx_buf[MAX_BUF_SAMPLES];
 
     static inline AudioCallback s_callback = nullptr;
     static inline uint16_t s_block_size = 48;
