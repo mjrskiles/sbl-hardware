@@ -27,20 +27,12 @@
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/driver/dma.hpp>
 #include <sbl/hw/driver/dma_buffer.hpp>
+#include <sbl/hal/audio/types.hpp>
 
 namespace sbl::driver {
 
-/**
- * Audio processing callback type.
- *
- * Called from DMA ISR context with pointers to the current half-buffer.
- * Buffers contain interleaved stereo samples: [L0, R0, L1, R1, ...]
- *
- * @param tx_buf  Fill with samples to send to DAC (24-bit signed in int32_t)
- * @param rx_buf  Samples received from ADC (24-bit signed in int32_t)
- * @param frames  Number of stereo frames (= block_size from AudioConfig)
- */
-using AudioCallback = void(*)(int32_t* tx_buf, const int32_t* rx_buf, uint16_t frames);
+using AudioCallback = sbl::core::hal::audio::AudioCallback;
+using AudioConfig = sbl::core::hal::audio::AudioConfig;
 
 /**
  * @brief SAI1 I2S driver for Daisy Seed audio
@@ -50,25 +42,21 @@ using AudioCallback = void(*)(int32_t* tx_buf, const int32_t* rx_buf, uint16_t f
  */
 class Sai {
 public:
-    /** Audio configuration */
-    struct Config {
-        uint16_t block_size;
-    };
-
     /**
      * @brief Configure SAI1 for I2S operation (default: 48 samples/block)
      */
     static void init() {
-        init(Config{48});
+        init(AudioConfig{});
     }
 
     /**
      * @brief Configure SAI1 for I2S operation
      *
-     * Sets up SAI1 blocks, allocates DMA, but does NOT start streaming.
+     * Uses config.block_size for DMA buffer sizing. Sample rate and bit depth
+     * are determined by PLL2 and SAI register configuration respectively.
      * Call init_audio() first for PLL2 and GPIO configuration.
      */
-    static void init(const Config& config) {
+    static void init(const AudioConfig& config) {
         s_block_size = config.block_size;
         s_buf_samples = config.block_size * 2 * 2;  // block_size × stereo × double-buffer
 
@@ -328,5 +316,9 @@ private:
 };
 
 } // namespace sbl::driver
+
+#include <sbl/validation/audio_requirements.hpp>
+static_assert(sbl::validation::audio_driver_valid<sbl::driver::Sai>,
+              "SAI driver missing required audio methods");
 
 #endif // SBL_HW_DRIVER_SAI_HPP_

@@ -70,8 +70,8 @@
       }
     ],
     "adc": [
-      { "pin": "a0", "id": "knob1" },
-      { "pin": "a1", "id": "knob2" }
+      { "pin": "a6", "id": "knob1" },
+      { "pin": "a0", "id": "knob2" }
     ]
   }
 }

@@ -42,13 +42,29 @@ public:
     static void init() {
         using namespace sbl::hw::reg;
 
-        // Enable ADC clocks
+        // Select ADC kernel clock: per_ck (HSI 64 MHz)
+        // D3CCIPR.ADCSEL[1:0] bits 17:16: 00=pll2_p, 01=pll3_r, 10=per_ck
+        // Default pll2_p may not be running — explicitly select per_ck (HSI).
+        // Same class of fix as UART kernel clock (D2CCIP2R.USART234578SEL).
+        periph::rcc->D3CCIPR = (periph::rcc->D3CCIPR & ~(0x3u << 16)) | (0x2u << 16);
+
+        // Enable ADC bus clocks
         periph::rcc->AHB1ENR |= RCC::AHB1ENR_ADC12EN;  // ADC1, ADC2
         periph::rcc->AHB4ENR |= RCC::AHB4ENR_ADC3EN;   // ADC3
 
         // Read back for synchronization
         volatile uint32_t dummy = periph::rcc->AHB1ENR;
         (void)dummy;
+
+        // Configure ADC clock prescaler: /2 → 32 MHz (within 36 MHz max for 16-bit)
+        // CCR.PRESC[3:0] bits [21:18]: 0001 = /2
+        // Must be set before ADEN. Applies to all ADCs sharing the common register.
+        periph::adc12_common->CCR =
+            (periph::adc12_common->CCR & ~ADC12_Common::CCR_PRESC_Msk)
+            | (0x1u << ADC12_Common::CCR_PRESC_Pos);
+        periph::adc3_common->CCR =
+            (periph::adc3_common->CCR & ~ADC3_Common::CCR_PRESC_Msk)
+            | (0x1u << ADC3_Common::CCR_PRESC_Pos);
 
         // Initialize all three ADCs
         init_peripheral(periph::adc1);
@@ -170,6 +186,20 @@ private:
 
         // Wait for regulator startup (spec: 10us, we wait ~20us at 480MHz)
         for (volatile int i = 0; i < 10000; ++i) {}
+
+        // Set BOOST mode for 32 MHz ADC clock (64 MHz HSI / 2 prescaler)
+        // Rev V silicon (REV_ID=0x2003): BOOST[1:0] at CR bits [9:8]
+        //   00=≤6.25MHz, 01=≤12.5MHz, 10=≤25MHz, 11=>25MHz
+        // SVD only defines 1 bit — use raw 2-bit field. 32 MHz needs BOOST=11.
+        // Must be set while ADEN=0.
+        adc->CR = (adc->CR & ~(0x3u << 8)) | (0x3u << 8);
+
+        // Run single-ended linearity calibration for best accuracy
+        // Must be done while ADEN=0, after ADVREGEN stabilizes
+        adc->CR &= ~ADC1::CR_ADCALDIF;  // Single-ended calibration
+        adc->CR |= ADC1::CR_ADCALLIN;   // Include linearity calibration
+        adc->CR |= ADC1::CR_ADCAL;      // Start calibration
+        while ((adc->CR & ADC1::CR_ADCAL) != 0) {}  // Wait for completion
 
         // Configure for 16-bit resolution (RES = 00)
         adc->CFGR = (adc->CFGR & ~ADC1::CFGR_RES_Msk) | (0u << ADC1::CFGR_RES_Pos);
