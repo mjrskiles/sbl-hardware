@@ -25,9 +25,38 @@ set(SBL_STM32H750_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
 file(MAKE_DIRECTORY ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
 file(MAKE_DIRECTORY ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
 
-# Copy driver and reg headers to build include structure
-file(GLOB SBL_STM32H750_DRIVER_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/driver/*.hpp)
-file(GLOB SBL_STM32H750_REG_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/reg/*.hpp)
+# Driver headers — explicit list so CMake re-runs configure when files change.
+# Add new headers here (not GLOB) to avoid stale builds.
+set(SBL_STM32H750_DRIVER_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/adc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/clock.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/dma.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/dma_buffer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/gpio.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/init.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/sai.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/timeout.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/timer.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/uart.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/usb.hpp
+)
+
+# SVD-generated register headers
+set(SBL_STM32H750_REG_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/adc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/cortex_m.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/dma.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/flash.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/gpio.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/irq.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/pwr.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/rcc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/sai.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/usart.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/usb_otg.hpp
+)
+
+# Copy headers to build include structure
 file(COPY ${SBL_STM32H750_DRIVER_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
 file(COPY ${SBL_STM32H750_REG_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
 
