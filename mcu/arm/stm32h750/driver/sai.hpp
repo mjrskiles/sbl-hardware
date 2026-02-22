@@ -31,8 +31,8 @@
 
 namespace sbl::driver {
 
-using AudioCallback = sbl::core::hal::audio::AudioCallback;
-using AudioConfig = sbl::core::hal::audio::AudioConfig;
+using AudioCallback = sbl::hal::audio::AudioCallback;
+using AudioConfig = sbl::hal::audio::AudioConfig;
 
 /**
  * @brief SAI1 I2S driver for Daisy Seed audio
