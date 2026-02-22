@@ -21,6 +21,8 @@
 #include <sbl/hw/reg/adc.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/driver/dma.hpp>
+#include <sbl/hw/driver/timeout.hpp>
+#include <sbl/hw/driver/clock.hpp>
 #include <sbl/hal/adc/driver.hpp>
 
 namespace sbl::driver {
@@ -45,15 +47,15 @@ public:
      *
      * Enables clocks, exits deep power down, enables voltage regulator,
      * and enables the ADC. Call once at startup.
+     *
+     * @return true if all three ADC peripherals initialized successfully
      */
-    static void init() {
+    static bool init() {
         using namespace sbl::hw::reg;
 
         // Select ADC kernel clock: per_ck (HSI 64 MHz)
-        // D3CCIPR.ADCSEL[1:0] bits 17:16: 00=pll2_p, 01=pll3_r, 10=per_ck
         // Default pll2_p may not be running — explicitly select per_ck (HSI).
-        // Same class of fix as UART kernel clock (D2CCIP2R.USART234578SEL).
-        periph::rcc->D3CCIPR = (periph::rcc->D3CCIPR & ~(0x3u << 16)) | (0x2u << 16);
+        detail::set_adc_kernel_clock(KernelClockSrc::PER);
 
         // Enable ADC bus clocks
         periph::rcc->AHB1ENR |= RCC::AHB1ENR_ADC12EN;  // ADC1, ADC2
@@ -74,9 +76,11 @@ public:
             | (0x1u << ADC3_Common::CCR_PRESC_Pos);
 
         // Initialize all three ADCs
-        init_peripheral(periph::adc1);
-        init_peripheral(periph::adc2);
-        init_peripheral(periph::adc3);
+        bool ok = true;
+        ok &= init_peripheral(periph::adc1);
+        ok &= init_peripheral(periph::adc2);
+        ok &= init_peripheral(periph::adc3);
+        return ok;
     }
 
     /**
@@ -202,11 +206,6 @@ public:
                                SampleTime sample_time = SampleTime::Slow) {
         using namespace sbl::hw::reg;
         auto* adc = periph::adc1;
-
-        // Zero the buffer (DMA section has no flash LMA, may contain garbage)
-        for (uint8_t i = 0; i < num_channels; ++i) {
-            buffer[i] = 0;
-        }
 
         // Stop any ongoing conversion
         if (adc->CR & ADC1::CR_ADSTART) {
@@ -338,8 +337,9 @@ private:
 
     /**
      * @brief Initialize a single ADC peripheral
+     * @return true if peripheral initialized successfully
      */
-    static void init_peripheral(volatile sbl::hw::reg::ADC3_t* adc) {
+    static bool init_peripheral(volatile sbl::hw::reg::ADC3_t* adc) {
         using namespace sbl::hw::reg;
 
         // Exit deep power-down mode (must be done before enabling regulator)
@@ -363,7 +363,9 @@ private:
         adc->CR &= ~ADC1::CR_ADCALDIF;  // Single-ended calibration
         adc->CR |= ADC1::CR_ADCALLIN;   // Include linearity calibration
         adc->CR |= ADC1::CR_ADCAL;      // Start calibration
-        while ((adc->CR & ADC1::CR_ADCAL) != 0) {}  // Wait for completion
+        if (!detail::wait_for(&adc->CR, ADC1::CR_ADCAL, 0)) {
+            return false;  // Calibration timeout
+        }
 
         // Configure for 16-bit resolution (RES = 00)
         adc->CFGR = (adc->CFGR & ~ADC1::CFGR_RES_Msk) | (0u << ADC1::CFGR_RES_Pos);
@@ -372,10 +374,13 @@ private:
         adc->CR |= ADC1::CR_ADEN;
 
         // Wait for ADC ready
-        while ((adc->ISR & ADC1::ISR_ADRDY) == 0) {}
+        if (!detail::wait_for(&adc->ISR, ADC1::ISR_ADRDY, ADC1::ISR_ADRDY)) {
+            return false;  // ADC failed to become ready
+        }
 
         // Clear ADRDY flag
         adc->ISR = ADC1::ISR_ADRDY;
+        return true;
     }
 
     /**

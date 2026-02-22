@@ -14,6 +14,8 @@
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/usart.hpp>
+#include <sbl/hw/driver/timeout.hpp>
+#include <sbl/hw/driver/clock.hpp>
 #include <sbl/hal/uart/driver.hpp>
 
 namespace sbl::driver {
@@ -102,10 +104,9 @@ public:
     /**
      * @brief Initialize UART using handle from hardware manifest
      * @param handle UartHandle with resolved peripheral, pins, AF, and baud
-     *
-     * Note: Assumes APB2 clock is 120 MHz (STM32H750 default after init).
+     * @return true if UART initialized (continues even on TEACK timeout for debug use)
      */
-    static void init(const sbl::UartHandle& handle) {
+    static bool init(const sbl::UartHandle& handle) {
         using namespace sbl::hw::reg;
 
         // Enable GPIO clocks for TX and RX ports
@@ -133,8 +134,7 @@ public:
                 dummy = periph::rcc->APB2ENR;
                 break;
             default:
-                // Unsupported peripheral
-                return;
+                return false;
         }
         (void)dummy;
 
@@ -154,23 +154,11 @@ public:
         // Disable USART during configuration
         s_usart->CR1 = 0;
 
-        // Set baud rate
-        // BRR = fck / baud_rate (for oversampling by 16)
-        // STM32H7 USART2/3/4/5/7/8 kernel clock source is in RCC_D2CCIP2R.USART234578SEL
-        // Reset default is 00 = rcc_pclk1 (APB1 clock), NOT HSI.
         // Force kernel clock to HSI (64 MHz) for predictable baud regardless of PLL config.
-        {
-            // USART234578SEL bits [2:0] of D2CCIP2R: 00=pclk1, 01=pll2q, 10=pll3q, 11=hsi, 100=csi, 101=lse
-            // USART16SEL bits [5:3]: same encoding for USART1/6 on APB2
-            uint32_t d2ccip2r = periph::rcc->D2CCIP2R;
-            if (handle.peripheral == 1 || handle.peripheral == 6) {
-                d2ccip2r &= ~RCC::D2CCIP2R_USART16SEL_Msk;
-                d2ccip2r |= (3u << RCC::D2CCIP2R_USART16SEL_Pos);  // HSI
-            } else {
-                d2ccip2r &= ~RCC::D2CCIP2R_USART234578SEL_Msk;
-                d2ccip2r |= (3u << RCC::D2CCIP2R_USART234578SEL_Pos);  // HSI
-            }
-            periph::rcc->D2CCIP2R = d2ccip2r;
+        if (handle.peripheral == 1 || handle.peripheral == 6) {
+            detail::set_usart16_kernel_clock(KernelClockSrc::HSI);
+        } else {
+            detail::set_usart234578_kernel_clock(KernelClockSrc::HSI);
         }
         constexpr uint32_t usart_clk = 64'000'000;  // HSI
         s_usart->PRESC = 0;  // No prescaling (STM32H7 feature)
@@ -183,14 +171,12 @@ public:
         // Enable USART, transmitter, and receiver
         s_usart->CR1 = USART::UE | USART::TE | USART::RE;
 
-        // Wait for transmit enable acknowledge (with timeout)
-        volatile uint32_t timeout = 100000;
-        while ((s_usart->ISR & USART::TEACK) == 0 && --timeout) {
-            // Busy wait
-        }
+        // Wait for transmit enable acknowledge
+        bool teack_ok = detail::wait_for(&s_usart->ISR, USART::TEACK, USART::TEACK, 100'000);
 
-        // Continue even if timeout - allows LED to blink for debugging
+        // Continue even if TEACK timeout — debug UART should still try to work
         s_initialized = true;
+        return teack_ok;
     }
 
     /**

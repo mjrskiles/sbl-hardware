@@ -19,6 +19,7 @@
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/cortex_m.hpp>
+#include <sbl/hw/driver/timeout.hpp>
 
 namespace sbl::driver {
 
@@ -127,7 +128,7 @@ public:
 
         // Disable stream first and wait for EN to clear
         regs->CR &= ~(1u << 0);  // Clear EN
-        while (regs->CR & (1u << 0)) {}
+        detail::wait_for(&regs->CR, (1u << 0), 0);
 
         // Clear all interrupt flags for this stream
         clear_all_flags(stream);
@@ -192,7 +193,7 @@ public:
     static void disable(DmaStream stream) {
         auto* regs = stream_regs(stream);
         regs->CR &= ~(1u << 0);  // Clear EN
-        while (regs->CR & (1u << 0)) {}  // Wait for stream to stop
+        detail::wait_for(&regs->CR, (1u << 0), 0);  // Wait for stream to stop
     }
 
     /**

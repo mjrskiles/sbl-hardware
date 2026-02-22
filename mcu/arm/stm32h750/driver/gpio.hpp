@@ -60,6 +60,7 @@ public:
             case PinMode::OpenDrain:
                 gpio->GPIO_MODER |= (0x1u << (handle.pin * 2));  // General purpose output
                 gpio->GPIO_OTYPER |= (1u << handle.pin);          // Open-drain
+                gpio->GPIO_PUPDR &= ~(0x3u << (handle.pin * 2)); // No pull (defensive)
                 break;
             case PinMode::Analog:
                 gpio->GPIO_MODER |= (0x3u << (handle.pin * 2));  // Analog mode

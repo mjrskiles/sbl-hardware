@@ -163,13 +163,15 @@ SECTIONS
     /* Stack pointer starts at end of DTCM */
     _estack = ORIGIN(DTCM) + LENGTH(DTCM);
 
-    /* DMA buffers in D2 SRAM (needed for peripherals) */
+    /* DMA buffers in D2 SRAM (needed for peripherals, zeroed at startup) */
     .dma_buffer (NOLOAD) :
     {
         . = ALIGN(4);
+        _sdma_buffer = .;
         *(.dma_buffer)
         *(.dma_buffer*)
         . = ALIGN(4);
+        _edma_buffer = .;
     } >RAM_D2
 
     /* Audio buffers in AXI SRAM (large, cache-able) */

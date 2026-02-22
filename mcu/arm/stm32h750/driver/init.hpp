@@ -18,6 +18,7 @@
 #include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/sai.hpp>
 #include "timer.hpp"
+#include "timeout.hpp"
 
 // SystemCoreClock - required by TinyUSB and other CMSIS-compatible code
 // Updated by init() when clock configuration changes
@@ -95,9 +96,7 @@ inline void configure_power() {
     periph::pwr->PWR_D3CR = d3cr;
 
     // Step 2: Wait for VOS1 ready
-    while ((periph::pwr->PWR_D3CR & PWR::PWR_D3CR_VOSRDY) == 0) {
-        // Wait
-    }
+    wait_for(&periph::pwr->PWR_D3CR, PWR::PWR_D3CR_VOSRDY, PWR::PWR_D3CR_VOSRDY);
 
     // Step 3: Enable SYSCFG clock (needed to access SYSCFG_PWRCR)
     periph::rcc->APB4ENR |= RCC::APB4ENR_SYSCFGEN;
@@ -109,9 +108,7 @@ inline void configure_power() {
     SYSCFG_PWRCR |= SYSCFG_PWRCR_ODEN;
 
     // Step 5: Wait for VOS0 active (ACTVOSRDY in PWR_CSR1)
-    while ((periph::pwr->PWR_CSR1 & PWR::PWR_CSR1_ACTVOSRDY) == 0) {
-        // Wait for overdrive to stabilize
-    }
+    wait_for(&periph::pwr->PWR_CSR1, PWR::PWR_CSR1_ACTVOSRDY, PWR::PWR_CSR1_ACTVOSRDY);
 }
 
 /**
@@ -144,9 +141,7 @@ inline void configure_flash(uint32_t sysclk_mhz) {
     periph::flash->ACR = acr;
 
     // Wait for latency to be applied
-    while ((periph::flash->ACR & Flash::ACR_LATENCY_Msk) != latency) {
-        // Wait
-    }
+    wait_for(&periph::flash->ACR, Flash::ACR_LATENCY_Msk, latency);
 }
 
 /**

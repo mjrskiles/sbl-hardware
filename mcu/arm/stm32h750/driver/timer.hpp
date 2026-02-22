@@ -66,20 +66,13 @@ public:
     /**
      * @brief Blocking delay in milliseconds
      *
-     * Uses SysTick COUNTFLAG polling - simple and reliable, no interrupt
-     * handler required. Updates tick count for millis() accuracy.
+     * Polls millis() (driven by SysTick interrupt). Simple and correct —
+     * the interrupt is the sole tick source, so no double-counting.
      */
     static void delay_ms(uint32_t ms) {
-        using namespace sbl::hw::reg;
-
-        while (ms > 0) {
-            // Wait for COUNTFLAG (set when counter reaches 0)
-            // Reading CTRL clears COUNTFLAG, so we check it each iteration
-            while ((periph::systick->CTRL & SysTick::COUNTFLAG) == 0) {
-                // Busy wait for 1ms tick
-            }
-            ++s_tick_count;  // Keep millis() accurate
-            --ms;
+        uint32_t start = s_tick_count;
+        while ((s_tick_count - start) < ms) {
+            // Busy wait — SysTick_Handler increments s_tick_count
         }
     }
 

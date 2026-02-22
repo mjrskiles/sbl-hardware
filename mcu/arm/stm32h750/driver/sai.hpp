@@ -27,6 +27,7 @@
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/driver/dma.hpp>
 #include <sbl/hw/driver/dma_buffer.hpp>
+#include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hal/audio/types.hpp>
 
 namespace sbl::driver {
@@ -59,13 +60,6 @@ public:
     static void init(const AudioConfig& config) {
         s_block_size = config.block_size;
         s_buf_samples = config.block_size * 2 * 2;  // block_size × stereo × double-buffer
-
-        // Fill DMA buffers with silence at runtime
-        // (.dma_buffer section has no flash LMA — static initializers won't work)
-        for (uint32_t i = 0; i < MAX_BUF_SAMPLES; ++i) {
-            s_tx_buf[i] = 0;
-            s_rx_buf[i] = 0;
-        }
 
         // Enable DMA1 clock
         Dma::enable_clock(1);
@@ -112,12 +106,11 @@ public:
 
         // Disable Block A (master) first — stops clocks
         periph::sai1->SAI_ACR1 &= ~SAI1::SAI_ACR1_SAIXEN;
-        // Wait for Block A to actually stop
-        while (periph::sai1->SAI_ACR1 & SAI1::SAI_ACR1_SAIXEN) {}
+        detail::wait_for(&periph::sai1->SAI_ACR1, SAI1::SAI_ACR1_SAIXEN, 0);
 
         // Disable Block B (slave)
         periph::sai1->SAI_BCR1 &= ~SAI1::SAI_BCR1_SAIXEN;
-        while (periph::sai1->SAI_BCR1 & SAI1::SAI_BCR1_SAIXEN) {}
+        detail::wait_for(&periph::sai1->SAI_BCR1, SAI1::SAI_BCR1_SAIXEN, 0);
 
         // Stop DMA
         Dma::disable(TX_STREAM);
@@ -168,7 +161,7 @@ private:
 
         // Ensure Block A is disabled before configuring
         periph::sai1->SAI_ACR1 &= ~SAI1::SAI_ACR1_SAIXEN;
-        while (periph::sai1->SAI_ACR1 & SAI1::SAI_ACR1_SAIXEN) {}
+        detail::wait_for(&periph::sai1->SAI_ACR1, SAI1::SAI_ACR1_SAIXEN, 0);
 
         // Flush FIFO
         periph::sai1->SAI_ACR2 |= SAI1::SAI_ACR2_FFLUSH;
@@ -211,7 +204,7 @@ private:
 
         // Ensure Block B is disabled
         periph::sai1->SAI_BCR1 &= ~SAI1::SAI_BCR1_SAIXEN;
-        while (periph::sai1->SAI_BCR1 & SAI1::SAI_BCR1_SAIXEN) {}
+        detail::wait_for(&periph::sai1->SAI_BCR1, SAI1::SAI_BCR1_SAIXEN, 0);
 
         // Flush FIFO
         periph::sai1->SAI_BCR2 |= SAI1::SAI_BCR2_FFLUSH;
