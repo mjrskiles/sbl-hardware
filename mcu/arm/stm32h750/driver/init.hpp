@@ -245,6 +245,13 @@ constexpr uint32_t D2CCIP1R_SAI1SEL_PLL2P = (1u << RCC::D2CCIP1R_SAI1SEL_Pos); /
 // RCC_PLLCFGR.PLL2RGE field value (RM0433 §8.7.11)
 constexpr uint32_t PLLCFGR_PLL2RGE_4_8 = (2u << RCC::PLLCFGR_PLL2RGE_Pos);   // Input 4-8 MHz
 
+// PLL2 fractional config: HSE/4 × (196 + 4981/8192) / 64 = 12.288 MHz
+// Produces 48 kHz × 256 MCLK with <1 ppm error
+constexpr uint32_t PLL2_DIVM  = 4;     // HSE prescaler → 4 MHz PLL input
+constexpr uint32_t PLL2_DIVN  = 196;   // VCO integer multiplier
+constexpr uint32_t PLL2_FRACN = 4981;  // Fractional numerator (/8192)
+constexpr uint32_t PLL2_DIVP  = 64;    // P output divider → 12.288 MHz
+
 /**
  * @brief Configure PLL2 fractional mode for audio clocks
  *
@@ -267,7 +274,7 @@ inline bool configure_pll2_audio(uint32_t hse_mhz = 16) {
     for (volatile int i = 0; i < 100; ++i) { __asm__ volatile("nop"); }
 
     // Configure PLL2 prescaler in PLLCKSELR (shared register — preserve PLL1/3)
-    uint32_t divm2 = hse_mhz / 4;  // 4 MHz PLL input
+    uint32_t divm2 = hse_mhz / PLL2_DIVM;
     uint32_t pllckselr = periph::rcc->PLLCKSELR;
     pllckselr &= ~RCC::PLLCKSELR_DIVM2_Msk;
     pllckselr |= (divm2 << RCC::PLLCKSELR_DIVM2_Pos);
@@ -285,12 +292,12 @@ inline bool configure_pll2_audio(uint32_t hse_mhz = 16) {
     __asm__ volatile("dsb" ::: "memory");
     __asm__ volatile("isb");
 
-    // Set integer dividers: DIVN2=196-1=195, DIVP2=64-1=63
-    periph::rcc->PLL2DIVR = (195u << RCC::PLL2DIVR_DIVN2_Pos)
-                           | (63u << RCC::PLL2DIVR_DIVP2_Pos);
+    // Set integer dividers: DIVN2=196-1, DIVP2=64-1
+    periph::rcc->PLL2DIVR = ((PLL2_DIVN - 1) << RCC::PLL2DIVR_DIVN2_Pos)
+                           | ((PLL2_DIVP - 1) << RCC::PLL2DIVR_DIVP2_Pos);
 
-    // Set fractional part: FRACN2=4981 → 12.288 MHz output
-    periph::rcc->PLL2FRACR = (4981u << RCC::PLL2FRACR_FRACN2_Pos);
+    // Set fractional part → 12.288 MHz output
+    periph::rcc->PLL2FRACR = (PLL2_FRACN << RCC::PLL2FRACR_FRACN2_Pos);
 
     // Enable PLL2 and wait for lock
     periph::rcc->CR |= RCC::CR_PLL2ON;

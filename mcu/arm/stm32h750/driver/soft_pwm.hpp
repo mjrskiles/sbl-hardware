@@ -67,6 +67,12 @@ public:
         pending_dirty_ = true;
     }
 
+    // Timer prescaler: 240 MHz APB1 timer / 240 = 1 MHz tick (1 us/count)
+    static constexpr uint32_t TIM7_PSC = 239;
+
+    // NVIC priority for BCM timer (below audio DMA at priority 4)
+    static constexpr uint8_t BCM_IRQ_PRIORITY = 8;
+
     /**
      * @brief Start BCM engine (enables TIM7 + NVIC)
      *
@@ -84,9 +90,7 @@ public:
 
         auto* tim = periph::tim7;
 
-        // PSC = 239: 240 MHz / 240 = 1 MHz tick (1 us per count)
-        tim->PSC = 239;
-        // ARR = 3: 4 us for bit 0 (T = 4 us)
+        tim->PSC = TIM7_PSC;
         tim->ARR = BASE_ARR;
         // Enable auto-reload preload so ARR changes take effect at next update
         tim->CR1 = TIM_Basic::CR1_ARPE;
@@ -97,9 +101,9 @@ public:
         // Enable update interrupt
         tim->DIER = TIM_Basic::DIER_UIE;
 
-        // NVIC: enable TIM7 IRQ (position 55), priority 8 (below audio DMA)
+        // NVIC: enable TIM7 IRQ (position 55), below audio DMA priority
         constexpr auto irq = static_cast<int32_t>(IRQn::TIM7);
-        periph::nvic->IP[irq] = (8 << 4);  // Priority 8 (upper 4 bits)
+        periph::nvic->IP[irq] = (BCM_IRQ_PRIORITY << 4);
         periph::nvic->ISER[irq / 32] = (1u << (irq % 32));
 
         // Initialize active buffer to match pending
@@ -192,15 +196,17 @@ private:
     // Current BCM bit position (0-7)
     static inline volatile uint8_t bit_index_ = 0;
 
+    // GPIO port layout: 0x400 spacing, BSRR at +0x18
+    static constexpr uintptr_t GPIO_SPACING = 0x400;
+    static constexpr uintptr_t BSRR_OFFSET  = 0x18;
+
     /**
      * @brief Get BSRR register reference for a GPIO port
-     * GPIO base 0x58020000, spacing 0x400, BSRR at offset 0x18
+     * Base address derived from SVD periph::gpioa (port 0)
      */
     static volatile uint32_t& port_bsrr(uint8_t port) {
-        constexpr uintptr_t GPIO_BASE = 0x58020000;
-        constexpr uintptr_t GPIO_SPACING = 0x400;
-        constexpr uintptr_t BSRR_OFFSET = 0x18;
-        auto addr = GPIO_BASE + (port * GPIO_SPACING) + BSRR_OFFSET;
+        auto base = reinterpret_cast<uintptr_t>(sbl::hw::reg::periph::gpioa);
+        auto addr = base + (port * GPIO_SPACING) + BSRR_OFFSET;
         return *reinterpret_cast<volatile uint32_t*>(addr);
     }
 };

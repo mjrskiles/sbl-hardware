@@ -39,12 +39,6 @@ public:
         sleep_ms(ms);
     }
 
-    /**
-     * @brief Blocking delay in microseconds
-     */
-    static void delay_us(uint32_t us) {
-        sleep_us(us);
-    }
 };
 
 } // namespace sbl::driver

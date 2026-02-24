@@ -21,11 +21,14 @@ namespace sbl::driver {
  */
 class Timer {
 public:
+    static constexpr uint32_t DEFAULT_CPU_FREQ_HZ = 480'000'000;
+
     /**
      * @brief Initialize SysTick for 1ms ticks
      * @param cpu_freq_hz CPU frequency in Hz (default 480 MHz for STM32H750)
+     * @return true (always succeeds; matches init() pattern of other drivers)
      */
-    static void init(uint32_t cpu_freq_hz = 480'000'000) {
+    static bool init(uint32_t cpu_freq_hz = DEFAULT_CPU_FREQ_HZ) {
         using namespace sbl::hw::reg;
 
         s_cpu_freq = cpu_freq_hz;
@@ -41,6 +44,8 @@ public:
 
         // Enable with processor clock and interrupt
         periph::systick->CTRL = SysTick::ENABLE | SysTick::TICKINT | SysTick::CLKSOURCE;
+
+        return true;
     }
 
     /**
@@ -77,52 +82,6 @@ public:
     }
 
     /**
-     * @brief Blocking delay in microseconds
-     *
-     * For delays under 1ms, uses direct SysTick polling.
-     */
-    static void delay_us(uint32_t us) {
-        using namespace sbl::hw::reg;
-
-        if (us == 0) return;
-
-        // Calculate ticks needed
-        uint32_t ticks_per_us = s_cpu_freq / 1'000'000;
-
-        while (us > 0) {
-            // SysTick is 24-bit, max ~16M ticks
-            uint32_t chunk = (us > 1000) ? 1000 : us;
-            uint32_t ticks = chunk * ticks_per_us;
-
-            if (ticks > SysTick::LOAD_MAX) {
-                ticks = SysTick::LOAD_MAX;
-            }
-
-            // Save current state
-            uint32_t saved_ctrl = periph::systick->CTRL;
-            uint32_t saved_load = periph::systick->LOAD;
-
-            periph::systick->CTRL = 0;  // Disable
-            periph::systick->LOAD = ticks - 1;
-            periph::systick->VAL = 0;
-            periph::systick->CTRL = SysTick::ENABLE | SysTick::CLKSOURCE;
-
-            // Wait for COUNTFLAG
-            while ((periph::systick->CTRL & SysTick::COUNTFLAG) == 0) {
-                // Busy wait
-            }
-
-            // Restore
-            periph::systick->CTRL = 0;
-            periph::systick->LOAD = saved_load;
-            periph::systick->VAL = 0;
-            periph::systick->CTRL = saved_ctrl;
-
-            us -= chunk;
-        }
-    }
-
-    /**
      * @brief SysTick interrupt handler - call from SysTick_Handler
      */
     static void systick_handler() {
@@ -131,7 +90,7 @@ public:
 
 private:
     static inline volatile uint32_t s_tick_count = 0;
-    static inline uint32_t s_cpu_freq = 480'000'000;
+    static inline uint32_t s_cpu_freq = DEFAULT_CPU_FREQ_HZ;
 };
 
 } // namespace sbl::driver

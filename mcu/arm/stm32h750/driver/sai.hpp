@@ -42,12 +42,22 @@ using AudioConfig = sbl::hal::audio::AudioConfig;
  * with circular DMA for continuous full-duplex audio streaming.
  */
 class Sai {
+    // SAI register field values (RM0433 §51.5)
+    static constexpr uint32_t DS_24BIT      = 6;   // Data size: 24-bit
+    static constexpr uint32_t SLOTSZ_32BIT  = 2;   // Slot size: 32-bit
+    static constexpr uint32_t NBSLOT_STEREO = 1;   // 2 slots (NBSLOT+1)
+    static constexpr uint32_t FRL_64BIT     = 63;  // Frame length: 64 bits (FRL+1)
+    static constexpr uint32_t FSALL_32BIT   = 31;  // FS active: 32 bits (FSALL+1)
+    static constexpr uint32_t SLOTEN_LR     = 0x3; // Enable slots 0+1 (L+R)
+    static constexpr uint32_t MCKEN_BIT     = 27;  // MCLK output enable (not in SVD)
+
 public:
     /**
      * @brief Configure SAI1 for I2S operation (default: 48 samples/block)
+     * @return true (always succeeds; matches init() pattern of other drivers)
      */
-    static void init() {
-        init(AudioConfig{});
+    static bool init() {
+        return init(AudioConfig{});
     }
 
     /**
@@ -56,8 +66,10 @@ public:
      * Uses config.block_size for DMA buffer sizing. Sample rate and bit depth
      * are determined by PLL2 and SAI register configuration respectively.
      * Call init_audio() first for PLL2 and GPIO configuration.
+     *
+     * @return true (always succeeds; matches init() pattern of other drivers)
      */
-    static void init(const AudioConfig& config) {
+    static bool init(const AudioConfig& config) {
         s_block_size = config.block_size;
         s_buf_samples = config.block_size * 2 * 2;  // block_size × stereo × double-buffer
 
@@ -67,6 +79,8 @@ public:
         configure_block_a();
         configure_block_b();
         configure_dma();
+
+        return true;
     }
 
     /**
@@ -168,28 +182,28 @@ private:
 
         // CR1: Master TX, free protocol, 24-bit data, DMA enabled
         uint32_t cr1 = 0;
-        cr1 |= (0u << SAI1::SAI_ACR1_MODE_Pos);     // 00 = Master TX
-        cr1 |= (0u << SAI1::SAI_ACR1_PRTCFG_Pos);   // 00 = Free protocol
-        cr1 |= (6u << SAI1::SAI_ACR1_DS_Pos);        // 110 = 24-bit data
-        cr1 |= SAI1::SAI_ACR1_DMAEN;                  // DMA enabled
-        cr1 |= (1u << 27);                             // MCKEN: enable MCLK output (Rev V+)
+        cr1 |= (0u << SAI1::SAI_ACR1_MODE_Pos);       // 00 = Master TX
+        cr1 |= (0u << SAI1::SAI_ACR1_PRTCFG_Pos);     // 00 = Free protocol
+        cr1 |= (DS_24BIT << SAI1::SAI_ACR1_DS_Pos);   // 24-bit data
+        cr1 |= SAI1::SAI_ACR1_DMAEN;                    // DMA enabled
+        cr1 |= (1u << MCKEN_BIT);                       // Enable MCLK output (Rev V+)
         // MCKDIV=0, NODIV=0 → MCLK = SAI_CK (12.288 MHz from PLL2P)
         periph::sai1->SAI_ACR1 = cr1;
 
         // Frame config: 64-bit frame, FS active 32 bits, MSB-Justified
         uint32_t frcr = 0;
-        frcr |= (63u << SAI1::SAI_AFRCR_FRL_Pos);    // Frame length = 64 bits (FRL+1)
-        frcr |= (31u << SAI1::SAI_AFRCR_FSALL_Pos);   // FS active = 32 bits (FSALL+1)
-        frcr |= SAI1::SAI_AFRCR_FSDEF;                 // FS = channel identification
+        frcr |= (FRL_64BIT << SAI1::SAI_AFRCR_FRL_Pos);     // Frame length (FRL+1)
+        frcr |= (FSALL_32BIT << SAI1::SAI_AFRCR_FSALL_Pos); // FS active (FSALL+1)
+        frcr |= SAI1::SAI_AFRCR_FSDEF;                        // FS = channel identification
         // FSPOL=0 → FS active low (left channel when low)
         // FSOFF=0 → FS coincides with first data bit (MSB-Justified)
         periph::sai1->SAI_AFRCR = frcr;
 
         // Slot config: 32-bit slots, 2 slots, both enabled
         uint32_t slotr = 0;
-        slotr |= (2u << SAI1::SAI_ASLOTR_SLOTSZ_Pos);  // 10 = 32-bit slot width
-        slotr |= (1u << SAI1::SAI_ASLOTR_NBSLOT_Pos);   // NBSLOT = 1 (2 slots, N-1)
-        slotr |= (0x3u << SAI1::SAI_ASLOTR_SLOTEN_Pos); // Enable slots 0 and 1
+        slotr |= (SLOTSZ_32BIT << SAI1::SAI_ASLOTR_SLOTSZ_Pos);    // 32-bit slot width
+        slotr |= (NBSLOT_STEREO << SAI1::SAI_ASLOTR_NBSLOT_Pos);   // 2 slots (N-1)
+        slotr |= (SLOTEN_LR << SAI1::SAI_ASLOTR_SLOTEN_Pos);       // Enable slots 0+1
         periph::sai1->SAI_ASLOTR = slotr;
     }
 
@@ -211,26 +225,26 @@ private:
 
         // CR1: Slave RX, synced to Block A, 24-bit data, DMA enabled
         uint32_t cr1 = 0;
-        cr1 |= (3u << SAI1::SAI_BCR1_MODE_Pos);       // 11 = Slave RX
-        cr1 |= (0u << SAI1::SAI_BCR1_PRTCFG_Pos);     // 00 = Free protocol
-        cr1 |= (6u << SAI1::SAI_BCR1_DS_Pos);          // 110 = 24-bit data
-        cr1 |= (1u << SAI1::SAI_BCR1_SYNCEN_Pos);      // 01 = Sync with sub-block A
-        cr1 |= SAI1::SAI_BCR1_DMAEN;                    // DMA enabled
+        cr1 |= (3u << SAI1::SAI_BCR1_MODE_Pos);         // 11 = Slave RX
+        cr1 |= (0u << SAI1::SAI_BCR1_PRTCFG_Pos);       // 00 = Free protocol
+        cr1 |= (DS_24BIT << SAI1::SAI_BCR1_DS_Pos);     // 24-bit data
+        cr1 |= (1u << SAI1::SAI_BCR1_SYNCEN_Pos);        // 01 = Sync with sub-block A
+        cr1 |= SAI1::SAI_BCR1_DMAEN;                      // DMA enabled
         periph::sai1->SAI_BCR1 = cr1;
 
         // Frame config — same as Block A (MSB-Justified)
         uint32_t frcr = 0;
-        frcr |= (63u << SAI1::SAI_BFRCR_FRL_Pos);
-        frcr |= (31u << SAI1::SAI_BFRCR_FSALL_Pos);
+        frcr |= (FRL_64BIT << SAI1::SAI_BFRCR_FRL_Pos);
+        frcr |= (FSALL_32BIT << SAI1::SAI_BFRCR_FSALL_Pos);
         frcr |= SAI1::SAI_BFRCR_FSDEF;
         // FSOFF=0 → MSB-Justified (same as Block A)
         periph::sai1->SAI_BFRCR = frcr;
 
         // Slot config — same as Block A
         uint32_t slotr = 0;
-        slotr |= (2u << SAI1::SAI_BSLOTR_SLOTSZ_Pos);  // 10 = 32-bit slot width
-        slotr |= (1u << SAI1::SAI_BSLOTR_NBSLOT_Pos);
-        slotr |= (0x3u << SAI1::SAI_BSLOTR_SLOTEN_Pos);
+        slotr |= (SLOTSZ_32BIT << SAI1::SAI_BSLOTR_SLOTSZ_Pos);    // 32-bit slots
+        slotr |= (NBSLOT_STEREO << SAI1::SAI_BSLOTR_NBSLOT_Pos);
+        slotr |= (SLOTEN_LR << SAI1::SAI_BSLOTR_SLOTEN_Pos);
         periph::sai1->SAI_BSLOTR = slotr;
     }
 

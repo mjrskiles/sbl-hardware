@@ -32,12 +32,6 @@ public:
     static void delay_ms(uint32_t ms) {
         sleep_ms(ms);
     }
-    /**
-     * @brief Blocking delay in microseconds
-     */
-    static void delay_us(uint32_t us) {
-        sleep_us(us);
-    }
 };
 } // namespace sbl::driver
 // Compile-time interface validation
