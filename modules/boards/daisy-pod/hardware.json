@@ -54,11 +54,27 @@
         "id": "encoder_a"
       },
       {
-        "pin": "d27",
+        "pin": "d25",
         "function": "gpio",
         "direction": "in",
         "pull": "up",
         "id": "encoder_b"
+      },
+      {
+        "pin": "d13",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "encoder_click"
+      },
+      {
+        "pin": "d27",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "button1"
       },
       {
         "pin": "d28",
@@ -66,12 +82,23 @@
         "direction": "in",
         "pull": "up",
         "active_low": true,
-        "id": "encoder_click"
+        "id": "button2"
       }
     ],
     "adc": [
       { "pin": "a6", "id": "knob1" },
       { "pin": "a0", "id": "knob2" }
     ]
+  },
+
+  "components": {
+    "button1":       { "type": "button",  "pins": {"pin": "button1"} },
+    "button2":       { "type": "button",  "pins": {"pin": "button2"} },
+    "encoder":       { "type": "encoder", "pins": {"a": "encoder_a", "b": "encoder_b"} },
+    "encoder_click": { "type": "button",  "pins": {"pin": "encoder_click"} },
+    "knob1":         { "type": "pot",     "pins": {"adc": "knob1"} },
+    "knob2":         { "type": "pot",     "pins": {"adc": "knob2"} },
+    "led1":          { "type": "rgb_led", "pins": {"r": "led1_r", "g": "led1_g", "b": "led1_b"} },
+    "led2":          { "type": "rgb_led", "pins": {"r": "led2_r", "g": "led2_g", "b": "led2_b"} }
   }
 }
