@@ -94,6 +94,9 @@
     "adc": [
       { "pin": "a6", "id": "knob1" },
       { "pin": "a0", "id": "knob2" }
+    ],
+    "uart": [
+      { "bus": "uart1", "id": "midi", "baud": 31250 }
     ]
   },
 

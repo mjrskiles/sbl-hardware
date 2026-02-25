@@ -58,8 +58,7 @@ sbl-hardware/
 ├── mainboards/                   # Primary boards running SBL applications
 │   ├── daisy-seed/               # Electrosmith Daisy Seed (STM32H750)
 │   ├── raspberry-pi-pico/        # Raspberry Pi Pico (RP2040)
-│   ├── raspberry-pi-pico-2/      # Raspberry Pi Pico 2 (RP2350)
-│   └── sbl-simulator-0/          # Native simulator mainboard
+│   └── raspberry-pi-pico-2/      # Raspberry Pi Pico 2 (RP2350)
 └── modules/                      # Extension modules
     ├── boards/                   # Expansion PCBs
     │   └── daisy-pod/            # Electrosmith Daisy Pod (knobs, encoder, LEDs)
@@ -88,13 +87,13 @@ sbl-hardware/
 | `sbl:mainboards/raspberry-pi-pico-2` | Raspberry Pi Pico 2 | RP2350 | Cortex-M33 |
 | `sbl:mainboards/raspberry-pi-pico` | Raspberry Pi Pico | RP2040 | Cortex-M0+ |
 | `sbl:mainboards/daisy-seed` | Electrosmith Daisy Seed | STM32H750 | Cortex-M7 |
-| `sbl:mainboards/sbl-simulator-0` | Native simulator | x86/ARM host | - |
+| `sbl:mainboards/sbl-simulator-0` | Native simulator (planned) | x86/ARM host | - |
 
 ### Modules
 
 | Target | Module | Attaches To | Features |
 |--------|--------|-------------|----------|
-| `sbl:modules/boards/daisy-pod` | Electrosmith Daisy Pod | daisy-seed | 2 LEDs, encoder, 2 knobs (ADC) |
+| `sbl:modules/boards/daisy-pod` | Electrosmith Daisy Pod | daisy-seed | 2 RGB LEDs, encoder + click, 2 buttons, 2 knobs (ADC), MIDI IN (UART) |
 
 ## MCU Definitions
 
@@ -106,9 +105,10 @@ Each MCU directory contains:
   - `sai.hpp` - SAI/I2S audio driver with DMA (STM32H7)
   - `dma.hpp`, `dma_buffer.hpp` - DMA controller and buffer placement (STM32H7)
   - `adc.hpp` - ADC driver: polling reads and DMA scan mode (STM32H7)
-  - `reg/*.hpp` - SVD-generated register definitions (no vendor HAL)
+  - `clock.hpp` - Kernel clock mux helpers (STM32H7)
   - `startup.cpp` - Reset handler and vector table
   - `*.ld` - Linker script for the MCU
+- `reg/` - SVD-generated register definitions (sibling of `driver/`, no vendor HAL)
 - `CMakeLists.txt` - Build integration (copies drivers to `<sbl/hw/driver/>` include path)
 
 ### SVD-Generated Registers
