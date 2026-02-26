@@ -40,6 +40,10 @@ Bare-metal drivers with no vendor HAL dependencies:
 | DMA buffer placement macros | `driver/dma_buffer.hpp` | Complete |
 | DMA IRQ dispatch | `driver/dma_irq.cpp` | Complete |
 | SAI/I2S (full-duplex, DMA, MSB-Justified) | `driver/sai.hpp` | Complete |
+| Kernel clock mux helpers | `driver/clock.hpp` | Complete |
+| Blocking timeout utilities | `driver/timeout.hpp` | Complete |
+| Software PWM (TIM7 BCM engine) | `driver/soft_pwm.hpp` | Complete |
+| SoftPwm ISR (application source) | `driver/soft_pwm_irq.cpp` | Complete |
 | USB OTG (device mode setup) | `driver/usb.hpp` | Complete |
 | USB IRQ handler | `driver/usb_irq.cpp` | Complete |
 

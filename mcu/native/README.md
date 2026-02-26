@@ -6,16 +6,12 @@ Virtual MCU for the SBL native simulator. Runs on the host machine for developme
 
 | Aspect | Status |
 |--------|--------|
-| Schema | v1.0 (needs migration to v0.1) |
+| Schema | Planned |
 | Pin definitions | Complete (32 GPIO, 4 ADC) |
 | Alternate functions | Not applicable |
 | Peripherals | Minimal |
 | Driver | Implemented in sound-byte-libs |
 | Testing | Functional |
-
-**TODO:** Migrate to new schema format with:
-- `schemaVersion: "0.1"`
-- `pins` object format (for consistency)
 
 ## Purpose
 
