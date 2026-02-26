@@ -89,6 +89,12 @@ extern "C" {
     // USB2_OTG_FS (at 0x40080000) - USED by Daisy Seed on PA11/PA12!
     // USB2 only has one IRQ (101), no separate EP1 IRQs. Positions 99-100 are other peripherals.
     void OTG_FS_IRQHandler() __attribute__((weak, alias("Default_Handler")));  // USB2 main - position 101
+
+    // USART interrupt handlers (overridden by uart_irq.cpp when linked)
+    void USART1_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+    void USART2_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+    void USART3_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+    void USART6_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
 }
 
 /**
@@ -247,9 +253,9 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 34
     reinterpret_cast<void*>(Default_Handler),           // 35
     reinterpret_cast<void*>(Default_Handler),           // 36
-    reinterpret_cast<void*>(Default_Handler),           // 37
-    reinterpret_cast<void*>(Default_Handler),           // 38
-    reinterpret_cast<void*>(Default_Handler),           // 39
+    reinterpret_cast<void*>(USART1_IRQHandler),         // 37 - USART1
+    reinterpret_cast<void*>(USART2_IRQHandler),         // 38 - USART2
+    reinterpret_cast<void*>(USART3_IRQHandler),         // 39 - USART3
     reinterpret_cast<void*>(Default_Handler),           // 40
     reinterpret_cast<void*>(Default_Handler),           // 41
     reinterpret_cast<void*>(Default_Handler),           // 42
@@ -281,7 +287,7 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(DMA2_Stream5_IRQHandler),    // 68 - DMA2 stream 5
     reinterpret_cast<void*>(DMA2_Stream6_IRQHandler),    // 69 - DMA2 stream 6
     reinterpret_cast<void*>(DMA2_Stream7_IRQHandler),    // 70 - DMA2 stream 7
-    reinterpret_cast<void*>(Default_Handler),           // 71
+    reinterpret_cast<void*>(USART6_IRQHandler),         // 71 - USART6
     reinterpret_cast<void*>(Default_Handler),           // 72
     reinterpret_cast<void*>(Default_Handler),           // 73
     reinterpret_cast<void*>(OTG_HS_EP1_OUT_IRQHandler),  // 74 - USB1 EP1 OUT

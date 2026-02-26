@@ -1,13 +1,21 @@
 /**
  * @file uart.hpp
- * @brief STM32H750 UART driver
+ * @brief STM32H750 UART driver — fully interrupt-driven RX and TX
  *
  * Manifest-driven UART initialization using UartHandle.
  * Bare-metal implementation using SVD-generated register definitions.
  *
+ * Both RX and TX use NVIC interrupts + ring buffers:
+ * - RX: ISR drains hardware FIFO into 256-byte ring buffer (MIDI never drops)
+ * - TX: write_byte() pushes to 256-byte ring buffer, ISR drains to hardware FIFO
+ *
  * Templated on Instance index so multiple UART peripherals can coexist
  * (e.g., debug on USART3 + MIDI on USART1). Each Uart<N> has its own
  * static state.
+ *
+ * LINK NOTE: Any executable using UART must compile uart_irq.cpp as a
+ * direct source (not via static lib) so the strong ISR symbols override
+ * the weak stubs in startup.cpp. Same pattern as dma_irq.cpp.
  */
 #ifndef SBL_HW_DRIVER_UART_HPP_
 #define SBL_HW_DRIVER_UART_HPP_
@@ -18,9 +26,13 @@
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/usart.hpp>
+#include <sbl/hw/reg/irq.hpp>
+#include <sbl/hw/reg/cortex_m.hpp>
 #include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hw/driver/clock.hpp>
 #include <sbl/hal/uart/driver.hpp>
+#include <sbl/hal/memory/barrier.hpp>
+#include <sbl/primitives/buffers/ring_buffer.hpp>
 
 namespace sbl::driver {
 
@@ -131,31 +143,87 @@ inline bool enable_usart_clocks(uint32_t peripheral) {
     return true;
 }
 
+// ── IRQ dispatch infrastructure ──────────────────────────────────────
+
+/** Callback type for UART IRQ dispatch */
+using UartCallback = void(*)();
+
+/** Callback table indexed by peripheral number (defined in uart_irq.cpp) */
+extern UartCallback callbacks[7];
+
+/**
+ * @brief Get NVIC IRQ number for a USART peripheral
+ */
+inline sbl::hw::reg::IRQn get_usart_irqn(uint32_t peripheral) {
+    using sbl::hw::reg::IRQn;
+    switch (peripheral) {
+        case 1: return IRQn::USART1;   // 37
+        case 2: return IRQn::USART2;   // 38
+        case 3: return IRQn::USART3;   // 39
+        case 6: return IRQn::USART6;   // 71
+        default: return IRQn::USART1;
+    }
+}
+
+/**
+ * @brief Enable NVIC interrupt for a USART peripheral
+ * @param peripheral USART peripheral number
+ * @param priority NVIC priority (lower = higher priority)
+ *
+ * Priority scheme from FDP-018:
+ *   4 (High) — UART RX-only (MIDI): must not be delayed by debug TX
+ *  12 (Low)  — UART TX+RX (debug): bulk output, not latency-sensitive
+ */
+inline void enable_usart_nvic(uint32_t peripheral, uint8_t priority) {
+    using namespace sbl::hw::reg;
+    auto irq = get_usart_irqn(peripheral);
+    uint32_t n = static_cast<uint32_t>(irq);
+    periph::nvic->IP[n] = (priority << 4);
+    periph::nvic->ISER[n >> 5] = (1u << (n & 0x1Fu));
+}
+
 } // namespace uart_detail
 
 /**
- * @brief UART driver for STM32H750
+ * @brief UART driver for STM32H750 — fully interrupt-driven RX and TX
  *
  * @tparam Instance Instance index (default 0). Each Uart<N> gets its own
  *         static state, enabling multiple coexisting UART peripherals
  *         (e.g., Uart<0> for debug, Uart<1> for MIDI).
  *
- * Simple blocking UART for debug output and serial input.
- * Pin configuration is resolved from hardware manifests via UartHandle.
+ * RX: ISR drains hardware FIFO into 256-byte ring buffer. available() and
+ * read_byte() pop from main context.
+ *
+ * TX: write_byte() pushes to 256-byte ring buffer and enables TXEIE. ISR
+ * drains ring buffer into hardware FIFO. Disables TXEIE when buffer empty.
+ * Back-pressure: write_byte() spins if TX buffer is full.
  *
  * Supports USART1, USART2, USART3, USART6.
- * Note: STM32H7 USART kernel clock defaults to HSI (64 MHz).
- * This is independent of APB bus clocks - USARTs have dedicated kernel clock muxes.
+ * Kernel clock: HSI (64 MHz), independent of APB bus clocks.
  */
 template<uint8_t Instance = 0>
 class Uart {
 private:
     static inline bool s_initialized = false;
+    static inline bool s_tx_enabled = false;
     static inline volatile sbl::hw::reg::USART_t* s_usart = nullptr;
+
+    /** RX ring buffer — ISR pushes, main loop pops */
+    static inline sbl::primitives::buffers::RingBuffer<
+        uint8_t, 256, sbl::hal::memory::ArmMemoryBarrier> s_rx_buf;
+
+    /** TX ring buffer — main loop pushes, ISR pops */
+    static inline sbl::primitives::buffers::RingBuffer<
+        uint8_t, 256, sbl::hal::memory::ArmMemoryBarrier> s_tx_buf;
 
 public:
     /**
      * @brief Initialize UART (TX + RX) using handle from hardware manifest
+     *
+     * Configures both TX and RX pins. Both RX and TX are interrupt-driven
+     * with 256-byte ring buffers. NVIC priority 12 (Low) — suitable for
+     * debug output where latency is not critical.
+     *
      * @param handle UartHandle with resolved peripheral, pins, AF, and baud
      * @return true if UART initialized (continues even on TEACK timeout for debug use)
      */
@@ -189,29 +257,39 @@ public:
         s_usart->PRESC = 0;  // No prescaling (STM32H7 feature)
         s_usart->BRR = usart_clk / handle.baud;
 
-        // CR2 and CR3 at reset values (1 stop bit, no flow control)
         s_usart->CR2 = 0;
-        s_usart->CR3 = 0;
 
-        // Enable USART, transmitter, and receiver
-        s_usart->CR1 = USART::UE | USART::TE | USART::RE;
+        // OVRDIS (bit 12): disable overrun — prevents ORE from blocking RXNE
+        s_usart->CR3 = (1u << 12);
+
+        // Register callback before enabling interrupts
+        uart_detail::callbacks[handle.peripheral] = &irq_handler;
+
+        // UE + TE + RE + RXNEIE + FIFOEN (TXEIE enabled on first write)
+        s_usart->CR1 = USART::UE | USART::TE | USART::RE
+                      | USART::RXNEIE | (1u << 29);
 
         // Wait for transmit enable acknowledge
         bool teack_ok = detail::wait_for(&s_usart->ISR, USART::TEACK, USART::TEACK, 100'000);
 
+        // Enable NVIC — priority 12 (Low) for debug TX+RX
+        uart_detail::enable_usart_nvic(handle.peripheral, 12);
+
         // Continue even if TEACK timeout — debug UART should still try to work
         s_initialized = true;
+        s_tx_enabled = true;
         return teack_ok;
     }
 
     /**
-     * @brief Initialize UART in RX-only mode
+     * @brief Initialize UART in RX-only mode (interrupt-driven)
      *
      * Only configures the RX pin — TX pin is left alone. Critical for cases
      * like MIDI on Daisy Pod where the TX pin (PB6) is used by the encoder.
      *
-     * Enables OVRDIS (overrun disable) so ORE doesn't block RXNE, and
-     * FIFOEN (8-byte hardware FIFO) for buffering between polls.
+     * RX bytes are buffered via NVIC interrupt into a 256-byte ring buffer.
+     * OVRDIS prevents overrun from blocking RXNE. FIFOEN enables the 8-byte
+     * hardware FIFO for additional buffering.
      *
      * @param handle UartHandle — only peripheral, rx_port, rx_pin, rx_af, baud are used
      * @return true if initialized successfully
@@ -248,30 +326,37 @@ public:
         // OVRDIS (bit 12): disable overrun detection — prevents ORE from blocking RXNE
         s_usart->CR3 = (1u << 12);
 
-        // UE + RE + FIFOEN (bit 29): enable receiver with 8-byte hardware FIFO
-        s_usart->CR1 = USART::UE | USART::RE | (1u << 29);
+        // Register callback before enabling interrupts
+        uart_detail::callbacks[handle.peripheral] = &irq_handler;
+
+        // UE + RE + RXNEIE + FIFOEN
+        s_usart->CR1 = USART::UE | USART::RE | USART::RXNEIE | (1u << 29);
+
+        // Enable NVIC — priority 4 (High) for MIDI RX
+        uart_detail::enable_usart_nvic(handle.peripheral, 4);
 
         s_initialized = true;
         return true;
     }
 
     /**
-     * @brief Write single byte
+     * @brief Write single byte via TX ring buffer (interrupt-driven)
+     *
+     * Pushes byte to TX ring buffer and enables TXEIE. The ISR drains
+     * the buffer into the hardware FIFO. Back-pressure: spins if buffer full.
+     *
      * @param byte Byte to send
      */
     static void write_byte(uint8_t byte) {
-        if (!s_initialized || !s_usart) return;
+        if (!s_tx_enabled) return;
 
         using namespace sbl::hw::reg;
 
-        // Wait for TXE (transmit data register empty) with timeout
-        volatile uint32_t timeout = 10000;
-        while ((s_usart->ISR & USART::TXE) == 0 && --timeout) {
-            // Busy wait
-        }
-        if (timeout == 0) return;  // Give up on this byte
+        // Spin until space in TX ring buffer (back-pressure)
+        while (!s_tx_buf.push(byte)) {}
 
-        s_usart->TDR = byte;
+        // Enable TX interrupt — ISR will drain the buffer
+        s_usart->CR1 |= USART::TXEIE;
     }
 
     /**
@@ -296,30 +381,58 @@ public:
     }
 
     /**
-     * @brief Check if RX data available
-     * @return true if data waiting
+     * @brief Check if RX data available in ring buffer
+     * @return true if at least one byte is buffered
      */
     static bool available() {
-        if (!s_initialized || !s_usart) return false;
-        using namespace sbl::hw::reg;
-        return (s_usart->ISR & USART::RXNE) != 0;
+        return !s_rx_buf.empty();
     }
 
     /**
-     * @brief Read single byte (blocking)
-     * @return Received byte
+     * @brief Read single byte from RX ring buffer
+     * @return Received byte, or 0 if buffer empty
+     *
+     * Non-blocking. Callers should check available() first, or use
+     * sbl::midi::poll<>() which handles the available/read loop.
      */
     static uint8_t read_byte() {
-        if (!s_initialized || !s_usart) return 0;
+        uint8_t b;
+        if (s_rx_buf.pop(b)) {
+            return b;
+        }
+        return 0;
+    }
 
+    /**
+     * @brief UART interrupt handler — called from uart_irq.cpp via callback table
+     *
+     * Handles both RX and TX:
+     * - RX: drains hardware FIFO into RX ring buffer
+     * - TX: drains TX ring buffer into hardware FIFO, disables TXEIE when empty
+     */
+    static void irq_handler() {
         using namespace sbl::hw::reg;
+        auto* usart = s_usart;
 
-        // Wait for RXNE (read data register not empty)
-        while ((s_usart->ISR & USART::RXNE) == 0) {
-            // Busy wait
+        // RX: drain hardware FIFO into software ring buffer
+        while (usart->ISR & USART::RXNE) {
+            uint8_t byte = static_cast<uint8_t>(usart->RDR);
+            s_rx_buf.push(byte);  // drop on overflow
         }
 
-        return static_cast<uint8_t>(s_usart->RDR);
+        // TX: drain software ring buffer into hardware FIFO
+        if (usart->CR1 & USART::TXEIE) {
+            while (usart->ISR & USART::TXE) {
+                uint8_t byte;
+                if (s_tx_buf.pop(byte)) {
+                    usart->TDR = byte;
+                } else {
+                    // Buffer empty — disable TX interrupt until next write
+                    usart->CR1 &= ~USART::TXEIE;
+                    break;
+                }
+            }
+        }
     }
 };
 
