@@ -25,6 +25,7 @@ public:
      * @brief Set pin mode
      * @param handle GPIO handle from hardware.hpp
      * @param mode Pin mode (from sbl::gpio::PinMode)
+     * @note ISR-safe — Pico SDK GPIO functions use atomic SIO register writes
      */
     static void set_mode(const sbl::GpioHandle& handle, PinMode mode) {
         gpio_init(handle.pin);
@@ -61,6 +62,7 @@ public:
      * @brief Write logical value (handles active_low automatically)
      * @param handle GPIO handle from hardware.hpp
      * @param value Logical value (true = active, false = inactive)
+     * @note ISR-safe — Pico SDK gpio_put uses atomic SIO register write
      */
     static void write(const sbl::GpioHandle& handle, bool value) {
         gpio_put(handle.pin, handle.effective_level(value));
@@ -69,6 +71,7 @@ public:
      * @brief Read logical value (handles active_low automatically)
      * @param handle GPIO handle from hardware.hpp
      * @return Logical value (true = active, false = inactive)
+     * @note ISR-safe — Pico SDK gpio_get is a single SIO register read
      */
     static bool read(const sbl::GpioHandle& handle) {
         bool raw = gpio_get(handle.pin);
@@ -77,6 +80,7 @@ public:
     /**
      * @brief Toggle pin output
      * @param handle GPIO handle from hardware.hpp
+     * @note ISR-safe — Pico SDK gpio_xor_mask is an atomic SIO register write
      */
     static void toggle(const sbl::GpioHandle& handle) {
         gpio_xor_mask(1u << handle.pin);

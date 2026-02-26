@@ -16,18 +16,21 @@ class Timer {
 public:
     /**
      * @brief Get milliseconds since boot
+     * @note ISR-safe — reads volatile hardware timer register
      */
     static uint32_t millis() {
         return static_cast<uint32_t>(time_us_64() / 1000);
     }
     /**
      * @brief Get microseconds since boot
+     * @note ISR-safe — reads volatile hardware timer register
      */
     static uint32_t micros() {
         return static_cast<uint32_t>(time_us_64());
     }
     /**
      * @brief Blocking delay in milliseconds
+     * @note Not ISR-safe — blocks for the specified duration
      */
     static void delay_ms(uint32_t ms) {
         sleep_ms(ms);

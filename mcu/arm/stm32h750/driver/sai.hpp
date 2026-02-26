@@ -55,6 +55,7 @@ public:
     /**
      * @brief Configure SAI1 for I2S operation (default: 48 samples/block)
      * @return true (always succeeds; matches init() pattern of other drivers)
+     * @note Not ISR-safe — init-time only
      */
     static bool init() {
         return init(AudioConfig{});
@@ -68,6 +69,7 @@ public:
      * Call init_audio() first for PLL2 and GPIO configuration.
      *
      * @return true (always succeeds; matches init() pattern of other drivers)
+     * @note Not ISR-safe — init-time only
      */
     static bool init(const AudioConfig& config) {
         s_block_size = config.block_size;
@@ -86,6 +88,7 @@ public:
     /**
      * @brief Set the audio processing callback
      * @param cb Function called from ISR with TX/RX buffer pointers
+     * @note Not ISR-safe — call before start()
      */
     static void set_callback(AudioCallback cb) {
         s_callback = cb;
@@ -95,6 +98,7 @@ public:
      * @brief Start audio streaming
      *
      * Enables DMA streams, then SAI blocks (slave before master).
+     * @note Not ISR-safe — init-time only
      */
     static void start() {
         using namespace sbl::hw::reg;
@@ -114,6 +118,7 @@ public:
      * @brief Stop audio streaming
      *
      * Disables SAI blocks (master before slave), then DMA.
+     * @note Not ISR-safe — blocking (polls SAIXEN clear)
      */
     static void stop() {
         using namespace sbl::hw::reg;

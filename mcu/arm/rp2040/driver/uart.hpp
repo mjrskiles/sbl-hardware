@@ -35,6 +35,7 @@ public:
     /**
      * @brief Initialize UART (TX + RX) using handle from hardware manifest
      * @param handle UartHandle with resolved peripheral, pins, and baud
+     * @note Not ISR-safe — configures peripheral and GPIO, call at init time only
      *
      * Note: AF fields in handle are ignored on RP2040 (Pico SDK GPIO function).
      * RP2040 uses GPIO pin numbers directly (tx_pin/rx_pin).
@@ -59,6 +60,7 @@ public:
      * RX pin is routed to the UART peripheral.
      *
      * @param handle UartHandle — only peripheral, rx_pin, and baud are used
+     * @note Not ISR-safe — configures peripheral and GPIO, call at init time only
      */
     static void init_rx(const sbl::UartHandle& handle) {
         auto uart = (handle.peripheral == 0) ? uart0 : uart1;
@@ -75,6 +77,7 @@ public:
     /**
      * @brief Write single byte
      * @param byte Byte to send
+     * @note Not ISR-safe — Pico SDK uart_putc_raw spins waiting for TX FIFO space
      */
     static void write_byte(uint8_t byte) {
         if (!s_initialized) return;
@@ -85,6 +88,7 @@ public:
      * @brief Write buffer
      * @param data Data buffer
      * @param len Number of bytes to write
+     * @note Not ISR-safe — Pico SDK uart_write_blocking spins until all bytes sent
      */
     static void write(const uint8_t* data, size_t len) {
         if (!s_initialized) return;
@@ -94,6 +98,7 @@ public:
     /**
      * @brief Write null-terminated string
      * @param str String to write
+     * @note Not ISR-safe — Pico SDK uart_puts blocks until string is sent
      */
     static void write_string(const char* str) {
         if (!s_initialized) return;
@@ -103,6 +108,7 @@ public:
     /**
      * @brief Check if RX data available
      * @return true if data waiting
+     * @note ISR-safe — uart_is_readable is a single register flag check
      */
     static bool available() {
         if (!s_initialized) return false;
@@ -112,6 +118,7 @@ public:
     /**
      * @brief Read single byte (blocking)
      * @return Received byte
+     * @note Not ISR-safe — uart_getc blocks indefinitely until data arrives
      */
     static uint8_t read_byte() {
         if (!s_initialized) return 0;

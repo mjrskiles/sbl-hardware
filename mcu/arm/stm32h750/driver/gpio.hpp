@@ -32,6 +32,7 @@ public:
      * @brief Set pin mode
      * @param handle GPIO handle from hardware.hpp
      * @param mode Pin mode (from sbl::gpio::PinMode)
+     * @note ISR-safe (atomic register writes), but typically init-only
      */
     static void set_mode(const sbl::GpioHandle& handle, PinMode mode) {
         enable_port_clock(handle.port);
@@ -72,6 +73,7 @@ public:
      * @brief Write logical value (handles active_low automatically)
      * @param handle GPIO handle from hardware.hpp
      * @param value Logical value (true = active, false = inactive)
+     * @note ISR-safe — atomic BSRR write
      */
     static void write(const sbl::GpioHandle& handle, bool value) {
         auto gpio = port_regs(handle.port);
@@ -87,6 +89,7 @@ public:
      * @brief Read logical value (handles active_low automatically)
      * @param handle GPIO handle from hardware.hpp
      * @return Logical value (true = active, false = inactive)
+     * @note ISR-safe — volatile IDR read
      */
     static bool read(const sbl::GpioHandle& handle) {
         auto gpio = port_regs(handle.port);
@@ -97,6 +100,7 @@ public:
     /**
      * @brief Toggle pin output
      * @param handle GPIO handle from hardware.hpp
+     * @note ISR-safe — single ODR XOR
      */
     static void toggle(const sbl::GpioHandle& handle) {
         auto gpio = port_regs(handle.port);

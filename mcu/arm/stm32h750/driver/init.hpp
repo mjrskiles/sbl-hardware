@@ -476,6 +476,8 @@ inline void configure_usb_gpio() {
  * - Bus clocks (AHB, APB)
  * - SysTick timer
  *
+ * @note Not ISR-safe — blocking. Boot-time only.
+ *
  * @param config Clock configuration (defaults to 480 MHz from 16 MHz HSE)
  * @return true if initialization successful
  */
@@ -553,6 +555,8 @@ inline bool init(const ClockConfig& config = ClockConfig{}) {
  *
  * Runs at 64 MHz internal oscillator - useful for debugging
  * or when HSE is not available.
+ *
+ * @note Not ISR-safe — boot-time only.
  */
 inline void init_hsi() {
     // Default HSI is already running at 64 MHz
@@ -646,6 +650,8 @@ inline void enable_usb2_nvic() {
  * Must be called AFTER init() to ensure HSE is running.
  * This is for Daisy Seed and similar boards using USB2 on PA11/PA12.
  *
+ * @note Not ISR-safe — blocking. Boot-time only.
+ *
  * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed)
  * @return true if USB clock setup successful
  */
@@ -692,6 +698,8 @@ inline bool init_usb(uint32_t hse_mhz = 16) {
  * - AK4556 codec reset release (PB11)
  *
  * Must be called AFTER init() to ensure HSE is running.
+ *
+ * @note Not ISR-safe — blocking. Boot-time only.
  *
  * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed)
  * @return true if audio clock setup successful

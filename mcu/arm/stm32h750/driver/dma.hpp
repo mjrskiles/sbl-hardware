@@ -96,6 +96,7 @@ public:
     /**
      * @brief Enable DMA controller clock (RCC AHB1)
      * @param controller 1 or 2
+     * @note Not ISR-safe — init-time only
      */
     static void enable_clock(uint8_t controller) {
         using namespace sbl::hw::reg;
@@ -120,6 +121,7 @@ public:
      * @param periph_addr Peripheral register address (or source for M2M)
      * @param memory_addr Memory buffer address (must be in DMA-accessible RAM)
      * @param num_items   Number of data items to transfer
+     * @note Not ISR-safe — blocking (disables stream, waits for EN clear)
      */
     static void configure(DmaStream stream, const DmaConfig& config,
                          volatile void* periph_addr, volatile void* memory_addr,
@@ -163,6 +165,7 @@ public:
      *
      * @param stream     DMA controller + stream number
      * @param request_id DMAMUX request ID (e.g., 87 for SAI1_A, 88 for SAI1_B)
+     * @note Not ISR-safe — init-time only
      */
     static void set_request(DmaStream stream, uint8_t request_id) {
         using namespace sbl::hw::reg;
@@ -175,6 +178,7 @@ public:
     /**
      * @brief Enable (start) a DMA stream
      * @param stream DMA controller + stream number
+     * @note ISR-safe — register write
      */
     static void enable(DmaStream stream) {
         auto* regs = stream_regs(stream);
@@ -189,6 +193,7 @@ public:
     /**
      * @brief Disable (stop) a DMA stream
      * @param stream DMA controller + stream number
+     * @note Not ISR-safe — blocking (polls EN clear)
      */
     static void disable(DmaStream stream) {
         auto* regs = stream_regs(stream);
@@ -198,6 +203,7 @@ public:
 
     /**
      * @brief Check if half-transfer flag is set
+     * @note ISR-safe — volatile register read
      */
     static bool is_half_transfer(DmaStream stream) {
         auto [isr, bit] = flag_reg_and_bit(stream, FlagType::HalfTransfer);
@@ -206,6 +212,7 @@ public:
 
     /**
      * @brief Check if transfer-complete flag is set
+     * @note ISR-safe — volatile register read
      */
     static bool is_transfer_complete(DmaStream stream) {
         auto [isr, bit] = flag_reg_and_bit(stream, FlagType::TransferComplete);
@@ -214,6 +221,7 @@ public:
 
     /**
      * @brief Clear half-transfer interrupt flag
+     * @note ISR-safe — write-1-to-clear register
      */
     static void clear_half_transfer(DmaStream stream) {
         auto [ifcr, bit] = clear_reg_and_bit(stream, FlagType::HalfTransfer);
@@ -222,6 +230,7 @@ public:
 
     /**
      * @brief Clear transfer-complete interrupt flag
+     * @note ISR-safe — write-1-to-clear register
      */
     static void clear_transfer_complete(DmaStream stream) {
         auto [ifcr, bit] = clear_reg_and_bit(stream, FlagType::TransferComplete);
@@ -230,6 +239,7 @@ public:
 
     /**
      * @brief Clear all interrupt flags for a stream
+     * @note ISR-safe — write-to-clear register
      */
     static void clear_all_flags(DmaStream stream) {
         auto* dma = dma_regs(stream.controller);
@@ -253,6 +263,7 @@ public:
 
     /**
      * @brief Get remaining items count
+     * @note ISR-safe — volatile register read
      */
     static uint16_t remaining(DmaStream stream) {
         return static_cast<uint16_t>(stream_regs(stream)->NDTR);
@@ -266,6 +277,7 @@ public:
      *
      * @param stream   DMA controller + stream
      * @param callback Function pointer (called from ISR context)
+     * @note Not ISR-safe — call before enabling stream
      */
     static void set_callback(DmaStream stream, void(*callback)()) {
         uint8_t idx = (stream.controller == 1) ? stream.stream

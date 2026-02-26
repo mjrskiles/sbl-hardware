@@ -27,6 +27,7 @@ public:
      * @brief Initialize SysTick for 1ms ticks
      * @param cpu_freq_hz CPU frequency in Hz (default 480 MHz for STM32H750)
      * @return true (always succeeds; matches init() pattern of other drivers)
+     * @note Not ISR-safe — init-time only
      */
     static bool init(uint32_t cpu_freq_hz = DEFAULT_CPU_FREQ_HZ) {
         using namespace sbl::hw::reg;
@@ -50,6 +51,7 @@ public:
 
     /**
      * @brief Get milliseconds since boot
+     * @note ISR-safe — volatile read
      */
     static uint32_t millis() {
         return s_tick_count;
@@ -57,6 +59,7 @@ public:
 
     /**
      * @brief Get microseconds since boot (approximate)
+     * @note ISR-safe — volatile reads (minor race between ms and counter is acceptable)
      */
     static uint32_t micros() {
         using namespace sbl::hw::reg;
@@ -73,6 +76,8 @@ public:
      *
      * Polls millis() (driven by SysTick interrupt). Simple and correct —
      * the interrupt is the sole tick source, so no double-counting.
+     *
+     * @note Not ISR-safe — blocking busy-wait. Use NonBlockingDelay for main loop.
      */
     static void delay_ms(uint32_t ms) {
         uint32_t start = s_tick_count;

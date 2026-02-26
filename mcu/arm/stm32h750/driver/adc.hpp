@@ -49,6 +49,7 @@ public:
      * and enables the ADC. Call once at startup.
      *
      * @return true if all three ADC peripherals initialized successfully
+     * @note Not ISR-safe — blocking (regulator startup, calibration, ADRDY). Init-time only.
      */
     static bool init() {
         using namespace sbl::hw::reg;
@@ -90,6 +91,7 @@ public:
      *
      * @param handle ADC channel handle (adc=1,2,3; channel=0-19)
      * @param sample_time Sampling duration
+     * @note Not ISR-safe — call before starting conversions
      */
     static void configure_channel(const sbl::AdcHandle& handle, SampleTime sample_time) {
         auto adc = get_adc(handle.adc);
@@ -118,6 +120,7 @@ public:
      * @brief Start single conversion
      *
      * @param handle ADC channel handle
+     * @note Not ISR-safe — main context only
      */
     static void start_conversion(const sbl::AdcHandle& handle) {
         using namespace sbl::hw::reg;
@@ -134,6 +137,7 @@ public:
      * @brief Check if conversion is complete
      *
      * @return true if conversion complete, false otherwise
+     * @note ISR-safe — volatile register read
      */
     static bool is_conversion_complete() {
         using namespace sbl::hw::reg;
@@ -147,6 +151,7 @@ public:
      *
      * @param adc_num ADC peripheral number (1, 2, or 3)
      * @return true if conversion complete
+     * @note ISR-safe — volatile register read
      */
     static bool is_conversion_complete(uint32_t adc_num) {
         using namespace sbl::hw::reg;
@@ -158,6 +163,7 @@ public:
      * @brief Read raw conversion result
      *
      * @return 16-bit ADC value (0-65535)
+     * @note ISR-safe — register read
      */
     static uint16_t read_raw() {
         using namespace sbl::hw::reg;
@@ -169,6 +175,7 @@ public:
      *
      * @param adc_num ADC peripheral number (1, 2, or 3)
      * @return 16-bit ADC value
+     * @note ISR-safe — register read
      */
     static uint16_t read_raw(uint32_t adc_num) {
         auto adc = get_adc(adc_num);
@@ -200,6 +207,7 @@ public:
      * @param buffer      DMA-accessible buffer, must have num_channels elements.
      *                    Use SBL_DMA_BUFFER for placement in RAM_D2.
      * @param sample_time Sampling duration for all channels (default: Slow)
+     * @note Not ISR-safe — blocking (stops ongoing conversion). Init-time only.
      */
     static void start_dma_scan(const sbl::AdcHandle* channels, uint8_t num_channels,
                                uint16_t* buffer,
@@ -276,6 +284,7 @@ public:
      *
      * Stops ADC conversion and disables DMA. After calling this,
      * polling functions can be used again.
+     * @note Not ISR-safe — blocking (polls ADSTART clear)
      */
     static void stop_dma_scan() {
         using namespace sbl::hw::reg;

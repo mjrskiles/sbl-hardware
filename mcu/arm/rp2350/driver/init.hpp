@@ -10,6 +10,7 @@ namespace sbl::driver {
  * @brief Initialize RP2350 board
  *
  * Sets up stdio for USB/UART output.
+ * @note Not ISR-safe — call once at boot before interrupts are enabled
  */
 inline void init() {
     stdio_init_all();

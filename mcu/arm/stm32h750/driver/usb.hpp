@@ -57,6 +57,8 @@ inline void apply_vbus_bypass() {
  * 6. Applies VBUS bypass for Daisy Seed (no VBUS sensing)
  *
  * Call after sbl::driver::init() to ensure HSE is running.
+ *
+ * @note Not ISR-safe — blocking. Boot-time only.
  */
 inline void init() {
     // Initialize USB clocks and GPIO
@@ -75,7 +77,8 @@ inline void init() {
  * @brief Process USB events
  *
  * Must be called periodically to handle USB enumeration and data transfer.
- * Can be called from main loop or a timer interrupt.
+ *
+ * @note Not ISR-safe — main loop only (calls TinyUSB stack).
  */
 inline void task() {
     tud_task();
@@ -83,6 +86,8 @@ inline void task() {
 
 /**
  * @brief Check if USB device is ready (enumerated and configured)
+ *
+ * @note ISR-safe — TinyUSB state query.
  */
 inline bool ready() {
     return tud_ready();

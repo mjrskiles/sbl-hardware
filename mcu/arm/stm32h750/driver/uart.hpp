@@ -226,6 +226,7 @@ public:
      *
      * @param handle UartHandle with resolved peripheral, pins, AF, and baud
      * @return true if UART initialized (continues even on TEACK timeout for debug use)
+     * @note Not ISR-safe — blocking (TEACK wait). Init-time only.
      */
     static bool init(const sbl::UartHandle& handle) {
         using namespace sbl::hw::reg;
@@ -293,6 +294,7 @@ public:
      *
      * @param handle UartHandle — only peripheral, rx_port, rx_pin, rx_af, baud are used
      * @return true if initialized successfully
+     * @note Not ISR-safe — init-time only
      */
     static bool init_rx(const sbl::UartHandle& handle) {
         using namespace sbl::hw::reg;
@@ -346,6 +348,8 @@ public:
      * the buffer into the hardware FIFO. Back-pressure: spins if buffer full.
      *
      * @param byte Byte to send
+     * @note Mostly ISR-safe — spins if TX buffer full. Use try_write_byte()
+     *       for guaranteed non-blocking behavior.
      */
     static void write_byte(uint8_t byte) {
         if (!s_tx_enabled) return;
@@ -363,6 +367,7 @@ public:
      * @brief Write buffer
      * @param data Data buffer
      * @param len Number of bytes to write
+     * @note Mostly ISR-safe — spins per byte if TX buffer full
      */
     static void write(const uint8_t* data, size_t len) {
         for (size_t i = 0; i < len; ++i) {
@@ -373,6 +378,7 @@ public:
     /**
      * @brief Write null-terminated string
      * @param str String to write
+     * @note Mostly ISR-safe — spins per byte if TX buffer full
      */
     static void write_string(const char* str) {
         while (*str) {
@@ -381,8 +387,51 @@ public:
     }
 
     /**
+     * @brief Non-blocking write — returns false if TX buffer full
+     *
+     * Unlike write_byte(), never spins. Safe to call from any ISR priority.
+     *
+     * @param byte Byte to send
+     * @return true if byte was queued, false if TX buffer full
+     * @note ISR-safe — never blocks
+     */
+    static bool try_write_byte(uint8_t byte) {
+        if (!s_tx_enabled) return false;
+
+        if (!s_tx_buf.push(byte)) {
+            return false;
+        }
+
+        // Enable TX interrupt — ISR will drain the buffer
+        s_usart->CR1 |= sbl::hw::reg::USART::TXEIE;
+        return true;
+    }
+
+    /**
+     * @brief Non-blocking string write — stops if TX buffer full
+     *
+     * Writes as many bytes as the TX buffer can accept without spinning.
+     *
+     * @param str String to write
+     * @return Number of bytes written (may be less than strlen if buffer full)
+     * @note ISR-safe — never blocks
+     */
+    static size_t try_write_string(const char* str) {
+        size_t written = 0;
+        while (*str) {
+            if (!try_write_byte(static_cast<uint8_t>(*str))) {
+                break;
+            }
+            ++str;
+            ++written;
+        }
+        return written;
+    }
+
+    /**
      * @brief Check if RX data available in ring buffer
      * @return true if at least one byte is buffered
+     * @note ISR-safe — lock-free ring buffer query
      */
     static bool available() {
         return !s_rx_buf.empty();
@@ -394,6 +443,8 @@ public:
      *
      * Non-blocking. Callers should check available() first, or use
      * sbl::midi::poll<>() which handles the available/read loop.
+     *
+     * @note ISR-safe — lock-free ring buffer pop
      */
     static uint8_t read_byte() {
         uint8_t b;

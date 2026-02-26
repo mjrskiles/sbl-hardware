@@ -36,6 +36,7 @@ public:
      * @brief Register a GPIO pin as a BCM channel
      * @param handle GPIO handle (port, pin, active_low)
      * @return Channel index for use with set_duty()
+     * @note Not ISR-safe — call before start()
      */
     static uint8_t add_channel(const sbl::GpioHandle& handle) {
         uint8_t idx = num_channels_;
@@ -61,6 +62,7 @@ public:
      * Writes to pending buffer. Active buffer is swapped in ISR at bit 0.
      * @param channel Channel index from add_channel()
      * @param duty Duty cycle 0-255
+     * @note ISR-safe — writes to pending buffer (double-buffered)
      */
     static void set_duty(uint8_t channel, uint8_t duty) {
         duty_pending_[channel] = duty;
@@ -79,6 +81,7 @@ public:
      * Call after all channels are registered via add_channel().
      * TIM7 clock: APB1 timer = 240 MHz (post-init).
      * PSC = 239 -> 1 MHz tick. ARR = 3 -> 4 us for bit 0.
+     * @note Not ISR-safe — init-time only
      */
     static void start() {
         using namespace sbl::hw::reg;
