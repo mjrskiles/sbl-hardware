@@ -175,7 +175,11 @@ void Reset_Handler() {
     __asm__ volatile("isb");
 
     // Call C++ constructors for static objects
-    // (if using static constructors, add __libc_init_array call here)
+    extern void (*__init_array_start[])();
+    extern void (*__init_array_end[])();
+    for (void (**p)() = __init_array_start; p < __init_array_end; p++) {
+        (*p)();
+    }
 
     // Call main
     main();
