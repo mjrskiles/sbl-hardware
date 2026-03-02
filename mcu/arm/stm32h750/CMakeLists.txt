@@ -33,6 +33,7 @@ set(SBL_STM32H750_DRIVER_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/dma.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/dma_buffer.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/gpio.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/i2c.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/init.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/sai.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/soft_pwm.hpp
@@ -50,6 +51,7 @@ set(SBL_STM32H750_REG_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/dma.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/flash.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/gpio.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/i2c.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/irq.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/pwr.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/rcc.hpp
@@ -63,9 +65,10 @@ set(SBL_STM32H750_REG_HEADERS
 file(COPY ${SBL_STM32H750_DRIVER_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
 file(COPY ${SBL_STM32H750_REG_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
 
-# Startup code (compiled)
+# Startup code + malloc trap (compiled)
 add_library(sbl_stm32h750_startup STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/startup.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/malloc_trap.cpp
 )
 
 target_include_directories(sbl_stm32h750_startup PUBLIC
@@ -103,6 +106,26 @@ target_compile_options(sbl_stm32h750_driver INTERFACE
     -Wall
     -Wextra
     -Os
+    # Real-time safety warnings (FDP-020)
+    -Werror=vla                 # VLAs are stack bombs in ISR context
+    -Wdouble-promotion          # Catch float→double on M7 (still safe but wasteful)
+    -Wfloat-conversion          # Catch implicit float↔int
+    -Wframe-larger-than=512     # Large stack frames in audio callbacks
+    -Wstack-usage=1024          # Per-function stack budget
+)
+
+# Malloc trap: intercept heap allocations at link time (FDP-020)
+# Default-on for all firmware — bare-metal audio must never allocate.
+# Wraps both standard and newlib reentrant (_r) variants.
+set(SBL_MALLOC_TRAP_FLAGS
+    -Wl,--wrap=malloc
+    -Wl,--wrap=free
+    -Wl,--wrap=calloc
+    -Wl,--wrap=realloc
+    -Wl,--wrap=_malloc_r
+    -Wl,--wrap=_free_r
+    -Wl,--wrap=_calloc_r
+    -Wl,--wrap=_realloc_r
 )
 
 # Propagate link options to users
@@ -110,6 +133,7 @@ target_link_options(sbl_stm32h750_driver INTERFACE
     ${SBL_STM32H750_CPU_FLAGS}
     -T${SBL_STM32H750_LINKER_SCRIPT}
     -Wl,--gc-sections
+    ${SBL_MALLOC_TRAP_FLAGS}
     --specs=nosys.specs
     --specs=nano.specs
     -lc

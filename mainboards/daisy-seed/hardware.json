@@ -111,6 +111,15 @@
         "rx_pin": "PC11",
         "baud": 115200
       }
+    ],
+    "i2c": [
+      {
+        "id": "i2c1",
+        "mcu_peripheral": "I2C1",
+        "scl_pin": "PB8",
+        "sda_pin": "PB9",
+        "speed": 400000
+      }
     ]
   },
 

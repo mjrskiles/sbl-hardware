@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2025-12-19T21:10:07.244027
+ * Generated: 2026-03-01T19:33:05.152110
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */

@@ -90,6 +90,16 @@ extern "C" {
     // USB2 only has one IRQ (101), no separate EP1 IRQs. Positions 99-100 are other peripherals.
     void OTG_FS_IRQHandler() __attribute__((weak, alias("Default_Handler")));  // USB2 main - position 101
 
+    // I2C interrupt handlers (overridden by i2c_irq.cpp when linked)
+    void I2C1_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C1_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C2_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C2_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C3_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C3_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C4_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C4_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+
     // USART interrupt handlers (overridden by uart_irq.cpp when linked)
     void USART1_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
     void USART2_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
@@ -251,10 +261,10 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 28
     reinterpret_cast<void*>(Default_Handler),           // 29
     reinterpret_cast<void*>(Default_Handler),           // 30
-    reinterpret_cast<void*>(Default_Handler),           // 31
-    reinterpret_cast<void*>(Default_Handler),           // 32
-    reinterpret_cast<void*>(Default_Handler),           // 33
-    reinterpret_cast<void*>(Default_Handler),           // 34
+    reinterpret_cast<void*>(I2C1_EV_IRQHandler),         // 31 - I2C1 event
+    reinterpret_cast<void*>(I2C1_ER_IRQHandler),         // 32 - I2C1 error
+    reinterpret_cast<void*>(I2C2_EV_IRQHandler),         // 33 - I2C2 event
+    reinterpret_cast<void*>(I2C2_ER_IRQHandler),         // 34 - I2C2 error
     reinterpret_cast<void*>(Default_Handler),           // 35
     reinterpret_cast<void*>(Default_Handler),           // 36
     reinterpret_cast<void*>(USART1_IRQHandler),         // 37 - USART1
@@ -292,8 +302,8 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(DMA2_Stream6_IRQHandler),    // 69 - DMA2 stream 6
     reinterpret_cast<void*>(DMA2_Stream7_IRQHandler),    // 70 - DMA2 stream 7
     reinterpret_cast<void*>(USART6_IRQHandler),         // 71 - USART6
-    reinterpret_cast<void*>(Default_Handler),           // 72
-    reinterpret_cast<void*>(Default_Handler),           // 73
+    reinterpret_cast<void*>(I2C3_EV_IRQHandler),         // 72 - I2C3 event
+    reinterpret_cast<void*>(I2C3_ER_IRQHandler),         // 73 - I2C3 error
     reinterpret_cast<void*>(OTG_HS_EP1_OUT_IRQHandler),  // 74 - USB1 EP1 OUT
     reinterpret_cast<void*>(OTG_HS_EP1_IN_IRQHandler),  // 75 - USB1 EP1 IN
     reinterpret_cast<void*>(Default_Handler),           // 76 - USB1 WKUP (unused)
@@ -315,8 +325,8 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(Default_Handler),           // 92
     reinterpret_cast<void*>(Default_Handler),           // 93
     reinterpret_cast<void*>(Default_Handler),           // 94
-    reinterpret_cast<void*>(Default_Handler),           // 95
-    reinterpret_cast<void*>(Default_Handler),           // 96
+    reinterpret_cast<void*>(I2C4_EV_IRQHandler),         // 95 - I2C4 event
+    reinterpret_cast<void*>(I2C4_ER_IRQHandler),         // 96 - I2C4 error
     reinterpret_cast<void*>(Default_Handler),           // 97
     reinterpret_cast<void*>(Default_Handler),           // 98
     reinterpret_cast<void*>(Default_Handler),           // 99 - Reserved (not USB2)

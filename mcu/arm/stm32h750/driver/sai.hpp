@@ -115,6 +115,27 @@ public:
     }
 
     /**
+     * @brief Check and clear SAI FIFO underrun flag (FDP-020)
+     *
+     * Reads the OVRUDR (overrun/underrun) bit in SAI_ASR for Block A (TX).
+     * In master TX mode, this indicates a FIFO underrun — the DMA didn't
+     * fill the FIFO fast enough, causing an audio glitch.
+     *
+     * Safe to call from control context (not ISR-critical).
+     *
+     * @return true if an underrun occurred since the last check
+     */
+    static bool check_underrun() {
+        using namespace sbl::hw::reg;
+        bool underrun = (periph::sai1->SAI_ASR & SAI1::SAI_ASR_OVRUDR) != 0;
+        if (underrun) {
+            // Clear the flag by writing 1 to COVRUDR in the clear register
+            periph::sai1->SAI_ACLRFR = SAI1::SAI_ACLRFR_COVRUDR;
+        }
+        return underrun;
+    }
+
+    /**
      * @brief Stop audio streaming
      *
      * Disables SAI blocks (master before slave), then DMA.

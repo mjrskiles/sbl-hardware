@@ -9,8 +9,8 @@
  * D1/D2/D3 CCIPR registers needs its kernel clock explicitly selected.
  * Don't assume defaults work - they often point to PLLs that aren't configured.
  *
- * Affected so far: USART (D2CCIP2R), ADC (D3CCIPR).
- * Future: SPI, I2C, LPTIM, etc.
+ * Affected so far: USART (D2CCIP2R), ADC (D3CCIPR), I2C (D2CCIP2R, D3CCIPR).
+ * Future: SPI, LPTIM, etc.
  */
 #ifndef SBL_HW_DRIVER_CLOCK_HPP_
 #define SBL_HW_DRIVER_CLOCK_HPP_
@@ -98,6 +98,52 @@ inline void set_adc_kernel_clock(KernelClockSrc src) {
         default:                    sel = 2; break;  // Default to per_ck
     }
     periph::rcc->D3CCIPR = (periph::rcc->D3CCIPR & ~(0x3u << 16)) | (sel << 16);
+}
+
+/**
+ * @brief Set I2C1/2/3 kernel clock source (D2CCIP2R.I2C123SEL)
+ *
+ * Valid sources: rcc_pclk1(0), pll3r(1), hsi(2), csi(3)
+ *
+ * Note: Default I2C123SEL=00 selects rcc_pclk1 which depends on PLL config.
+ * Use HSI (64 MHz) for safe, PLL-independent initialization.
+ */
+inline void set_i2c123_kernel_clock(KernelClockSrc src) {
+    using namespace sbl::hw::reg;
+    uint32_t sel;
+    switch (src) {
+        case KernelClockSrc::HSI:   sel = 2; break;
+        case KernelClockSrc::CSI:   sel = 3; break;
+        case KernelClockSrc::PLL3R: sel = 1; break;
+        default:                    sel = 2; break;  // Default to HSI
+    }
+    uint32_t d2ccip2r = periph::rcc->D2CCIP2R;
+    d2ccip2r &= ~RCC::D2CCIP2R_I2C123SEL_Msk;
+    d2ccip2r |= (sel << RCC::D2CCIP2R_I2C123SEL_Pos);
+    periph::rcc->D2CCIP2R = d2ccip2r;
+}
+
+/**
+ * @brief Set I2C4 kernel clock source (D3CCIPR.I2C4SEL)
+ *
+ * Valid sources: rcc_pclk4(0), pll3r(1), hsi(2), csi(3)
+ *
+ * Note: I2C4 is in D3 domain. Default I2C4SEL=00 selects rcc_pclk4.
+ * Use HSI (64 MHz) for safe initialization.
+ */
+inline void set_i2c4_kernel_clock(KernelClockSrc src) {
+    using namespace sbl::hw::reg;
+    uint32_t sel;
+    switch (src) {
+        case KernelClockSrc::HSI:   sel = 2; break;
+        case KernelClockSrc::CSI:   sel = 3; break;
+        case KernelClockSrc::PLL3R: sel = 1; break;
+        default:                    sel = 2; break;  // Default to HSI
+    }
+    uint32_t d3ccipr = periph::rcc->D3CCIPR;
+    d3ccipr &= ~RCC::D3CCIPR_I2C4SEL_Msk;
+    d3ccipr |= (sel << RCC::D3CCIPR_I2C4SEL_Pos);
+    periph::rcc->D3CCIPR = d3ccipr;
 }
 
 } // namespace detail

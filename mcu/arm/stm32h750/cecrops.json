@@ -37,6 +37,10 @@
     "sai": {
       "peripherals": ["SAI1", "SAI2", "SAI3", "SAI4"],
       "output": "reg/sai.hpp"
+    },
+    "i2c": {
+      "peripherals": ["I2C1", "I2C2", "I2C3", "I2C4"],
+      "output": "reg/i2c.hpp"
     }
   },
 
