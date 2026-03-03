@@ -105,7 +105,8 @@ target_compile_options(sbl_stm32h750_driver INTERFACE
     -fno-rtti
     -Wall
     -Wextra
-    -Os
+    -O2
+    -g
     # Real-time safety warnings (FDP-020)
     -Werror=vla                 # VLAs are stack bombs in ISR context
     -Wdouble-promotion          # Catch float→double on M7 (still safe but wasteful)
