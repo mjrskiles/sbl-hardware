@@ -17,8 +17,10 @@ extern "C" {
     extern uint32_t _edata;       // End of .data section
     extern uint32_t _sbss;        // Start of .bss section
     extern uint32_t _ebss;        // End of .bss section
-    extern uint32_t _sdma_buffer; // Start of .dma_buffer section (RAM_D2)
-    extern uint32_t _edma_buffer; // End of .dma_buffer section
+    extern uint32_t _sdma_buffer;   // Start of .dma_buffer section (RAM_D2)
+    extern uint32_t _edma_buffer;   // End of .dma_buffer section
+    extern uint32_t _saudio_buffer; // Start of .audio_buffer section (RAM_D1)
+    extern uint32_t _eaudio_buffer; // End of .audio_buffer section
 
     // System core clock - required by TinyUSB
     // Daisy Seed runs at 480MHz but boots with HSI (64MHz) until PLL init
@@ -173,6 +175,12 @@ void Reset_Handler() {
     // Zero .dma_buffer section (RAM_D2, NOLOAD — no flash LMA)
     dst = &_sdma_buffer;
     while (dst < &_edma_buffer) {
+        *dst++ = 0;
+    }
+
+    // Zero .audio_buffer section (RAM_D1, NOLOAD — reverb/delay pools)
+    dst = &_saudio_buffer;
+    while (dst < &_eaudio_buffer) {
         *dst++ = 0;
     }
 

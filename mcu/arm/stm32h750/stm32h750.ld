@@ -178,9 +178,11 @@ SECTIONS
     .audio_buffer (NOLOAD) :
     {
         . = ALIGN(4);
+        _saudio_buffer = .;
         *(.audio_buffer)
         *(.audio_buffer*)
         . = ALIGN(4);
+        _eaudio_buffer = .;
     } >RAM_D1
 
     /* Remove debug info from output */
