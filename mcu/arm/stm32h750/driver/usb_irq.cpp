@@ -12,9 +12,6 @@
 #include "tusb.h"
 #include <cstdint>
 
-// Debug counter to verify ISR is being called - visible to main.cpp
-volatile uint32_t usb_irq_count = 0;
-
 extern "C" {
 
 /**
@@ -24,7 +21,6 @@ extern "C" {
  * USB2_OTG_FS has a single combined interrupt, unlike USB1_OTG_HS which has 3.
  */
 void OTG_FS_IRQHandler(void) {
-    ++usb_irq_count;
     tud_int_handler(0);  // Port 0 = USB2_OTG_FS
 }
 

@@ -56,10 +56,12 @@ extern "C" {
 // Enable CDC (Communications Device Class)
 #define CFG_TUD_CDC 1
 
+// Enable MIDI (USB MIDI 1.0 class — bidirectional)
+#define CFG_TUD_MIDI 1
+
 // Disable other classes
 #define CFG_TUD_MSC 0
 #define CFG_TUD_HID 0
-#define CFG_TUD_MIDI 0
 #define CFG_TUD_AUDIO 0
 #define CFG_TUD_VENDOR 0
 
@@ -73,6 +75,13 @@ extern "C" {
 
 // Endpoint buffer size (must be power of 2, max 64 for full-speed)
 #define CFG_TUD_CDC_EP_BUFSIZE 64
+
+//--------------------------------------------------------------------
+// MIDI CLASS CONFIGURATION
+//--------------------------------------------------------------------
+
+#define CFG_TUD_MIDI_RX_BUFSIZE 64
+#define CFG_TUD_MIDI_TX_BUFSIZE 64
 
 #ifdef __cplusplus
 }
