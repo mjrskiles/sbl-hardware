@@ -35,7 +35,7 @@ extern "C" {
     // Core exception handlers
     void Reset_Handler();
     void NMI_Handler()          __attribute__((weak, alias("Default_Handler")));
-    void HardFault_Handler()    __attribute__((weak, alias("Default_Handler")));
+    void HardFault_Handler();
     void MemManage_Handler()    __attribute__((weak, alias("Default_Handler")));
     void BusFault_Handler()     __attribute__((weak, alias("Default_Handler")));
     void UsageFault_Handler()   __attribute__((weak, alias("Default_Handler")));
@@ -107,6 +107,12 @@ extern "C" {
     void USART2_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
     void USART3_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
     void USART6_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+
+    // Fault handler callback — overridden by sbl/assert.hpp when included
+    __attribute__((weak)) void sbl_on_hard_fault(const uint32_t* frame) {
+        (void)frame;
+        while (true) { __asm__ volatile("bkpt #0"); }
+    }
 }
 
 /**
@@ -118,6 +124,31 @@ void Default_Handler() {
     while (true) {
         __asm__ volatile("bkpt #0");  // Breakpoint for debugger
     }
+}
+
+/**
+ * @brief HardFault handler with register dump
+ *
+ * The Cortex-M exception entry pushes {R0-R3, R12, LR, PC, xPSR}
+ * onto the active stack (MSP or PSP). Bit 2 of EXC_RETURN (in LR)
+ * indicates which stack was active:
+ *   LR[2] == 0 → MSP (handler mode or main thread without RTOS)
+ *   LR[2] == 1 → PSP (thread mode with RTOS)
+ *
+ * We extract the correct stack pointer and pass it to
+ * sbl_on_hard_fault() which dumps the frame. If sbl/assert.hpp
+ * is included, it provides the real implementation with formatted
+ * output. Otherwise the weak default just hits a breakpoint.
+ */
+__attribute__((naked))
+void HardFault_Handler() {
+    __asm__ volatile(
+        "tst lr, #4          \n"  // Test bit 2 of EXC_RETURN
+        "ite eq              \n"
+        "mrseq r0, msp       \n"  // LR[2]==0: fault used MSP
+        "mrsne r0, psp       \n"  // LR[2]==1: fault used PSP
+        "b sbl_on_hard_fault \n"  // Tail-call with frame pointer in R0
+    );
 }
 
 // Minimal delay for debug blinking

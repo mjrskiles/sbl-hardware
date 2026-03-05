@@ -11,6 +11,14 @@
  */
 
 #include "tusb.h"
+
+// The CMSIS compat shim (stm32h7xx.h → sbl_usb_shim.h) defines C macros
+// that conflict with SBL's C++ register namespaces. Undefine them now that
+// TinyUSB headers are done processing.
+#undef RCC
+#undef NVIC
+#undef SCB
+
 #include "init.hpp"         // For init_usb()
 #include "timer.hpp"        // For millis()
 #include <sbl/hw/reg/usb_otg.hpp>  // For periph::usb2_global, GCCFG::, GOTGCTL::
@@ -43,6 +51,32 @@ inline void apply_vbus_bypass() {
     usb->GOTGCTL |= GOTGCTL::BVALOEN | GOTGCTL::BVALOVAL;
 }
 
+/**
+ * @brief Force USB soft disconnect to trigger host re-enumeration
+ *
+ * After a debugger reset, the USB peripheral resets but the physical
+ * D+/D- lines stay connected. The host still thinks the old device
+ * exists. Setting SDIS (soft disconnect, DCTL bit 1) pulls D+ low,
+ * forcing the host to detect a disconnect. After a brief delay,
+ * clearing SDIS allows the host to re-enumerate the device.
+ *
+ * Must be called BEFORE tusb_init().
+ */
+inline void force_usb_reenumerate() {
+    constexpr uint32_t DCTL_SDIS = (1u << 1);
+
+    auto* dev = sbl::hw::reg::periph::usb2_device;
+
+    // Assert soft disconnect — host sees device disappear
+    dev->DCTL |= DCTL_SDIS;
+
+    // Wait for host to process disconnect (~10ms is sufficient)
+    for (volatile uint32_t i = 0; i < 500000; ++i) { __asm volatile("nop"); }
+
+    // Release soft disconnect — host will re-enumerate
+    dev->DCTL &= ~DCTL_SDIS;
+}
+
 } // namespace detail
 
 /**
@@ -64,6 +98,11 @@ inline void init() {
     // Initialize USB clocks and GPIO
     // This configures PLL3 for 48 MHz and enables USB2_OTG_FS
     sbl::driver::init_usb();
+
+    // Force USB disconnect/reconnect so the host re-enumerates after
+    // debugger resets (which reset the peripheral but not the physical
+    // USB connection)
+    detail::force_usb_reenumerate();
 
     // Initialize TinyUSB device stack
     tusb_init();

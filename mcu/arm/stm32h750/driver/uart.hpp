@@ -387,6 +387,28 @@ public:
     }
 
     /**
+     * @brief Polling write — bypasses ring buffer, works with interrupts disabled
+     *
+     * Writes directly to hardware TDR, spinning on TXE for each byte.
+     * Use only from fault/panic context where ISRs are disabled.
+     *
+     * @param str Null-terminated string to write
+     * @note NOT ISR-safe — blocks until all bytes are transmitted
+     */
+    static void write_string_polling(const char* str) {
+        using namespace sbl::hw::reg;
+        if (!s_usart) return;
+
+        while (*str) {
+            // Wait for TX data register empty
+            while (!(s_usart->ISR & USART::TXE)) {}
+            s_usart->TDR = static_cast<uint8_t>(*str++);
+        }
+        // Wait for transmission complete
+        while (!(s_usart->ISR & (1u << 6))) {}  // TC bit
+    }
+
+    /**
      * @brief Non-blocking write — returns false if TX buffer full
      *
      * Unlike write_byte(), never spins. Safe to call from any ISR priority.

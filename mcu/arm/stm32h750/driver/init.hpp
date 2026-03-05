@@ -509,16 +509,23 @@ inline bool init(const ClockConfig& config = ClockConfig{}) {
     uint32_t divm1 = config.hse_mhz / 4;
     periph::rcc->PLLCKSELR = PLLCKSELR_PLLSRC_HSE | (divm1 << 4);
 
-    // PLL1 config: input range 4-8MHz (PLL1RGE=2), enable P output (DIVP1EN)
-    periph::rcc->PLLCFGR = PLLCFGR_PLL1RGE_4_8 | RCC::PLLCFGR_DIVP1EN;
+    // PLL1 config: input range 4-8MHz (PLL1RGE=2), enable P and Q outputs
+    // P = SYSCLK (480 MHz), Q = SDMMC/general (48 MHz)
+    periph::rcc->PLLCFGR = PLLCFGR_PLL1RGE_4_8
+                          | RCC::PLLCFGR_DIVP1EN
+                          | RCC::PLLCFGR_DIVQ1EN;
 
     // Calculate dividers for target frequency
     // VCO = target * 2 = 960 MHz, DIVN = VCO / PLL_input = 960 / 4 = 240
+    // DIVP = 2 → 480 MHz SYSCLK, DIVQ = 20 → 48 MHz (SDMMC, etc.)
     uint32_t pll_input_mhz = config.hse_mhz / divm1;
     uint32_t vco_mhz = config.sysclk_mhz * 2;
     uint32_t divn = vco_mhz / pll_input_mhz;
     uint32_t divp = 2;
-    periph::rcc->PLL1DIVR = ((divn - 1) << 0) | ((divp - 1) << 9);
+    uint32_t divq = vco_mhz / 48;  // 960/48 = 20
+    periph::rcc->PLL1DIVR = ((divn - 1) << RCC::PLL1DIVR_DIVN1_Pos)
+                           | ((divp - 1) << RCC::PLL1DIVR_DIVP1_Pos)
+                           | ((divq - 1) << RCC::PLL1DIVR_DIVQ1_Pos);
 
     // Enable PLL1 and wait for lock
     periph::rcc->CR |= RCC::CR_PLL1ON;
@@ -728,6 +735,83 @@ inline bool init_audio(uint32_t hse_mhz = 16) {
     codec_reset_release();
 
     return true;
+}
+
+/**
+ * @brief Initialize SDMMC1 clocks and GPIO
+ *
+ * Configures:
+ * - D1CCIPR.SDMMCSEL = PLL1Q (48 MHz, configured in init())
+ * - AHB3 bus clock for SDMMC1
+ * - GPIO: PC8(D0), PC9(D1), PC10(D2), PC11(D3), PC12(CK), PD2(CMD) as AF12
+ *
+ * NOTE: PC10/PC11 conflict with USART3 — cannot use debug UART and SD card
+ * simultaneously on Daisy Pod.
+ *
+ * Must be called AFTER init() (PLL1Q must be running).
+ *
+ * @note Not ISR-safe — blocking. Boot-time only.
+ */
+inline void init_sdmmc() {
+    using namespace detail;
+    using namespace sbl::hw::reg;
+
+    // Select PLL1Q as SDMMC kernel clock (D1CCIPR.SDMMCSEL = 0)
+    uint32_t d1ccipr = periph::rcc->D1CCIPR;
+    d1ccipr &= ~RCC::D1CCIPR_SDMMCSEL;  // Bit 16 = 0 → PLL1Q
+    periph::rcc->D1CCIPR = d1ccipr;
+
+    // Enable SDMMC1 bus clock on AHB3
+    periph::rcc->AHB3ENR |= RCC::AHB3ENR_SDMMC1EN;
+    volatile uint32_t dummy = periph::rcc->AHB3ENR;
+    (void)dummy;
+
+    // Enable GPIOC and GPIOD clocks
+    periph::rcc->AHB4ENR |= RCC::AHB4ENR_GPIOCEN | RCC::AHB4ENR_GPIODEN;
+    dummy = periph::rcc->AHB4ENR;
+    (void)dummy;
+
+    // Configure GPIOC pins 8-12 as AF12 (SDMMC1), very high speed, push-pull, pull-up
+    // PC8=D0, PC9=D1, PC10=D2, PC11=D3, PC12=CK
+    uint32_t moder = periph::gpioc->GPIO_MODER;
+    uint32_t ospeedr = periph::gpioc->GPIO_OSPEEDR;
+    uint32_t pupdr = periph::gpioc->GPIO_PUPDR;
+    uint32_t afrh = periph::gpioc->GPIO_AFRH;
+
+    for (uint8_t pin = 8; pin <= 12; ++pin) {
+        moder &= ~(3u << (pin * 2));
+        moder |= (2u << (pin * 2));      // AF mode
+        ospeedr |= (3u << (pin * 2));     // Very high speed
+        pupdr &= ~(3u << (pin * 2));
+        pupdr |= (1u << (pin * 2));       // Pull-up (data lines + CK)
+        afrh &= ~(0xFu << ((pin - 8) * 4));
+        afrh |= (12u << ((pin - 8) * 4)); // AF12 = SDMMC1
+    }
+
+    periph::gpioc->GPIO_MODER = moder;
+    periph::gpioc->GPIO_OSPEEDR = ospeedr;
+    periph::gpioc->GPIO_PUPDR = pupdr;
+    periph::gpioc->GPIO_AFRH = afrh;
+
+    // Configure PD2 as AF12 (SDMMC1_CMD), very high speed, pull-up
+    moder = periph::gpiod->GPIO_MODER;
+    moder &= ~(3u << (2 * 2));
+    moder |= (2u << (2 * 2));            // AF mode
+    periph::gpiod->GPIO_MODER = moder;
+
+    ospeedr = periph::gpiod->GPIO_OSPEEDR;
+    ospeedr |= (3u << (2 * 2));           // Very high speed
+    periph::gpiod->GPIO_OSPEEDR = ospeedr;
+
+    pupdr = periph::gpiod->GPIO_PUPDR;
+    pupdr &= ~(3u << (2 * 2));
+    pupdr |= (1u << (2 * 2));             // Pull-up
+    periph::gpiod->GPIO_PUPDR = pupdr;
+
+    uint32_t afrl = periph::gpiod->GPIO_AFRL;
+    afrl &= ~(0xFu << (2 * 4));
+    afrl |= (12u << (2 * 4));             // AF12 = SDMMC1
+    periph::gpiod->GPIO_AFRL = afrl;
 }
 
 } // namespace sbl::driver
