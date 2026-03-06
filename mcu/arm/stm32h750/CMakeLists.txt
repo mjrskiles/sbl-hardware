@@ -63,7 +63,22 @@ set(SBL_STM32H750_REG_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/usb_otg.hpp
 )
 
-# Copy headers to build include structure
+# Copy headers to build include structure at build time.
+# Using a custom command + stamp file ensures edits to source headers
+# trigger recompilation of dependent targets (file(COPY) only runs at
+# configure time, causing stale builds on header-only changes).
+set(_STAMP ${CMAKE_CURRENT_BINARY_DIR}/headers_copied.stamp)
+add_custom_command(
+    OUTPUT ${_STAMP}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SBL_STM32H750_DRIVER_HEADERS} ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver/
+    COMMAND ${CMAKE_COMMAND} -E copy ${SBL_STM32H750_REG_HEADERS} ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg/
+    COMMAND ${CMAKE_COMMAND} -E touch ${_STAMP}
+    DEPENDS ${SBL_STM32H750_DRIVER_HEADERS} ${SBL_STM32H750_REG_HEADERS}
+    COMMENT "Copying STM32H750 driver/reg headers"
+)
+add_custom_target(sbl_stm32h750_copy_headers DEPENDS ${_STAMP})
+
+# Keep configure-time copy for first build (custom command needs dirs to exist)
 file(COPY ${SBL_STM32H750_DRIVER_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
 file(COPY ${SBL_STM32H750_REG_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
 
@@ -72,6 +87,7 @@ add_library(sbl_stm32h750_startup STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/startup.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/malloc_trap.cpp
 )
+add_dependencies(sbl_stm32h750_startup sbl_stm32h750_copy_headers)
 
 target_include_directories(sbl_stm32h750_startup PUBLIC
     ${SBL_STM32H750_INCLUDE_DIR}

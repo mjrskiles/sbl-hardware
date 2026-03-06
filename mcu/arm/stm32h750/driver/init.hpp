@@ -368,43 +368,6 @@ inline void configure_sai_gpio() {
 }
 
 /**
- * @brief Assert AK4556 codec reset (PB11 high)
- *
- * The AK4556 is hardware-configured — just hold reset high and it runs
- * in its default I2S mode.
- */
-inline void codec_reset_release() {
-    using namespace sbl::hw::reg;
-
-    // Enable GPIOB clock
-    periph::rcc->AHB4ENR |= RCC::AHB4ENR_GPIOBEN;
-    volatile uint32_t dummy = periph::rcc->AHB4ENR;
-    (void)dummy;
-
-    // PB11 as general-purpose output (01b)
-    uint32_t moder = periph::gpiob->GPIO_MODER;
-    moder &= ~(3u << (11 * 2));
-    moder |= (1u << (11 * 2));
-    periph::gpiob->GPIO_MODER = moder;
-
-    // Drive PB11 low first (hold codec in reset)
-    periph::gpiob->GPIO_BSRR = (1u << (11 + 16));  // Reset (low)
-
-    // Brief reset pulse (~1ms)
-    for (volatile uint32_t i = 0; i < 100'000; ++i) {
-        __asm__ volatile("nop");
-    }
-
-    // Release reset (high)
-    periph::gpiob->GPIO_BSRR = (1u << 11);  // Set (high)
-
-    // Give codec time to initialize (~1ms)
-    for (volatile uint32_t i = 0; i < 100'000; ++i) {
-        __asm__ volatile("nop");
-    }
-}
-
-/**
  * @brief Enable USB2 OTG FS peripheral clock
  */
 inline void enable_usb2_clock() {
@@ -464,6 +427,46 @@ inline void configure_usb_gpio() {
 }
 
 } // namespace detail
+
+/**
+ * @brief Release AK4556 codec from reset (PB11 high)
+ *
+ * The AK4556 is hardware-configured — no I2C control port.
+ * Just hold PB11 high and the codec runs in its default MSB-Justified mode.
+ *
+ * Call after init_audio() on Daisy Seed boards.
+ * NOT needed on Patch SM (PCM3060 uses I2C — see codec.hpp).
+ */
+inline void codec_reset_release() {
+    using namespace sbl::hw::reg;
+
+    // Enable GPIOB clock
+    periph::rcc->AHB4ENR |= RCC::AHB4ENR_GPIOBEN;
+    volatile uint32_t dummy = periph::rcc->AHB4ENR;
+    (void)dummy;
+
+    // PB11 as general-purpose output (01b)
+    uint32_t moder = periph::gpiob->GPIO_MODER;
+    moder &= ~(3u << (11 * 2));
+    moder |= (1u << (11 * 2));
+    periph::gpiob->GPIO_MODER = moder;
+
+    // Drive PB11 low first (hold codec in reset)
+    periph::gpiob->GPIO_BSRR = (1u << (11 + 16));  // Reset (low)
+
+    // Brief reset pulse (~1ms)
+    for (volatile uint32_t i = 0; i < 100'000; ++i) {
+        __asm__ volatile("nop");
+    }
+
+    // Release reset (high)
+    periph::gpiob->GPIO_BSRR = (1u << 11);  // Set (high)
+
+    // Give codec time to initialize (~1ms)
+    for (volatile uint32_t i = 0; i < 100'000; ++i) {
+        __asm__ volatile("nop");
+    }
+}
 
 /**
  * @brief Initialize STM32H750 for 480 MHz operation
@@ -780,20 +783,23 @@ inline bool init_usb(uint32_t hse_mhz = 16) {
 }
 
 /**
- * @brief Initialize audio subsystem (PLL2, SAI GPIO, codec reset)
+ * @brief Initialize audio subsystem (PLL2, SAI GPIO, SAI clock)
  *
- * Configures:
+ * Configures MCU-level audio infrastructure shared by all codecs:
  * - PLL2 fractional mode for 12.288 MHz audio MCLK (48 kHz × 256)
  * - SAI1 clock source = PLL2P
  * - SAI1 GPIO pins (PE2-PE6, AF6)
  * - SAI1 peripheral clock
- * - AK4556 codec reset release (PB11)
+ *
+ * Does NOT initialize any codec — call the appropriate codec init after:
+ *   - Daisy Seed (AK4556):  codec_reset_release()
+ *   - Patch SM (PCM3060):   init_pcm3060() (in mainboard driver)
  *
  * Must be called AFTER init() to ensure HSE is running.
  *
  * @note Not ISR-safe — blocking. Boot-time only.
  *
- * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed)
+ * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed / Patch SM)
  * @return true if audio clock setup successful
  */
 inline bool init_audio(uint32_t hse_mhz = 16) {
@@ -815,9 +821,6 @@ inline bool init_audio(uint32_t hse_mhz = 16) {
     periph::rcc->APB2ENR |= RCC::APB2ENR_SAI1EN;
     volatile uint32_t dummy = periph::rcc->APB2ENR;
     (void)dummy;
-
-    // Release codec from reset (PB11 high)
-    codec_reset_release();
 
     return true;
 }
