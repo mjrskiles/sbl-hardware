@@ -50,6 +50,8 @@
         "pin": "b7",
         "function": "gpio",
         "direction": "in",
+        "pull": "up",
+        "active_low": true,
         "id": "button1"
       },
       {
@@ -105,5 +107,13 @@
       { "pin": "cv_in_7", "id": "cv_7" },
       { "pin": "cv_in_8", "id": "cv_8" }
     ]
+  },
+
+  "components": {
+    "button1": { "type": "button",  "pins": {"pin": "button1"} },
+    "knob1":   { "type": "pot",     "pins": {"adc": "knob_1"} },
+    "knob2":   { "type": "pot",     "pins": {"adc": "knob_2"} },
+    "knob3":   { "type": "pot",     "pins": {"adc": "knob_3"} },
+    "knob4":   { "type": "pot",     "pins": {"adc": "knob_4"} }
   }
 }
