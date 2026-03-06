@@ -245,21 +245,24 @@ constexpr uint32_t D2CCIP1R_SAI1SEL_PLL2P = (1u << RCC::D2CCIP1R_SAI1SEL_Pos); /
 // RCC_PLLCFGR.PLL2RGE field value (RM0433 §8.7.11)
 constexpr uint32_t PLLCFGR_PLL2RGE_4_8 = (2u << RCC::PLLCFGR_PLL2RGE_Pos);   // Input 4-8 MHz
 
-// PLL2 fractional config: HSE/4 × (196 + 4981/8192) / 64 = 12.288 MHz
-// Produces 48 kHz × 256 MCLK with <1 ppm error
+// PLL2 fractional config: HSE/4 × (196 + 4981/8192) / 16 = 49.152 MHz
+// SAI uses MCKDIV=2 to divide to 12.288 MHz MCLK (256×48kHz).
+// Using MCKDIV>0 routes through the SAI clock divider for cleaner MCLK
+// (matches libDaisy's approach: PLL3P ~49MHz with MCKDIV=2).
 constexpr uint32_t PLL2_DIVM  = 4;     // HSE prescaler → 4 MHz PLL input
 constexpr uint32_t PLL2_DIVN  = 196;   // VCO integer multiplier
 constexpr uint32_t PLL2_FRACN = 4981;  // Fractional numerator (/8192)
-constexpr uint32_t PLL2_DIVP  = 64;    // P output divider → 12.288 MHz
+constexpr uint32_t PLL2_DIVP  = 16;    // P output divider → 49.152 MHz
 
 /**
  * @brief Configure PLL2 fractional mode for audio clocks
  *
- * PLL2 produces 12.288 MHz for 48 kHz audio (256×Fs MCLK).
+ * PLL2 produces 49.152 MHz for SAI audio clocks.
+ * SAI MCKDIV=2 divides to 12.288 MHz MCLK (256×48kHz).
  *
- * Config: 16 MHz HSE → /4 → 4 MHz → ×196.608 (fractional) → 786.432 MHz VCO → /64 → 12.288 MHz
+ * Config: 16 MHz HSE → /4 → 4 MHz → ×196.608 (fractional) → 786.432 MHz VCO → /16 → 49.152 MHz
  *   DIVN2 = 196 (integer), FRACN2 = 4981 → N_eff = 196 + 4981/8192 = 196.6078
- *   VCO = 4 × 196.6078 = 786.431 MHz, PLL2P = 786.431/64 = 12.288 MHz (<1 ppm error)
+ *   VCO = 4 × 196.6078 = 786.431 MHz, PLL2P = 786.431/16 = 49.152 MHz (<1 ppm error)
  *
  * Must be called AFTER init() (HSE must be running).
  */

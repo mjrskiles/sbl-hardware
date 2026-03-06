@@ -294,6 +294,11 @@ private:
         cr1 |= SAI1::SAI_ACR1_CKSTR;                      // Data on falling edge (MSB-J)
         // DMAEN deferred to start() — ST HAL pattern
         cr1 |= (1u << MCKEN_BIT);                        // MCLK output
+        // MCKDIV=4: PLL2P(49.152MHz) / 4 = 12.288 MHz MCLK = 256×48kHz.
+        // NOTE: RM0433 documents fMCLK = fSAI_CK/(MCKDIV×2) but actual
+        // STM32H750 silicon divides by MCKDIV only (not ×2). Verified
+        // empirically: MCKDIV=2 gives 96kHz, MCKDIV=4 gives 48kHz.
+        cr1 |= (4u << SAI1::SAI_ACR1_MCKDIV_Pos);
         periph::sai1->SAI_ACR1 = cr1;
 
         // Frame config: 64-bit frame, FS active 32 bits, MSB-Justified
@@ -371,60 +376,64 @@ private:
 
         const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
 
-        // --- Stream 0 -> Block A (always primary, always drives ISR) ---
-        DmaConfig cfg_a{};
-        cfg_a.direction = a_is_tx ? DmaDirection::MemoryToPeriph
-                                  : DmaDirection::PeriphToMemory;
-        cfg_a.periph_width = DmaDataWidth::Word;
-        cfg_a.memory_width = DmaDataWidth::Word;
-        cfg_a.priority = DmaPriority::High;
-        cfg_a.circular = true;
-        cfg_a.periph_increment = false;
-        cfg_a.memory_increment = true;
-        cfg_a.half_transfer_irq = true;
-        cfg_a.transfer_complete_irq = true;
+        // The TX stream drives the ISR — the callback must know the TX DMA
+        // position to safely write to the half-buffer the DMA isn't reading.
+        const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
+        const DmaStream rx_stream = a_is_tx ? STREAM_B : STREAM_A;
 
-        Dma::configure(STREAM_A, cfg_a,
-                       &periph::sai1->SAI_ADR,
-                       s_buf_a,
-                       s_buf_samples);
-        Dma::set_request(STREAM_A, DMAMUX_SAI1_A);
-        Dma::set_callback(STREAM_A, dma_callback);
+        // --- TX stream (drives ISR) ---
+        DmaConfig cfg_tx{};
+        cfg_tx.direction = DmaDirection::MemoryToPeriph;
+        cfg_tx.periph_width = DmaDataWidth::Word;
+        cfg_tx.memory_width = DmaDataWidth::Word;
+        cfg_tx.priority = DmaPriority::High;
+        cfg_tx.circular = true;
+        cfg_tx.periph_increment = false;
+        cfg_tx.memory_increment = true;
+        cfg_tx.half_transfer_irq = true;
+        cfg_tx.transfer_complete_irq = true;
 
-        // --- Stream 1 -> Block B (secondary, no ISR) ---
-        DmaConfig cfg_b{};
-        cfg_b.direction = a_is_tx ? DmaDirection::PeriphToMemory
-                                  : DmaDirection::MemoryToPeriph;
-        cfg_b.periph_width = DmaDataWidth::Word;
-        cfg_b.memory_width = DmaDataWidth::Word;
-        cfg_b.priority = DmaPriority::High;
-        cfg_b.circular = true;
-        cfg_b.periph_increment = false;
-        cfg_b.memory_increment = true;
-        cfg_b.half_transfer_irq = false;
-        cfg_b.transfer_complete_irq = false;
+        auto* tx_periph_reg = a_is_tx ? &periph::sai1->SAI_ADR
+                                      : &periph::sai1->SAI_BDR;
+        int32_t* tx_buf = a_is_tx ? s_buf_a : s_buf_b;
+        Dma::configure(tx_stream, cfg_tx, tx_periph_reg, tx_buf, s_buf_samples);
+        Dma::set_request(tx_stream, a_is_tx ? DMAMUX_SAI1_A : DMAMUX_SAI1_B);
+        Dma::set_callback(tx_stream, dma_callback);
 
-        Dma::configure(STREAM_B, cfg_b,
-                       &periph::sai1->SAI_BDR,
-                       s_buf_b,
-                       s_buf_samples);
-        Dma::set_request(STREAM_B, DMAMUX_SAI1_B);
+        // --- RX stream (no ISR) ---
+        DmaConfig cfg_rx{};
+        cfg_rx.direction = DmaDirection::PeriphToMemory;
+        cfg_rx.periph_width = DmaDataWidth::Word;
+        cfg_rx.memory_width = DmaDataWidth::Word;
+        cfg_rx.priority = DmaPriority::High;
+        cfg_rx.circular = true;
+        cfg_rx.periph_increment = false;
+        cfg_rx.memory_increment = true;
+        cfg_rx.half_transfer_irq = false;
+        cfg_rx.transfer_complete_irq = false;
+
+        auto* rx_periph_reg = a_is_tx ? &periph::sai1->SAI_BDR
+                                      : &periph::sai1->SAI_ADR;
+        int32_t* rx_buf = a_is_tx ? s_buf_b : s_buf_a;
+        Dma::configure(rx_stream, cfg_rx, rx_periph_reg, rx_buf, s_buf_samples);
+        Dma::set_request(rx_stream, a_is_tx ? DMAMUX_SAI1_B : DMAMUX_SAI1_A);
     }
 
     /**
      * @brief DMA callback — determines half-buffer and invokes user callback
      *
-     * Called from the TX stream's ISR. Maps buf_a/buf_b to tx/rx pointers
-     * based on layout, then invokes the user callback with the correct half.
+     * Called from the TX stream's ISR. The ISR fires on the TX stream so
+     * we know exactly which half-buffer the DMA just finished reading —
+     * that's the half we can safely overwrite.
      */
     static void dma_callback() {
         if (!s_callback) return;
 
         const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
+        const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
 
         uint16_t half_samples = s_block_size * 2;  // stereo samples per half
-        // ISR always fires on STREAM_A (primary)
-        bool is_half = Dma::is_half_transfer(STREAM_A);
+        bool is_half = Dma::is_half_transfer(tx_stream);
 
         int32_t* tx_buf = a_is_tx ? s_buf_a : s_buf_b;
         int32_t* rx_buf = a_is_tx ? s_buf_b : s_buf_a;
