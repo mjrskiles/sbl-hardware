@@ -2,11 +2,12 @@
  * @file usb_irq.cpp
  * @brief USB OTG interrupt handler for STM32H750
  *
- * Forwards USB2_OTG_FS interrupt to TinyUSB.
+ * Forwards the active USB controller's interrupt to TinyUSB.
  * Must be compiled as part of the application (not startup) to link with TinyUSB.
  *
- * IMPORTANT: Daisy Seed (LQFP100) uses USB2_OTG_FS (0x40080000) on PA11/PA12!
- * This matches the DFU bootloader. USB2 has only one IRQ (101).
+ * USB peripheral selection:
+ *   Daisy Seed: USB2_OTG_FS (PA11/PA12) — IRQ 101 (OTG_FS_IRQHandler)
+ *   Patch SM:   USB1_OTG_HS (PB14/PB15) — IRQ 77  (OTG_HS_IRQHandler)
  */
 
 #include "tusb.h"
@@ -14,14 +15,18 @@
 
 extern "C" {
 
-/**
- * @brief USB2 OTG FS interrupt handler (IRQ 101)
- *
- * This is the only USB interrupt for Daisy Seed.
- * USB2_OTG_FS has a single combined interrupt, unlike USB1_OTG_HS which has 3.
- */
+#ifdef SBL_USB_OTG_HS
+
+void OTG_HS_IRQHandler(void) {
+    tud_int_handler(0);  // Port 0 = USB1_OTG_HS
+}
+
+#else
+
 void OTG_FS_IRQHandler(void) {
     tud_int_handler(0);  // Port 0 = USB2_OTG_FS
 }
+
+#endif
 
 } // extern "C"

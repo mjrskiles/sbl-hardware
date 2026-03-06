@@ -1,0 +1,68 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/module.schema.json",
+  "schemaVersion": "0.1",
+  "module": {
+    "name": "patch-init",
+    "revision": "1.0",
+    "category": "boards",
+    "attaches_to": "mainboards/daisy-patch-sm"
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "pin": "b10",
+        "function": "gpio",
+        "direction": "in",
+        "id": "gate_in_1"
+      },
+      {
+        "pin": "b9",
+        "function": "gpio",
+        "direction": "in",
+        "id": "gate_in_2"
+      },
+      {
+        "pin": "b5",
+        "function": "gpio",
+        "direction": "out",
+        "id": "gate_out_1"
+      },
+      {
+        "pin": "b6",
+        "function": "gpio",
+        "direction": "out",
+        "id": "gate_out_2"
+      },
+      {
+        "pin": "c10",
+        "function": "gpio",
+        "direction": "out",
+        "id": "cv_out_1"
+      },
+      {
+        "pin": "c1",
+        "function": "gpio",
+        "direction": "out",
+        "id": "cv_out_2"
+      }
+    ],
+    "adc": [
+      { "pin": "cv_in_1", "id": "knob1" },
+      { "pin": "cv_in_2", "id": "knob2" },
+      { "pin": "cv_in_3", "id": "knob3" },
+      { "pin": "cv_in_4", "id": "knob4" },
+      { "pin": "cv_in_5", "id": "cv_in_1" },
+      { "pin": "cv_in_6", "id": "cv_in_2" },
+      { "pin": "cv_in_7", "id": "cv_in_3" },
+      { "pin": "cv_in_8", "id": "cv_in_4" }
+    ]
+  },
+
+  "components": {
+    "knob1": { "type": "pot", "pins": {"adc": "knob1"} },
+    "knob2": { "type": "pot", "pins": {"adc": "knob2"} },
+    "knob3": { "type": "pot", "pins": {"adc": "knob3"} },
+    "knob4": { "type": "pot", "pins": {"adc": "knob4"} }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/mainboard.schema.json",
+  "schemaVersion": "0.1",
+  "mainboard": {
+    "name": "daisy-patch-sm",
+    "manifestVersion": "1.0.0",
+    "revision": "1.0",
+    "mcu": "mcu/arm/stm32h750"
+  },
+
+  "exposes": {
+    "gpio": {
+      "a2":  { "mcu_pin": "PA1",  "functions": ["gpio", "adc"] },
+      "a3":  { "mcu_pin": "PA0",  "functions": ["gpio", "adc"] },
+
+      "b5":  { "mcu_pin": "PC14", "functions": ["gpio"] },
+      "b6":  { "mcu_pin": "PC13", "functions": ["gpio"] },
+      "b7":  { "mcu_pin": "PB8",  "functions": ["gpio", "i2c"] },
+      "b8":  { "mcu_pin": "PB9",  "functions": ["gpio", "i2c"] },
+      "b9":  { "mcu_pin": "PG14", "functions": ["gpio"] },
+      "b10": { "mcu_pin": "PG13", "functions": ["gpio"] },
+
+      "c1":  { "mcu_pin": "PA5",  "functions": ["gpio", "adc", "dac"] },
+      "c2":  { "mcu_pin": "PA7",  "functions": ["gpio", "adc"] },
+      "c3":  { "mcu_pin": "PA2",  "functions": ["gpio", "adc"] },
+      "c4":  { "mcu_pin": "PA6",  "functions": ["gpio", "adc"] },
+      "c5":  { "mcu_pin": "PA3",  "functions": ["gpio", "adc"] },
+      "c6":  { "mcu_pin": "PB1",  "functions": ["gpio", "adc"] },
+      "c7":  { "mcu_pin": "PC4",  "functions": ["gpio", "adc"] },
+      "c8":  { "mcu_pin": "PC0",  "functions": ["gpio", "adc"] },
+      "c9":  { "mcu_pin": "PC1",  "functions": ["gpio", "adc"] },
+      "c10": { "mcu_pin": "PA4",  "functions": ["gpio", "adc", "dac"] },
+
+      "d1":  { "mcu_pin": "PB4",  "functions": ["gpio", "spi"] },
+      "d2":  { "mcu_pin": "PC11", "functions": ["gpio"] },
+      "d3":  { "mcu_pin": "PC10", "functions": ["gpio"] },
+      "d4":  { "mcu_pin": "PC9",  "functions": ["gpio"] },
+      "d5":  { "mcu_pin": "PC8",  "functions": ["gpio"] },
+      "d6":  { "mcu_pin": "PC12", "functions": ["gpio"] },
+      "d7":  { "mcu_pin": "PD2",  "functions": ["gpio"] },
+      "d8":  { "mcu_pin": "PC2",  "functions": ["gpio", "spi"] },
+      "d9":  { "mcu_pin": "PC3",  "functions": ["gpio", "spi"] },
+      "d10": { "mcu_pin": "PD3",  "functions": ["gpio", "spi"] }
+    },
+    "adc": {
+      "cv_in_1": { "mcu_pin": "PA3",  "mcu_channel": "ADC1_IN15" },
+      "cv_in_2": { "mcu_pin": "PA6",  "mcu_channel": "ADC1_IN3" },
+      "cv_in_3": { "mcu_pin": "PA2",  "mcu_channel": "ADC1_IN14" },
+      "cv_in_4": { "mcu_pin": "PA7",  "mcu_channel": "ADC1_IN7" },
+      "cv_in_5": { "mcu_pin": "PB1",  "mcu_channel": "ADC1_IN5" },
+      "cv_in_6": { "mcu_pin": "PC4",  "mcu_channel": "ADC1_IN4" },
+      "cv_in_7": { "mcu_pin": "PC0",  "mcu_channel": "ADC1_IN10" },
+      "cv_in_8": { "mcu_pin": "PC1",  "mcu_channel": "ADC1_IN11" },
+      "adc_9":   { "mcu_pin": "PA1",  "mcu_channel": "ADC1_IN17" },
+      "adc_10":  { "mcu_pin": "PA0",  "mcu_channel": "ADC1_IN16" },
+      "adc_11":  { "mcu_pin": "PC3",  "mcu_channel": "ADC1_IN13" },
+      "adc_12":  { "mcu_pin": "PC2",  "mcu_channel": "ADC1_IN12" }
+    },
+    "buses": {
+      "i2c1": {
+        "type": "i2c",
+        "mcu_peripheral": "I2C1",
+        "pins": {
+          "scl": "PB8",
+          "sda": "PB9"
+        }
+      }
+    }
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "mcu_pin": "PC7",
+        "function": "gpio",
+        "direction": "out",
+        "id": "status_led",
+        "active_low": false
+      }
+    ],
+    "i2c": [
+      {
+        "id": "codec",
+        "mcu_peripheral": "I2C2",
+        "scl_pin": "PB10",
+        "sda_pin": "PB11",
+        "speed": 400000
+      }
+    ]
+  },
+
+  "config": {
+    "hse_mhz": 16,
+    "sysclk_mhz": 480
+  }
+}

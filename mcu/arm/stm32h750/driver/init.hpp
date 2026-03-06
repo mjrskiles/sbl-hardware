@@ -642,24 +642,112 @@ inline void enable_usb2_nvic() {
 }
 
 /**
- * @brief Initialize USB clocks and peripheral (USB2 OTG FS on PA11/PA12)
+ * @brief Enable USB1 OTG HS peripheral clock and select FS PHY
+ *
+ * USB1_OTG_HS defaults to ULPI PHY mode (PHYSEL=0) at reset.
+ * When using the internal FS PHY (no external ULPI connected),
+ * PHYSEL MUST be set to 1 immediately after enabling the AHB clock.
+ * Otherwise the DWC2 core starts up expecting a ULPI clock that
+ * doesn't exist, preventing AHB idle (GRSTCTL.AHBIDL) and causing
+ * TinyUSB's core reset to hang.
+ *
+ * This is not needed for USB2_OTG_FS which defaults to PHYSEL=1.
+ * See RM0433 §57.12.3 and RPT-004/005 for background.
+ */
+inline void enable_usb1_clock() {
+    using namespace sbl::hw::reg;
+
+    // Enable USB1 AHB clock
+    periph::rcc->AHB1ENR |= RCC::AHB1ENR_USB1OTGHSEN;
+
+    // Disable ULPI clock (using internal FS PHY, not external ULPI)
+    periph::rcc->AHB1ENR &= ~RCC::AHB1ENR_USB1OTGHSULPIEN;
+
+    // Brief delay for AHB clock to reach the USB1 controller
+    for (volatile int i = 0; i < 1000; ++i) {
+        __asm__ volatile("nop");
+    }
+
+    // Select internal FS PHY IMMEDIATELY — before the DWC2 core tries
+    // to use the non-existent ULPI PHY. This is the critical difference
+    // vs USB2_OTG_FS which defaults to FS PHY (PHYSEL=1 at reset).
+    periph::usb1_global->GUSBCFG |= GUSBCFG::PHYSEL;
+
+    // Enable FS PHY power (PWRDWN is active-high: 1 = PHY enabled)
+    periph::usb1_global->GCCFG |= GCCFG::PWRDWN;
+
+    // Wait for PHY clock to stabilize after switching from ULPI to FS
+    for (volatile int i = 0; i < 100000; ++i) {
+        __asm__ volatile("nop");
+    }
+}
+
+/**
+ * @brief Configure PB14/PB15 as USB DM/DP pins (USB1 OTG HS in FS mode)
  *
  * Configures:
- * - USB 3.3V internal power supply
- * - PLL3 for 48 MHz USB clock
- * - USB2 OTG FS peripheral clock
- * - PA11/PA12 as USB DM/DP (AF10)
- * - NVIC interrupt enable
+ * - PB14 as USB1 DM (alternate function 12)
+ * - PB15 as USB1 DP (alternate function 12)
+ * - Push-pull, no pull, very high speed
+ */
+inline void configure_usb_gpio_hs() {
+    using namespace sbl::hw::reg;
+
+    // Enable GPIOB clock
+    periph::rcc->AHB4ENR |= RCC::AHB4ENR_GPIOBEN;
+    volatile uint32_t dummy = periph::rcc->AHB4ENR;
+    (void)dummy;
+
+    // Set PB14, PB15 to alternate function mode (10b)
+    uint32_t moder = periph::gpiob->GPIO_MODER;
+    moder &= ~((3u << (14 * 2)) | (3u << (15 * 2)));
+    moder |= (2u << (14 * 2)) | (2u << (15 * 2));
+    periph::gpiob->GPIO_MODER = moder;
+
+    // Low speed (00b) — matches libDaisy; FS USB doesn't need high slew rate
+    uint32_t ospeedr = periph::gpiob->GPIO_OSPEEDR;
+    ospeedr &= ~((3u << (14 * 2)) | (3u << (15 * 2)));
+    periph::gpiob->GPIO_OSPEEDR = ospeedr;
+
+    // No pull-up/pull-down
+    uint32_t pupdr = periph::gpiob->GPIO_PUPDR;
+    pupdr &= ~((3u << (14 * 2)) | (3u << (15 * 2)));
+    periph::gpiob->GPIO_PUPDR = pupdr;
+
+    // AF12 for PB14 and PB15 (USB OTG HS)
+    // PB14 is in AFRH bit positions [27:24], PB15 is [31:28]
+    uint32_t afrh = periph::gpiob->GPIO_AFRH;
+    afrh &= ~((0xFu << ((14 - 8) * 4)) | (0xFu << ((15 - 8) * 4)));
+    afrh |= (12u << ((14 - 8) * 4)) | (12u << ((15 - 8) * 4));
+    periph::gpiob->GPIO_AFRH = afrh;
+}
+
+/**
+ * @brief Enable USB1 OTG HS main interrupt in NVIC
  *
- * NOTE: USB core configuration (VBUS bypass, device mode) is handled by TinyUSB.
- * We only set up clocks, GPIO, and enable the peripheral.
+ * Only enable the main OTG_HS IRQ (77). The DWC2 controller routes all
+ * events through this single interrupt. The separate EP1_OUT (74) and
+ * EP1_IN (75) IRQs are ST HAL specific and not used by TinyUSB.
+ */
+inline void enable_usb1_nvic() {
+    using namespace sbl::hw::reg;
+
+    constexpr auto irq = IRQn::OTG_HS;
+    constexpr uint32_t n = static_cast<uint32_t>(irq);
+
+    periph::nvic->ISER[n >> 5] = (1u << (n & 0x1Fu));
+    periph::nvic->IP[n] = (4u << 4);  // Priority 4
+}
+
+/**
+ * @brief Initialize USB clocks and peripheral
+ *
+ * Selects USB1_OTG_HS (PB14/PB15) or USB2_OTG_FS (PA11/PA12) based on
+ * the SBL_USB_OTG_HS compile define.
  *
  * Must be called AFTER init() to ensure HSE is running.
- * This is for Daisy Seed and similar boards using USB2 on PA11/PA12.
  *
- * @note Not ISR-safe — blocking. Boot-time only.
- *
- * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed)
+ * @param hse_mhz HSE frequency (default 16 MHz)
  * @return true if USB clock setup successful
  */
 inline bool init_usb(uint32_t hse_mhz = 16) {
@@ -676,20 +764,17 @@ inline bool init_usb(uint32_t hse_mhz = 16) {
     // Select PLL3Q as USB clock source
     select_usb_clock_pll3();
 
-    // Configure PA11/PA12 as USB DM/DP
+#ifdef SBL_USB_OTG_HS
+    // Patch SM: USB1_OTG_HS on PB14/PB15 (FS mode with internal PHY)
+    configure_usb_gpio_hs();
+    enable_usb1_clock();
+    enable_usb1_nvic();
+#else
+    // Daisy Seed: USB2_OTG_FS on PA11/PA12
     configure_usb_gpio();
-
-    // Enable USB2 peripheral clock (PA11/PA12 use USB2_OTG_FS)
     enable_usb2_clock();
-
-    // NOTE: Don't configure USB core here - TinyUSB's dcd_init() handles:
-    // - GCCFG (PHY power, VBUS detection disable)
-    // - GOTGCTL (B-session valid override for VBUS bypass)
-    // - GUSBCFG (device mode forcing)
-    // Doing it here can conflict with TinyUSB's initialization sequence.
-
-    // Enable USB2 interrupt in NVIC
     enable_usb2_nvic();
+#endif
 
     return true;
 }

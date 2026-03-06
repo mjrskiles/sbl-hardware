@@ -37,18 +37,33 @@ extern uint32_t SystemCoreClock;
 //   - USB1_OTG_HS at 0x40040000 (HS with ULPI or FS with internal PHY)
 //   - USB2_OTG_FS at 0x40080000 (FS only with internal PHY)
 //
-// Daisy Seed (LQFP100) uses USB2_OTG_FS on PA11/PA12.
+// STM32H750 has two DWC2 controllers:
+//   - USB1_OTG_HS at 0x40040000 (HS with ULPI or FS with internal PHY)
+//   - USB2_OTG_FS at 0x40080000 (FS only with internal PHY)
+//
+// Daisy Seed uses USB2_OTG_FS on PA11/PA12.
+// Patch SM uses USB1_OTG_HS on PB14/PB15 (FS mode with internal PHY).
+//
+// SBL_USB_OTG_HS selects which controller is TinyUSB Port 0.
 
 #define USB1_OTG_HS_PERIPH_BASE   0x40040000UL
 #define USB2_OTG_FS_PERIPH_BASE   0x40080000UL
 
-// Tell TinyUSB that USB2 exists on this chip — prevents remapping FS to HS.
-// TinyUSB's dwc2_stm32.h checks: #if (! defined USB2_OTG_FS)
+#ifdef SBL_USB_OTG_HS
+// Patch SM: Use USB1_OTG_HS on PB14/PB15 (FS mode with internal PHY).
+// Do NOT define USB2_OTG_FS — this triggers TinyUSB's H7 auto-remap
+// (dwc2_stm32.h lines 67-70) which sets:
+//   USB_OTG_FS_PERIPH_BASE = USB1_OTG_HS_PERIPH_BASE  (0x40040000)
+//   OTG_FS_IRQn = OTG_HS_IRQn                         (77)
+// Result: Port 0 → USB1 at 0x40040000 with IRQ 77. Single-entry table.
+// Do NOT define USB_OTG_HS_PERIPH_BASE to avoid a duplicate Port 1 entry.
+#else
+// Daisy Seed: Port 0 = USB2_OTG_FS (PA11/PA12)
+// Tell TinyUSB that USB2 exists — prevents remapping FS to HS.
 #define USB2_OTG_FS               1
-
-// TinyUSB port mapping (dwc2_stm32.h uses these names):
 #define USB_OTG_FS_PERIPH_BASE    USB2_OTG_FS_PERIPH_BASE  // Port 0 = USB2
 #define USB_OTG_HS_PERIPH_BASE    USB1_OTG_HS_PERIPH_BASE  // Port 1 = USB1
+#endif
 
 // ============================================================================
 // IRQ Numbers (TinyUSB controller table references these)
