@@ -167,7 +167,7 @@ static inline void SCB_CleanInvalidateDCache_by_Addr(uint32_t *addr, int32_t dsi
 #define RCC                 ((RCC_Shim_Type*)RCC_BASE)
 
 typedef struct {
-    uint32_t RESERVED0[32];          // Padding to AHB1LPENR at offset 0x80
+    uint32_t RESERVED0[30];          // Padding to AHB1LPENR at offset 0x78
     volatile uint32_t AHB1LPENR;
 } RCC_Shim_Type;
 

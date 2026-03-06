@@ -20,8 +20,9 @@
 #undef NVIC
 #undef SCB
 
-#include "init.hpp"         // For init_usb()
-#include "timer.hpp"        // For millis()
+#include "init.hpp"             // For init_usb()
+#include "timer.hpp"            // For millis()
+#include "timer_callback.hpp"   // For IRQ-driven tud_task() servicing
 #include <sbl/hw/reg/usb_otg.hpp>  // For periph::usb2_global, GCCFG::, GOTGCTL::
 
 // TinyUSB requires a millisecond timer callback
@@ -41,67 +42,6 @@ inline auto* usb_device() { return sbl::hw::reg::periph::usb1_device; }
 inline auto* usb_global() { return sbl::hw::reg::periph::usb2_global; }
 inline auto* usb_device() { return sbl::hw::reg::periph::usb2_device; }
 #endif
-
-/**
- * @brief Reinitialize FS PHY after TinyUSB's incorrect HS PHY init
- *
- * Must be called AFTER tusb_init(). On STM32H750, both USB OTG
- * controllers report GHWCFG2.hs_phy_type = ULPI (2), even USB2_OTG_FS
- * which only has a dedicated FS PHY. TinyUSB reads this and takes the
- * HS PHY init path (phy_hs_init), which:
- *   1. Clears PHYSEL (selects non-existent ULPI PHY)
- *   2. Clears GCCFG.PWRDWN (powers down FS transceiver)
- *   3. Configures GUSBCFG for ULPI mode
- *
- * The DWC2 core reset inside TinyUSB restores PHYSEL=1 (FS PHY default),
- * but GCCFG.PWRDWN stays cleared because GCCFG is outside the DWC2
- * core reset domain. Result: D+ pull-up works (host detects device),
- * but the PHY can't transmit — descriptor reads timeout (error -110).
- *
- * This function redoes what phy_fs_init() should have done:
- *   - Re-enables FS PHY power (PWRDWN)
- *   - Confirms PHYSEL = 1 (FS PHY selected)
- *   - Sets correct FS turnaround time (TRDT = 6 for 480 MHz AHB)
- *   - Applies VBUS bypass for boards without VBUS sensing
- *   - Forces soft disconnect/reconnect to trigger clean enumeration
- */
-inline void apply_post_tusb_fixup() {
-    using namespace sbl::hw::reg;
-
-    auto* usb = usb_global();
-    auto* dev = usb_device();
-
-    // 1. Assert soft disconnect — host sees device disappear
-    constexpr uint32_t DCTL_SDIS = (1u << 1);
-    dev->DCTL |= DCTL_SDIS;
-
-    // 2. Re-enable FS PHY power (cleared by TinyUSB's HS PHY init path)
-    usb->GCCFG |= GCCFG::PWRDWN;
-
-    // 3. Ensure PHYSEL = 1 (select internal FS PHY, not ULPI)
-    usb->GUSBCFG |= GUSBCFG::PHYSEL;
-
-    // 4. Set correct FS turnaround time for AHB clock >= 32 MHz
-    //    (TinyUSB may have set wrong TRDT for ULPI 8-bit = 9)
-    constexpr uint32_t TRDT_MASK = 0xFu << 10;
-    constexpr uint32_t TRDT_FS   = 6u << 10;  // FS @ >= 32 MHz AHB
-    uint32_t gusbcfg = usb->GUSBCFG;
-    gusbcfg &= ~TRDT_MASK;
-    gusbcfg |= TRDT_FS;
-    usb->GUSBCFG = gusbcfg;
-
-    // 5. Disable VBUS sensing (no VBUS pin on Daisy/Patch boards)
-    usb->GCCFG &= ~GCCFG::VBDEN;
-
-    // 6. Force B-session valid (bypass VBUS detection)
-    usb->GOTGCTL |= GOTGCTL::BVALOEN | GOTGCTL::BVALOVAL;
-
-    // 7. Brief delay for PHY to stabilize
-    for (volatile uint32_t i = 0; i < 100000; ++i) { __asm volatile("nop"); }
-
-    // 8. Release soft disconnect — host will re-enumerate with working PHY
-    dev->DCTL &= ~DCTL_SDIS;
-}
 
 /**
  * @brief Force USB soft disconnect to trigger host re-enumeration
@@ -125,6 +65,9 @@ inline void force_usb_reenumerate() {
     dev->DCTL &= ~DCTL_SDIS;
 }
 
+// Track whether timer-driven USB servicing is active
+inline volatile bool s_timer_driven = false;
+
 } // namespace detail
 
 /**
@@ -136,7 +79,13 @@ inline void force_usb_reenumerate() {
  * 3. Enables USB2 peripheral clock
  * 4. Configures PA11/PA12 for USB
  * 5. Initializes TinyUSB device stack
- * 6. Applies VBUS bypass for Daisy Seed (no VBUS sensing)
+ * 6. Applies VBUS bypass (no VBUS sensing on Daisy/Patch boards)
+ * 7. Starts 1kHz timer for automatic tud_task() servicing
+ *
+ * After init(), USB events are serviced automatically via TIM6 interrupt.
+ * Applications do NOT need to call task() — it is a no-op when timer-driven
+ * servicing is active. This prevents re-entrancy issues with the TinyUSB
+ * event queue (SPSC FIFO: USB OTG ISR produces, tud_task consumes).
  *
  * Call after sbl::driver::init() to ensure HSE is running.
  *
@@ -147,21 +96,13 @@ inline void init() {
     // This configures PLL3 for 48 MHz and enables the USB peripheral clock
     sbl::driver::init_usb();
 
-    // Apply FS PHY fixup BEFORE tusb_init(). We set PWRDWN and VBUS bypass
-    // here so that TinyUSB's DWC2 driver finds the PHY already powered.
-    // Previously this was done after tusb_init(), but -O2 tail-call
-    // optimization eliminated the post-init fixup entirely.
+    // Post-init PHY fixup using volatile pointer writes.
     //
-    // Background: STM32H750 USB2_OTG_FS reports GHWCFG2.hs_phy_type=ULPI(2),
-    // causing TinyUSB to take the HS PHY init path which clears PWRDWN.
-    // Setting PWRDWN before tusb_init() means TinyUSB may clear it during
-    // core init, but the DWC2 core reset restores hardware defaults for
-    // GCCFG. We set it again in the init_usb() -> enable_usb2_clock() path
-    // AND we also need it after tusb clears it.
-    //
-    // Solution: Set PWRDWN in init_usb()'s enable_usb2_clock(), and also
-    // directly manipulate the register here with a volatile write that
-    // the optimizer cannot remove.
+    // TinyUSB's phy_fs_init() correctly sets PWRDWN, but GCCFG is outside
+    // the DWC2 core reset domain and can be cleared during the reset
+    // sequence. We re-apply PWRDWN, VBUS bypass, and TRDT after tusb_init()
+    // as a safety net. Volatile pointer writes prevent -O2 tail-call
+    // optimization from eliminating this code (see RPT-013).
     {
         auto* usb = detail::usb_global();
         auto* dev = detail::usb_device();
@@ -193,17 +134,28 @@ inline void init() {
         for (volatile uint32_t i = 0; i < 100000; ++i) { __asm volatile("nop"); }
         *dctl &= ~DCTL_SDIS;
     }
+
+    // Start 1kHz timer for automatic USB event processing.
+    // TIM6 at priority 8 (below USB OTG at 4, below audio DMA at 2).
+    // This ensures tud_task() is called every 1ms regardless of main loop timing.
+    detail::s_timer_driven = true;
+    sbl::driver::TimerCallback::start(1000, []() { tud_task(); });
 }
 
 /**
- * @brief Process USB events
+ * @brief Process USB events (no-op when timer-driven)
  *
- * Must be called periodically to handle USB enumeration and data transfer.
+ * When sbl::usb::init() has been called, USB events are serviced
+ * automatically via TIM6 interrupt at 1kHz. This function is a no-op
+ * to prevent re-entrancy with the timer ISR.
  *
- * @note Not ISR-safe — main loop only (calls TinyUSB stack).
+ * Kept for API compatibility — existing code that calls task() will
+ * compile and work correctly without changes.
  */
 inline void task() {
-    tud_task();
+    if (!detail::s_timer_driven) {
+        tud_task();
+    }
 }
 
 /**

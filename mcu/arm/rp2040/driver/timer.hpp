@@ -36,9 +36,9 @@ public:
 
     /**
      * @brief Blocking delay in milliseconds
-     * @note Not ISR-safe — blocks for the specified duration
+     * @note Not ISR-safe — blocking busy-wait.
      */
-    static void delay_ms(uint32_t ms) {
+    static void busy_wait_ms(uint32_t ms) {
         sleep_ms(ms);
     }
 

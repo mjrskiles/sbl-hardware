@@ -79,7 +79,7 @@ public:
      *
      * @note Not ISR-safe — blocking busy-wait. Use NonBlockingDelay for main loop.
      */
-    static void delay_ms(uint32_t ms) {
+    static void busy_wait_ms(uint32_t ms) {
         uint32_t start = s_tick_count;
         while ((s_tick_count - start) < ms) {
             // Busy wait — SysTick_Handler increments s_tick_count
