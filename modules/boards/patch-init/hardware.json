@@ -44,25 +44,78 @@
         "pin": "c1",
         "function": "gpio",
         "direction": "out",
-        "id": "cv_out_2"
+        "id": "cv_out_2",
+        "_note": "Also drives front-panel red LED via SM output resistor"
+      },
+      {
+        "pin": "b7",
+        "function": "gpio",
+        "direction": "in",
+        "id": "button1",
+        "_note": "Momentary tactile button. Active-low, internal pull-up."
+      },
+      {
+        "pin": "b8",
+        "function": "gpio",
+        "direction": "in",
+        "id": "toggle1",
+        "_note": "2-position toggle switch. Active-low, internal pull-up."
+      },
+      {
+        "pin": "d2",
+        "function": "gpio",
+        "id": "sdmmc_d3",
+        "_note": "SDMMC1 D3 (PC11)"
+      },
+      {
+        "pin": "d3",
+        "function": "gpio",
+        "id": "sdmmc_d2",
+        "_note": "SDMMC1 D2 (PC10)"
+      },
+      {
+        "pin": "d4",
+        "function": "gpio",
+        "id": "sdmmc_d1",
+        "_note": "SDMMC1 D1 (PC9)"
+      },
+      {
+        "pin": "d5",
+        "function": "gpio",
+        "id": "sdmmc_d0",
+        "_note": "SDMMC1 D0 (PC8)"
+      },
+      {
+        "pin": "d6",
+        "function": "gpio",
+        "id": "sdmmc_ck",
+        "_note": "SDMMC1 CK (PC12)"
+      },
+      {
+        "pin": "d7",
+        "function": "gpio",
+        "id": "sdmmc_cmd",
+        "_note": "SDMMC1 CMD (PD2)"
       }
     ],
     "adc": [
-      { "pin": "cv_in_1", "id": "knob1" },
-      { "pin": "cv_in_2", "id": "knob2" },
-      { "pin": "cv_in_3", "id": "knob3" },
-      { "pin": "cv_in_4", "id": "knob4" },
-      { "pin": "cv_in_5", "id": "cv_in_1" },
-      { "pin": "cv_in_6", "id": "cv_in_2" },
-      { "pin": "cv_in_7", "id": "cv_in_3" },
-      { "pin": "cv_in_8", "id": "cv_in_4" }
+      { "pin": "cv_in_1", "id": "cv_1" },
+      { "pin": "cv_in_2", "id": "cv_2" },
+      { "pin": "cv_in_3", "id": "cv_3" },
+      { "pin": "cv_in_4", "id": "cv_4" },
+      { "pin": "cv_in_5", "id": "cv_5" },
+      { "pin": "cv_in_6", "id": "cv_6" },
+      { "pin": "cv_in_7", "id": "cv_7" },
+      { "pin": "cv_in_8", "id": "cv_8" }
     ]
   },
 
   "components": {
-    "knob1": { "type": "pot", "pins": {"adc": "knob1"} },
-    "knob2": { "type": "pot", "pins": {"adc": "knob2"} },
-    "knob3": { "type": "pot", "pins": {"adc": "knob3"} },
-    "knob4": { "type": "pot", "pins": {"adc": "knob4"} }
+    "cv_1": { "type": "pot", "pins": {"adc": "cv_1"} },
+    "cv_2": { "type": "pot", "pins": {"adc": "cv_2"} },
+    "cv_3": { "type": "pot", "pins": {"adc": "cv_3"} },
+    "cv_4": { "type": "pot", "pins": {"adc": "cv_4"} },
+    "button1": { "type": "button", "pins": {"gpio": "button1"}, "active_low": true },
+    "led1": { "type": "led", "pins": {"gpio": "cv_out_2"}, "_note": "Red LED, shares CV_OUT_2 net (PA5)" }
   }
 }
