@@ -96,10 +96,10 @@
       }
     ],
     "adc": [
-      { "pin": "cv_in_1", "id": "cv_1" },
-      { "pin": "cv_in_2", "id": "cv_2" },
-      { "pin": "cv_in_3", "id": "cv_3" },
-      { "pin": "cv_in_4", "id": "cv_4" },
+      { "pin": "cv_in_1", "id": "knob_1" },
+      { "pin": "cv_in_2", "id": "knob_2" },
+      { "pin": "cv_in_3", "id": "knob_3" },
+      { "pin": "cv_in_4", "id": "knob_4" },
       { "pin": "cv_in_5", "id": "cv_5" },
       { "pin": "cv_in_6", "id": "cv_6" },
       { "pin": "cv_in_7", "id": "cv_7" },
