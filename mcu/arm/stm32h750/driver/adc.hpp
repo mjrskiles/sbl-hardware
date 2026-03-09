@@ -194,7 +194,7 @@ public:
     // ========================================================================
 
     /**
-     * @brief Start continuous DMA scan of multiple ADC channels
+     * @brief Start continuous DMA scan with per-channel sample times
      *
      * Configures ADC1 for continuous scan mode with circular DMA. The DMA
      * writes one 16-bit result per channel into the buffer, then wraps.
@@ -202,16 +202,16 @@ public:
      *
      * Uses DMA1 Stream 2 (DMAMUX request 9 = ADC1).
      *
-     * @param channels    Array of AdcHandle (all must be on ADC1)
-     * @param num_channels Number of channels (1–16)
-     * @param buffer      DMA-accessible buffer, must have num_channels elements.
-     *                    Use SBL_DMA_BUFFER for placement in RAM_D2.
-     * @param sample_time Sampling duration for all channels (default: Slow)
+     * @param channels      Array of AdcHandle (all must be on ADC1)
+     * @param num_channels  Number of channels (1–16)
+     * @param buffer        DMA-accessible buffer, must have num_channels elements.
+     *                      Use SBL_DMA_BUFFER for placement in RAM_D2.
+     * @param sample_times  Per-channel sampling durations (array of num_channels)
      * @note Not ISR-safe — blocking (stops ongoing conversion). Init-time only.
      */
     static void start_dma_scan(const sbl::AdcHandle* channels, uint8_t num_channels,
                                uint16_t* buffer,
-                               SampleTime sample_time = SampleTime::Slow) {
+                               const SampleTime* sample_times) {
         using namespace sbl::hw::reg;
         auto* adc = periph::adc1;
 
@@ -227,7 +227,7 @@ public:
             uint32_t ch = channels[i].channel;
             pcsel |= (1u << ch);
 
-            uint32_t smp = sample_time_to_cycles(sample_time);
+            uint32_t smp = sample_time_to_cycles(sample_times[i]);
             if (ch < 10) {
                 uint32_t shift = ch * 3;
                 adc->SMPR1 = (adc->SMPR1 & ~(0x7u << shift)) | (smp << shift);
@@ -277,6 +277,26 @@ public:
         // Enable DMA first, then start ADC
         Dma::enable(dma_stream);
         adc->CR |= ADC1::CR_ADSTART;
+    }
+
+    /**
+     * @brief Start continuous DMA scan with uniform sample time
+     *
+     * Convenience overload — applies the same sample time to all channels.
+     * Equivalent to calling the per-channel overload with a filled array.
+     *
+     * @param channels      Array of AdcHandle (all must be on ADC1)
+     * @param num_channels  Number of channels (1–16)
+     * @param buffer        DMA-accessible buffer (SBL_DMA_BUFFER)
+     * @param sample_time   Sampling duration for all channels (default: Slow)
+     */
+    static void start_dma_scan(const sbl::AdcHandle* channels, uint8_t num_channels,
+                               uint16_t* buffer,
+                               SampleTime sample_time = SampleTime::Slow) {
+        SampleTime times[16];
+        for (uint8_t i = 0; i < num_channels && i < 16; ++i)
+            times[i] = sample_time;
+        start_dma_scan(channels, num_channels, buffer, times);
     }
 
     /**
