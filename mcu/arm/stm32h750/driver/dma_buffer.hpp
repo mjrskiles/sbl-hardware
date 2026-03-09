@@ -40,4 +40,14 @@
  */
 #define SBL_AUDIO_BUFFER __attribute__((section(".audio_buffer"), aligned(32)))
 
+/**
+ * Place buffer in external SDRAM (0xC0000000) - 64MB on Daisy Seed/Patch SM.
+ * Available ONLY after init_sdram() has been called.
+ * Use for large audio buffers: multi-second delay, granular capture, samples.
+ *
+ * Example:
+ *   SBL_SDRAM_BUFFER static float long_delay[480000];  // 10 seconds @ 48kHz
+ */
+#define SBL_SDRAM_BUFFER __attribute__((section(".sdram_bss"), aligned(32)))
+
 #endif // SBL_HW_DRIVER_DMA_BUFFER_HPP_

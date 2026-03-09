@@ -40,6 +40,10 @@ MEMORY
 
     /* Backup SRAM - 4KB at 0x38800000 */
     BACKUP (rwx)    : ORIGIN = 0x38800000, LENGTH = 4K
+
+    /* External SDRAM - 64MB at 0xC0000000 (FMC Bank 1) */
+    /* Available after init_sdram(). Daisy Seed / Patch SM. */
+    SDRAM (rwx)     : ORIGIN = 0xC0000000, LENGTH = 64M
 }
 
 /* Stack size */
@@ -184,6 +188,17 @@ SECTIONS
         . = ALIGN(4);
         _eaudio_buffer = .;
     } >RAM_D1
+
+    /* External SDRAM buffers (available after init_sdram()) */
+    .sdram_bss (NOLOAD) :
+    {
+        . = ALIGN(32);
+        _ssdram_bss = .;
+        *(.sdram_bss)
+        *(.sdram_bss*)
+        . = ALIGN(32);
+        _esdram_bss = .;
+    } >SDRAM
 
     /* Remove debug info from output */
     /DISCARD/ :
