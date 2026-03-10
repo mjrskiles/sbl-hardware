@@ -49,19 +49,19 @@ Or use a local clone:
 
 ```
 sbl-hardware/
-├── mcu/                          # MCU definitions (SBL-native only)
+├── mcu/                          # MCU definitions (FPU required — ADR-008)
 │   ├── arm/                      # ARM Cortex-M MCUs
-│   │   ├── rp2040/               # Raspberry Pi RP2040 (Cortex-M0+)
 │   │   ├── rp2350/               # Raspberry Pi RP2350 (Cortex-M33)
 │   │   └── stm32h750/            # STM32H750 (Cortex-M7)
 │   └── native/                   # Native simulator
 ├── mainboards/                   # Primary boards running SBL applications
 │   ├── daisy-seed/               # Electrosmith Daisy Seed (STM32H750)
-│   ├── raspberry-pi-pico/        # Raspberry Pi Pico (RP2040)
+│   ├── daisy-patch-sm/           # Electrosmith Daisy Patch SM (STM32H750)
 │   └── raspberry-pi-pico-2/      # Raspberry Pi Pico 2 (RP2350)
 └── modules/                      # Extension modules
     ├── boards/                   # Expansion PCBs
-    │   └── daisy-pod/            # Electrosmith Daisy Pod (knobs, encoder, LEDs)
+    │   ├── daisy-pod/            # Electrosmith Daisy Pod (knobs, encoder, LEDs)
+    │   └── patch-init/           # Electrosmith Patch.init() (knobs, CV, gates)
     └── ic/                       # Complex ICs (DACs, codecs, etc.)
 ```
 
@@ -69,13 +69,13 @@ sbl-hardware/
 
 | Level | Description | Example |
 |-------|-------------|---------|
-| MCU | Silicon + driver + pin definitions | rp2040, rp2350, stm32h750 |
-| Mainboard | Primary board running SBL, exposes pins | raspberry-pi-pico |
+| MCU | Silicon + driver + pin definitions | rp2350, stm32h750 |
+| Mainboard | Primary board running SBL, exposes pins | daisy-seed, raspberry-pi-pico-2 |
 | Module | Attaches to mainboard/module, claims pins | led-panel, dac-board |
 
 ### Mainboard vs Module
 
-- **Mainboard**: Has an SBL-compatible MCU (ARM Cortex-M), runs the application, exposes pins to modules
+- **Mainboard**: Has an SBL-compatible MCU (ARM Cortex-M with FPU), runs the application, exposes pins to modules
 - **Module**: Attaches to a mainboard or another module, claims pins/buses for its components
 
 ## Available Targets
@@ -84,16 +84,16 @@ sbl-hardware/
 
 | Target | Board | MCU | Core |
 |--------|-------|-----|------|
-| `sbl:mainboards/raspberry-pi-pico-2` | Raspberry Pi Pico 2 | RP2350 | Cortex-M33 |
-| `sbl:mainboards/raspberry-pi-pico` | Raspberry Pi Pico | RP2040 | Cortex-M0+ |
 | `sbl:mainboards/daisy-seed` | Electrosmith Daisy Seed | STM32H750 | Cortex-M7 |
-| `sbl:mainboards/sbl-simulator-0` | Native simulator (planned) | x86/ARM host | - |
+| `sbl:mainboards/daisy-patch-sm` | Electrosmith Daisy Patch SM | STM32H750 | Cortex-M7 |
+| `sbl:mainboards/raspberry-pi-pico-2` | Raspberry Pi Pico 2 | RP2350 | Cortex-M33 |
 
 ### Modules
 
 | Target | Module | Attaches To | Features |
 |--------|--------|-------------|----------|
 | `sbl:modules/boards/daisy-pod` | Electrosmith Daisy Pod | daisy-seed | 2 RGB LEDs, encoder + click, 2 buttons, 2 knobs (ADC), MIDI IN (UART) |
+| `sbl:modules/boards/patch-init` | Electrosmith Patch.init() | daisy-patch-sm | 4 knobs, button, toggle, 4 CV in, 2 gate in, 2 gate out, CV out, SD card |
 
 ## MCU Definitions
 
@@ -164,15 +164,15 @@ MCU pins define all available alternate functions:
 Pins are resolved through the hardware chain with conflict detection:
 
 ```
-my-panel claims pin "gp0" with function "gpio"
+daisy-pod claims pin "seed_30" with function "adc"
     ↓
-raspberry-pi-pico exposes "gp0" → "GPIO0" with functions ["gpio", "spi", ...]
+daisy-seed exposes "seed_30" → "PA3" with functions ["gpio", "adc", ...]
     ↓
-rp2040 defines "GPIO0" → { gpio: { port: 0, pin: 0 }, spi: {...} }
+stm32h750 defines "PA3" → { gpio: { port: 0, pin: 3 }, adc: { peripheral: "ADC1", channel: 15 } }
     ↓
-Resolver checks: GPIO0 not already claimed? ✓
+Resolver checks: PA3 not already claimed? ✓
     ↓
-Generated: sbl::hw::gpio::led_r{0, 0, false}
+Generated: sbl::hw::adc::knob1{15}
 ```
 
 If the same MCU pin is claimed twice, the resolver fails with a conflict error.
@@ -207,7 +207,7 @@ Generate schemas: `sbl-schema generate` (outputs to `sbl-schema/generated/`)
 3. Set `attaches_to` to reference the parent (e.g., `mainboards/raspberry-pi-pico`)
 4. Define pin and bus claims with explicit functions
 
-See the Raspberry Pi Pico README for an example module definition.
+See the Daisy Pod or Patch.init() module definitions for examples.
 
 ## License
 

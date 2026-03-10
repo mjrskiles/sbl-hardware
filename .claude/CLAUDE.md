@@ -6,8 +6,7 @@ Hardware definitions and bare-metal drivers for Sound Byte Labs.
 
 ```
 sbl-hardware/
-├── mcu/arm/              # MCU definitions
-│   ├── rp2040/            # Cortex-M0+ (Pico SDK drivers)
+├── mcu/arm/              # MCU definitions (FPU required — ADR-008)
 │   ├── rp2350/            # Cortex-M33 (Pico SDK drivers)
 │   └── stm32h750/         # Cortex-M7 (bare-metal, SVD registers)
 │       ├── driver/        # Hand-written drivers (gpio, uart, sai, adc, dma, i2c, etc.)
@@ -16,7 +15,7 @@ sbl-hardware/
 │       ├── cecrops.json   # SVD generation config
 │       ├── startup.cpp    # Reset handler, vector table, .init_array
 │       └── stm32h750.ld   # Linker script
-├── mainboards/            # Board manifests (daisy-seed, pico, pico-2, daisy-patch-sm)
+├── mainboards/            # Board manifests (daisy-seed, pico-2, daisy-patch-sm)
 └── modules/               # Extension module manifests (daisy-pod, patch-init)
 ```
 
