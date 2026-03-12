@@ -1,0 +1,76 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/mainboard.schema.json",
+  "schemaVersion": "0.1",
+  "mainboard": {
+    "name": "native-workbench",
+    "manifestVersion": "1.0.0",
+    "revision": "1.0",
+    "mcu": "mcu/native"
+  },
+
+  "config": {
+    "sysclk_mhz": 1
+  },
+
+  "exposes": {
+    "gpio": {
+      "a2":  { "mcu_pin": "GPIO2",  "functions": ["gpio"] },
+      "a3":  { "mcu_pin": "GPIO3",  "functions": ["gpio"] },
+
+      "b5":  { "mcu_pin": "GPIO5",  "functions": ["gpio"] },
+      "b6":  { "mcu_pin": "GPIO6",  "functions": ["gpio"] },
+      "b7":  { "mcu_pin": "GPIO7",  "functions": ["gpio"] },
+      "b8":  { "mcu_pin": "GPIO8",  "functions": ["gpio"] },
+      "b9":  { "mcu_pin": "GPIO9",  "functions": ["gpio"] },
+      "b10": { "mcu_pin": "GPIO10", "functions": ["gpio"] },
+
+      "c1":  { "mcu_pin": "GPIO11", "functions": ["gpio", "adc"] },
+      "c2":  { "mcu_pin": "GPIO12", "functions": ["gpio", "adc"] },
+      "c3":  { "mcu_pin": "GPIO13", "functions": ["gpio", "adc"] },
+      "c4":  { "mcu_pin": "GPIO14", "functions": ["gpio", "adc"] },
+      "c5":  { "mcu_pin": "GPIO15", "functions": ["gpio", "adc"] },
+      "c6":  { "mcu_pin": "GPIO16", "functions": ["gpio", "adc"] },
+      "c7":  { "mcu_pin": "GPIO17", "functions": ["gpio", "adc"] },
+      "c8":  { "mcu_pin": "GPIO18", "functions": ["gpio", "adc"] },
+      "c9":  { "mcu_pin": "GPIO19", "functions": ["gpio", "adc"] },
+      "c10": { "mcu_pin": "GPIO20", "functions": ["gpio", "adc"] },
+
+      "d1":  { "mcu_pin": "GPIO21", "functions": ["gpio"] },
+      "d2":  { "mcu_pin": "GPIO22", "functions": ["gpio"] },
+      "d3":  { "mcu_pin": "GPIO23", "functions": ["gpio"] },
+      "d4":  { "mcu_pin": "GPIO24", "functions": ["gpio"] },
+      "d5":  { "mcu_pin": "GPIO25", "functions": ["gpio"] },
+      "d6":  { "mcu_pin": "GPIO26", "functions": ["gpio"] },
+      "d7":  { "mcu_pin": "GPIO27", "functions": ["gpio"] },
+      "d8":  { "mcu_pin": "GPIO28", "functions": ["gpio"] },
+      "d9":  { "mcu_pin": "GPIO29", "functions": ["gpio"] },
+      "d10": { "mcu_pin": "GPIO30", "functions": ["gpio"] }
+    },
+    "adc": {
+      "cv_in_1": { "mcu_pin": "GPIO15", "mcu_channel": "ADC0_IN4" },
+      "cv_in_2": { "mcu_pin": "GPIO14", "mcu_channel": "ADC0_IN3" },
+      "cv_in_3": { "mcu_pin": "GPIO13", "mcu_channel": "ADC0_IN2" },
+      "cv_in_4": { "mcu_pin": "GPIO12", "mcu_channel": "ADC0_IN1" },
+      "cv_in_5": { "mcu_pin": "GPIO16", "mcu_channel": "ADC0_IN5" },
+      "cv_in_6": { "mcu_pin": "GPIO17", "mcu_channel": "ADC0_IN6" },
+      "cv_in_7": { "mcu_pin": "GPIO18", "mcu_channel": "ADC0_IN7" },
+      "cv_in_8": { "mcu_pin": "GPIO19", "mcu_channel": "ADC0_IN10" },
+      "adc_9":   { "mcu_pin": "GPIO2",  "mcu_channel": "ADC0_IN8" },
+      "adc_10":  { "mcu_pin": "GPIO3",  "mcu_channel": "ADC0_IN9" },
+      "adc_11":  { "mcu_pin": "GPIO20", "mcu_channel": "ADC0_IN11" },
+      "adc_12":  { "mcu_pin": "GPIO11", "mcu_channel": "ADC0_IN0" }
+    }
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "mcu_pin": "GPIO0",
+        "function": "gpio",
+        "direction": "out",
+        "id": "status_led",
+        "active_low": false
+      }
+    ]
+  }
+}

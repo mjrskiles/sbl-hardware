@@ -1,0 +1,87 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/module.schema.json",
+  "schemaVersion": "0.1",
+  "module": {
+    "name": "native-workbench",
+    "revision": "1.0",
+    "category": "boards",
+    "attaches_to": "mainboards/native-workbench"
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "pin": "b10",
+        "function": "gpio",
+        "direction": "in",
+        "id": "gate_in_1"
+      },
+      {
+        "pin": "b9",
+        "function": "gpio",
+        "direction": "in",
+        "id": "gate_in_2"
+      },
+      {
+        "pin": "b5",
+        "function": "gpio",
+        "direction": "out",
+        "id": "gate_out_1"
+      },
+      {
+        "pin": "b6",
+        "function": "gpio",
+        "direction": "out",
+        "id": "gate_out_2"
+      },
+      {
+        "pin": "c10",
+        "function": "gpio",
+        "direction": "out",
+        "id": "cv_out_1"
+      },
+      {
+        "pin": "c1",
+        "function": "gpio",
+        "direction": "out",
+        "id": "cv_out_2"
+      },
+      {
+        "pin": "b7",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "button1"
+      },
+      {
+        "pin": "b8",
+        "function": "gpio",
+        "direction": "in",
+        "id": "toggle1"
+      }
+    ],
+    "adc": [
+      { "pin": "cv_in_1", "id": "knob_1" },
+      { "pin": "cv_in_2", "id": "knob_2" },
+      { "pin": "cv_in_3", "id": "knob_3" },
+      { "pin": "cv_in_4", "id": "knob_4" },
+      { "pin": "cv_in_8", "id": "cv_5" },
+      { "pin": "cv_in_7", "id": "cv_6" },
+      { "pin": "cv_in_5", "id": "cv_7" },
+      { "pin": "cv_in_6", "id": "cv_8" }
+    ]
+  },
+
+  "components": {
+    "button1": { "type": "button",   "pins": {"pin": "button1"} },
+    "knob1":   { "type": "pot",      "pins": {"adc": "knob_1"} },
+    "knob2":   { "type": "pot",      "pins": {"adc": "knob_2"} },
+    "knob3":   { "type": "pot",      "pins": {"adc": "knob_3"} },
+    "knob4":   { "type": "pot",      "pins": {"adc": "knob_4"} },
+    "cv5":     { "type": "cv_input", "pins": {"adc": "cv_5"} },
+    "cv6":     { "type": "cv_input", "pins": {"adc": "cv_6"} },
+    "cv7":     { "type": "cv_input", "pins": {"adc": "cv_7"} },
+    "cv8":     { "type": "cv_input", "pins": {"adc": "cv_8"} }
+  }
+}
