@@ -30,6 +30,7 @@ set(SBL_NATIVE_DRIVER_HEADERS
     ${SBL_NATIVE_DRIVER_DIR}/timer_callback.hpp
     ${SBL_NATIVE_DRIVER_DIR}/uart.hpp
     ${SBL_NATIVE_DRIVER_DIR}/usb.hpp
+    ${SBL_NATIVE_DRIVER_DIR}/cycles.hpp
 )
 
 # C headers that need to be findable as <ff.h>
