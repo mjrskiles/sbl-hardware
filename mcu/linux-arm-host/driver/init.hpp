@@ -23,7 +23,7 @@ struct ClockConfig {
 inline bool init(const ClockConfig& config = ClockConfig{}) {
     (void)config;
     Timer::init();
-    fprintf(stderr, "[native] SBL native driver initialized\n");
+    fprintf(stderr, "[host] SBL linux-arm-host driver initialized\n");
     return true;
 }
 

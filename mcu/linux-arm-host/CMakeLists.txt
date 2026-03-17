@@ -1,7 +1,7 @@
 #[[
     CMakeLists.txt — Native simulator driver for SBL
 
-    Provides sbl_native_driver target that links against miniaudio for
+    Provides sbl_linux_arm_host_driver target that links against miniaudio for
     real-time audio on Linux (ALSA/PulseAudio/JACK).
 
     Follows the STM32H750 pattern: copies driver headers to build/include/
@@ -46,7 +46,7 @@ add_custom_command(
     DEPENDS ${SBL_NATIVE_DRIVER_HEADERS} ${SBL_NATIVE_C_HEADERS}
     COMMENT "Copying native driver headers"
 )
-add_custom_target(sbl_native_copy_headers DEPENDS ${_STAMP})
+add_custom_target(sbl_linux_arm_host_copy_headers DEPENDS ${_STAMP})
 
 # Configure-time copy for first build
 file(COPY ${SBL_NATIVE_DRIVER_HEADERS} DESTINATION ${SBL_NATIVE_INCLUDE_DIR}/sbl/hw/driver)
@@ -54,35 +54,35 @@ file(COPY ${SBL_NATIVE_C_HEADERS} DESTINATION ${SBL_NATIVE_INCLUDE_DIR})
 
 # --- Driver library ---
 
-add_library(sbl_native_driver STATIC
+add_library(sbl_linux_arm_host_driver STATIC
     ${SBL_NATIVE_DRIVER_DIR}/sai.cpp
     ${SBL_NATIVE_DRIVER_DIR}/usb_stubs.cpp
     ${SBL_NATIVE_DRIVER_DIR}/ff_stubs.c
 )
 
-add_dependencies(sbl_native_driver sbl_native_copy_headers)
+add_dependencies(sbl_linux_arm_host_driver sbl_linux_arm_host_copy_headers)
 
 # Include paths: build/include for <sbl/hw/driver/*.hpp> + SBL library src
-target_include_directories(sbl_native_driver PUBLIC
+target_include_directories(sbl_linux_arm_host_driver PUBLIC
     ${SBL_NATIVE_INCLUDE_DIR}
     $ENV{SBL_PATH}/src
 )
 
 # miniaudio: single-header library
-target_include_directories(sbl_native_driver PRIVATE
+target_include_directories(sbl_linux_arm_host_driver PRIVATE
     $ENV{SBL_PATH}/../external/miniaudio
 )
 
 # Host compile flags
-target_compile_features(sbl_native_driver PUBLIC cxx_std_17)
-target_compile_options(sbl_native_driver PUBLIC
+target_compile_features(sbl_linux_arm_host_driver PUBLIC cxx_std_17)
+target_compile_options(sbl_linux_arm_host_driver PUBLIC
     -O2 -g
     -Wall -Wextra -Wpedantic
     -Wno-unused-parameter
 )
 
 # miniaudio dependencies on Linux
-target_link_libraries(sbl_native_driver PUBLIC
+target_link_libraries(sbl_linux_arm_host_driver PUBLIC
     pthread
     m
     dl

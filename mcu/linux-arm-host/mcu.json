@@ -1,11 +1,12 @@
 {
   "$schema": "https://soundbytelabs.net/schema/mcu.schema.json",
   "schemaVersion": "0.1",
-  "mcu": "native",
+  "mcu": "linux-arm-host",
+  "library": "sbl_linux_arm_host_driver",
   "manifestVersion": "1.0.0",
-  "family": "native",
-  "vendor": "simulator",
-  "arch": "native",
+  "family": "linux",
+  "vendor": "host",
+  "arch": "arm64",
   "capabilities": {
     "fpu": "host",
     "dsp_extensions": false
