@@ -71,6 +71,24 @@
         "id": "status_led",
         "active_low": false
       }
+    ],
+    "i2c": [
+      {
+        "id": "codec",
+        "mcu_peripheral": "I2C0",
+        "scl_pin": "GPIO6",
+        "sda_pin": "GPIO7",
+        "speed": 100000
+      }
+    ],
+    "uart": [
+      {
+        "id": "debug",
+        "mcu_peripheral": "UART0",
+        "tx_pin": "GPIO4",
+        "rx_pin": "GPIO5",
+        "baud": 115200
+      }
     ]
   }
 }
