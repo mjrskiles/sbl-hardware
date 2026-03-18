@@ -14,8 +14,14 @@ namespace sbl::driver {
 class Gpio {
 public:
     static void set_mode(const sbl::GpioHandle& handle, sbl::gpio::PinMode mode) {
-        (void)handle;
-        (void)mode;
+        if (handle.port == 0 && handle.pin < MAX_PINS) {
+            // Model pull resistor idle state: pull-up reads HIGH, pull-down reads LOW
+            if (mode == sbl::gpio::PinMode::InputPullup) {
+                pin_state_[handle.pin] = true;
+            } else if (mode == sbl::gpio::PinMode::InputPulldown) {
+                pin_state_[handle.pin] = false;
+            }
+        }
     }
 
     static void write(const sbl::GpioHandle& handle, bool value) {

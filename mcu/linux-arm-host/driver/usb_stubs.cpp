@@ -105,20 +105,32 @@ bool read_card_name(int card_num, char* name, size_t name_size) {
     return true;
 }
 
-/// Read the long name from /proc/asound/cardN/longname
+/// Read the full description for a card from /proc/asound/cards
+/// Lines look like: " 3 [A37            ]: USB-Audio - Arturia KeyStep 37"
+/// We want the part after " - " (e.g., "Arturia KeyStep 37")
 bool read_card_longname(int card_num, char* name, size_t name_size) {
-    char path[64];
-    snprintf(path, sizeof(path), "/proc/asound/card%d/longname", card_num);
-    FILE* f = fopen(path, "r");
+    FILE* f = fopen("/proc/asound/cards", "r");
     if (!f) return false;
-    if (!fgets(name, static_cast<int>(name_size), f)) {
-        fclose(f);
-        return false;
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        int num = -1;
+        if (sscanf(line, " %d ", &num) == 1 && num == card_num) {
+            // Find " - " separator for the full description
+            const char* sep = strstr(line, " - ");
+            if (sep) {
+                sep += 3;  // skip " - "
+                size_t len = strlen(sep);
+                if (len > 0 && sep[len - 1] == '\n') --len;
+                if (len >= name_size) len = name_size - 1;
+                memcpy(name, sep, len);
+                name[len] = '\0';
+                fclose(f);
+                return true;
+            }
+        }
     }
     fclose(f);
-    size_t len = strlen(name);
-    if (len > 0 && name[len - 1] == '\n') name[len - 1] = '\0';
-    return true;
+    return false;
 }
 
 struct MidiDevice {

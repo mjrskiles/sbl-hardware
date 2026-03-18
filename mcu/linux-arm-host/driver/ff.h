@@ -1,7 +1,8 @@
-/* Native FatFs stub — minimal ff.h providing types and functions used by SBL apps.
+/* Native FatFs implementation — backs FatFs API with POSIX file I/O.
  *
- * All file operations fail gracefully (FR_NOT_READY / FR_NO_FILE).
- * Calibration and preset code already handles these failures.
+ * f_mount() always succeeds (host filesystem is always available).
+ * f_open/f_read/f_write/f_close use fopen/fread/fwrite/fclose internally.
+ * Paths map directly to the host filesystem.
  */
 
 #ifndef FF_DEFINED
@@ -52,14 +53,14 @@ typedef unsigned char BYTE;
 typedef uint16_t WORD;
 typedef uint32_t DWORD;
 
-/* File object structure (opaque) */
+/* File object structure — holds a POSIX FILE* on native */
 typedef struct {
-    BYTE _dummy;
+    void* _fp;  /* FILE* cast to void* for C compatibility */
 } FIL;
 
-/* Filesystem object structure (opaque) */
+/* Filesystem object structure */
 typedef struct {
-    BYTE _dummy;
+    BYTE _mounted;
 } FATFS;
 
 /* File info structure */
@@ -71,7 +72,7 @@ typedef struct {
     char  fname[13];
 } FILINFO;
 
-/* File system functions — all return failure on native */
+/* File system functions — backed by POSIX on native */
 FRESULT f_mount(FATFS* fs, const char* path, BYTE opt);
 FRESULT f_open(FIL* fp, const char* path, BYTE mode);
 FRESULT f_close(FIL* fp);
