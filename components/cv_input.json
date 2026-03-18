@@ -1,0 +1,7 @@
+{
+  "component": {
+    "name": "cv_input",
+    "type": "cv_input",
+    "pins": { "adc": null }
+  }
+}

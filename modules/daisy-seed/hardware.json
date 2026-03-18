@@ -1,11 +1,15 @@
 {
-  "$schema": "https://soundbytelabs.net/schema/mainboard.schema.json",
+  "$schema": "https://soundbytelabs.net/schema/module.schema.json",
   "schemaVersion": "0.1",
-  "mainboard": {
+  "module": {
     "name": "daisy-seed",
     "manifestVersion": "1.0.0",
     "revision": "1.0",
-    "mcu": "mcu/arm/stm32h750"
+    "main": true,
+    "system": {
+      "mcu": "mcu/arm/stm32h750",
+      "config": { "hse_mhz": 16 }
+    }
   },
 
   "exposes": {
@@ -124,7 +128,6 @@
   },
 
   "config": {
-    "hse_mhz": 16,
     "sysclk_mhz": 480
   }
 }

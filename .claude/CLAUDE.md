@@ -15,8 +15,9 @@ sbl-hardware/
 │       ├── cecrops.json   # SVD generation config
 │       ├── startup.cpp    # Reset handler, vector table, .init_array
 │       └── stm32h750.ld   # Linker script
-├── mainboards/            # Board manifests (daisy-seed, pico-2, daisy-patch-sm)
-└── modules/               # Extension module manifests (daisy-pod, patch-init)
+├── modules/               # Module manifests — main (daisy-seed, daisy-patch-sm) and attached (daisy-pod, patch-init)
+├── devices/               # Device composition manifests (patch-init, daisy-pod, pico2-bare)
+└── components/            # Reusable component definitions (pot, button, pcm3060 codec, etc.)
 ```
 
 ## Driver Patterns
@@ -41,15 +42,19 @@ Validate:
 python -m cecrops generate sbl-hardware/mcu/arm/stm32h750 --validate --strict
 ```
 
-## Manifests
+## Manifests (ADR-010)
 
-**MCU (`mcu.json`):** Pin definitions with all alternate functions (gpio, uart, spi, adc, etc.)
+**MCU (`mcu.json`):** Pin definitions with all alternate functions (gpio, uart, spi, adc, etc.). Declares timing capability.
 
-**Mainboard (`hardware.json`):** Exposes MCU pins to modules. References an MCU.
+**Main module (`hardware.json`):** Has `"main": true` and a `system` section (MCU reference + boot config). Claims board-level peripherals (codec, UART). Exposes remaining pins.
 
-**Module (`hardware.json`):** Claims pins from a mainboard via `attaches_to`. Defines components (knobs, buttons, LEDs).
+**Attached module (`hardware.json`):** Claims pins from a parent module. Declares components (knobs, buttons, LEDs). Portable — no `attaches_to` in the manifest.
 
-Pin resolution: module claims pin by name + function -> mainboard maps to MCU pin -> MCU provides port/pin/AF. Conflicts detected automatically.
+**Device (`device.json`):** Composition authority. Names a main module + attached modules. Specifies attachment topology. App-agnostic.
+
+**Component (`component.json` or `*.json`):** Reusable definitions for front-panel components (pot, button) and ICs (PCM3060 codec with bundled driver). Referenced via `ref` in module manifests.
+
+Pin resolution: device specifies topology → attached module claims pin by name + function → main module maps to MCU pin → MCU provides port/pin/AF. Conflicts detected automatically.
 
 ## Build Notes
 

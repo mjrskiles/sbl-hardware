@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "0.1",
+  "device": {
+    "name": "daisy-seed",
+    "main": "sbl:modules/daisy-seed"
+  }
+}

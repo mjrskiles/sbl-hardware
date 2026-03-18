@@ -4,8 +4,7 @@
   "module": {
     "name": "daisy-pod",
     "revision": "1.0",
-    "category": "boards",
-    "attaches_to": "mainboards/daisy-seed"
+    "category": "boards"
   },
 
   "claims": {

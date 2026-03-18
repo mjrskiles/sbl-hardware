@@ -4,8 +4,7 @@
   "module": {
     "name": "patch-init",
     "revision": "1.0",
-    "category": "boards",
-    "attaches_to": "mainboards/daisy-patch-sm"
+    "category": "boards"
   },
 
   "claims": {
@@ -110,14 +109,14 @@
   },
 
   "components": {
-    "button1": { "type": "button",   "pins": {"pin": "button1"} },
-    "knob1":   { "type": "pot",      "pins": {"adc": "knob_1"} },
-    "knob2":   { "type": "pot",      "pins": {"adc": "knob_2"} },
-    "knob3":   { "type": "pot",      "pins": {"adc": "knob_3"} },
-    "knob4":   { "type": "pot",      "pins": {"adc": "knob_4"} },
-    "cv5":     { "type": "cv_input", "pins": {"adc": "cv_5"} },
-    "cv6":     { "type": "cv_input", "pins": {"adc": "cv_6"} },
-    "cv7":     { "type": "cv_input", "pins": {"adc": "cv_7"} },
-    "cv8":     { "type": "cv_input", "pins": {"adc": "cv_8"} }
+    "button1": { "ref": "sbl:components/button",   "pins": {"pin": "button1"} },
+    "knob1":   { "ref": "sbl:components/pot",      "pins": {"adc": "knob_1"} },
+    "knob2":   { "ref": "sbl:components/pot",      "pins": {"adc": "knob_2"} },
+    "knob3":   { "ref": "sbl:components/pot",      "pins": {"adc": "knob_3"} },
+    "knob4":   { "ref": "sbl:components/pot",      "pins": {"adc": "knob_4"} },
+    "cv5":     { "ref": "sbl:components/cv_input", "pins": {"adc": "cv_5"} },
+    "cv6":     { "ref": "sbl:components/cv_input", "pins": {"adc": "cv_6"} },
+    "cv7":     { "ref": "sbl:components/cv_input", "pins": {"adc": "cv_7"} },
+    "cv8":     { "ref": "sbl:components/cv_input", "pins": {"adc": "cv_8"} }
   }
 }

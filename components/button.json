@@ -1,0 +1,7 @@
+{
+  "component": {
+    "name": "button",
+    "type": "button",
+    "pins": { "pin": null }
+  }
+}
