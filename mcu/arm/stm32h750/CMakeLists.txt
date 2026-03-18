@@ -44,7 +44,7 @@ set(SBL_STM32H750_DRIVER_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/timer_callback.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/uart.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/usb.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/driver/cycles.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/dwt.hpp
 )
 
 # SVD-generated register headers

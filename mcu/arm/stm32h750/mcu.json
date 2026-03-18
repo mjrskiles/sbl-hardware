@@ -8,7 +8,8 @@
   "arch": "arm-cortex-m7",
   "capabilities": {
     "fpu": "fpv5-d16",
-    "dsp_extensions": false
+    "dsp_extensions": false,
+    "timing": { "source": "dwt" }
   },
   "driver": "./driver",
   "registers": "./reg",
