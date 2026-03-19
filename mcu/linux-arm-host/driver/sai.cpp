@@ -230,31 +230,40 @@ void Sai::start() {
         }
     }
 
-    // Try duplex first (playback + capture)
-    ma_device_config dev_config = ma_device_config_init(ma_device_type_duplex);
+    // Duplex only if SBL_AUDIO_INPUT is set (avoids feedback loops from
+    // capture device picking up playback). Default: playback-only.
+    const char* input_env = getenv("SBL_AUDIO_INPUT");
+    bool want_capture = (input_env && input_env[0] != '\0');
+
+    ma_device_config dev_config;
+    if (want_capture) {
+        dev_config = ma_device_config_init(ma_device_type_duplex);
+        dev_config.capture.format = ma_format_f32;
+        dev_config.capture.channels = 2;
+        if (have_capture) dev_config.capture.pDeviceID = &capture_id;
+        fprintf(stderr, "[native-sai] Audio input enabled (SBL_AUDIO_INPUT=%s)\n", input_env);
+    } else {
+        dev_config = ma_device_config_init(ma_device_type_playback);
+    }
     dev_config.playback.format = ma_format_f32;
     dev_config.playback.channels = 2;
-    dev_config.capture.format = ma_format_f32;
-    dev_config.capture.channels = 2;
     dev_config.sampleRate = s_config.sample_rate;
     dev_config.periodSizeInFrames = s_config.block_size;
     dev_config.dataCallback = ma_data_callback;
 
     if (have_playback) dev_config.playback.pDeviceID = &playback_id;
-    if (have_capture)  dev_config.capture.pDeviceID = &capture_id;
 
     if (ma_device_init(&s_context, &dev_config, &s_device) != MA_SUCCESS) {
-        fprintf(stderr, "[native-sai] Duplex init failed, trying playback-only\n");
-
-        // Fall back to playback-only (no capture device available)
-        dev_config = ma_device_config_init(ma_device_type_playback);
-        dev_config.playback.format = ma_format_f32;
-        dev_config.playback.channels = 2;
-        dev_config.sampleRate = s_config.sample_rate;
-        dev_config.periodSizeInFrames = s_config.block_size;
-        dev_config.dataCallback = ma_data_callback;
-
-        if (have_playback) dev_config.playback.pDeviceID = &playback_id;
+        if (want_capture) {
+            fprintf(stderr, "[native-sai] Duplex init failed, trying playback-only\n");
+            dev_config = ma_device_config_init(ma_device_type_playback);
+            dev_config.playback.format = ma_format_f32;
+            dev_config.playback.channels = 2;
+            dev_config.sampleRate = s_config.sample_rate;
+            dev_config.periodSizeInFrames = s_config.block_size;
+            dev_config.dataCallback = ma_data_callback;
+            if (have_playback) dev_config.playback.pDeviceID = &playback_id;
+        }
 
         if (ma_device_init(&s_context, &dev_config, &s_device) != MA_SUCCESS) {
             fprintf(stderr, "[native-sai] Failed to initialize playback device\n");
