@@ -6,18 +6,20 @@ Hardware definitions and bare-metal drivers for Sound Byte Labs.
 
 ```
 sbl-hardware/
-├── mcu/arm/              # MCU definitions (FPU required — ADR-008)
-│   ├── rp2350/            # Cortex-M33 (Pico SDK drivers)
-│   └── stm32h750/         # Cortex-M7 (bare-metal, SVD registers)
-│       ├── driver/        # Hand-written drivers (gpio, uart, sai, adc, dma, i2c, etc.)
-│       ├── reg/           # cecrops-generated register headers — DO NOT EDIT
-│       ├── mcu.json       # Pin definitions with alternate functions
-│       ├── cecrops.json   # SVD generation config
-│       ├── startup.cpp    # Reset handler, vector table, .init_array
-│       └── stm32h750.ld   # Linker script
-├── modules/               # Module manifests — main (daisy-seed, daisy-patch-sm) and attached (daisy-pod, patch-init)
-├── devices/               # Device composition manifests (patch-init, daisy-pod, pico2-bare)
-└── components/            # Reusable component definitions (pot, button, pcm3060 codec, etc.)
+├── mcu/
+│   ├── arm/               # Real MCU definitions (FPU required — ADR-008)
+│   │   ├── rp2350/        # Cortex-M33 (Pico SDK drivers)
+│   │   └── stm32h750/     # Cortex-M7 (bare-metal, SVD registers)
+│   └── linux-arm-host/    # Virtual MCU for workbench (miniaudio, rawmidi, POSIX FatFs)
+├── modules/               # Main + attached module manifests (real and virtual)
+│   ├── daisy-seed/        #   Real: Daisy Seed main module
+│   ├── daisy-patch-sm/    #   Real: Daisy Patch SM main module
+│   ├── patch-init/        #   Real: Patch.init() attached module (shared with virtual)
+│   └── virtual-patch-sm/  #   Virtual: workbench main module (linux-arm-host MCU)
+├── devices/               # Device composition manifests
+│   ├── patch-init/        #   Real: Patch SM + Patch.init()
+│   └── virtual-patch-init/ #  Virtual: virtual Patch SM + shared Patch.init()
+└── components/            # Reusable components (pot, button, pcm3060, virtual-codec, etc.)
 ```
 
 ## Driver Patterns
