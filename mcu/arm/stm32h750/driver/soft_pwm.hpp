@@ -19,7 +19,7 @@
 #define SBL_HW_DRIVER_SOFT_PWM_HPP_
 
 #include <cstdint>
-#include <sbl/hal/gpio/handle.hpp>
+#include <sbl/hw/hal/gpio/handle.hpp>
 #include <sbl/hw/reg/tim_basic.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/gpio.hpp>

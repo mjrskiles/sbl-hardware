@@ -14,7 +14,7 @@
 #include <cstring>
 #include <atomic>
 
-#include <sbl/hal/audio/types.hpp>
+#include <sbl/hw/hal/audio/types.hpp>
 
 // Forward declare miniaudio types (implementation in sai.cpp)
 struct ma_device;

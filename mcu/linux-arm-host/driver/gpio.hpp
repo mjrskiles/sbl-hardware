@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <sbl/types.hpp>
-#include <sbl/hal/gpio/driver.hpp>
+#include <sbl/hw/hal/gpio/driver.hpp>
 
 namespace sbl::driver {
 

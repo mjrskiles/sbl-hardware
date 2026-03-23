@@ -36,7 +36,7 @@
 #include <sbl/hw/driver/dma.hpp>
 #include <sbl/hw/driver/dma_buffer.hpp>
 #include <sbl/hw/driver/timeout.hpp>
-#include <sbl/hal/audio/types.hpp>
+#include <sbl/hw/hal/audio/types.hpp>
 
 namespace sbl::driver {
 
@@ -445,7 +445,7 @@ private:
 
 } // namespace sbl::driver
 
-#include <sbl/validation/audio_requirements.hpp>
+#include <sbl/hw/validation/audio_requirements.hpp>
 static_assert(sbl::validation::audio_driver_valid<sbl::driver::Sai>,
               "SAI driver missing required audio methods");
 

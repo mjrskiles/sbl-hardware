@@ -30,9 +30,9 @@
 #include <sbl/hw/reg/cortex_m.hpp>
 #include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hw/driver/clock.hpp>
-#include <sbl/hal/uart/driver.hpp>
-#include <sbl/hal/memory/barrier.hpp>
-#include <sbl/primitives/buffers/ring_buffer.hpp>
+#include <sbl/hw/hal/uart/driver.hpp>
+#include <sbl/hw/hal/memory/barrier.hpp>
+#include <sbl/hw/util/ring_buffer.hpp>
 
 namespace sbl::driver {
 
@@ -512,7 +512,7 @@ public:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <sbl/validation/uart_requirements.hpp>
+#include <sbl/hw/validation/uart_requirements.hpp>
 static_assert(sbl::validation::uart_driver_valid<sbl::driver::Uart<0>>,
               "STM32H750 UART driver incomplete");
 

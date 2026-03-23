@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <cstring>
 #include <sbl/types.hpp>
-#include <sbl/hal/adc/types.hpp>
+#include <sbl/hw/hal/adc/types.hpp>
 
 namespace sbl::driver {
 

@@ -23,7 +23,7 @@
 #include <sbl/hw/driver/dma.hpp>
 #include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hw/driver/clock.hpp>
-#include <sbl/hal/adc/driver.hpp>
+#include <sbl/hw/hal/adc/driver.hpp>
 
 namespace sbl::driver {
 
@@ -447,7 +447,7 @@ private:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <sbl/validation/adc_requirements.hpp>
+#include <sbl/hw/validation/adc_requirements.hpp>
 static_assert(sbl::validation::adc_driver_valid<sbl::driver::Adc>,
               "STM32H750 ADC driver incomplete");
 

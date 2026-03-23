@@ -14,7 +14,7 @@
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
 #include <sbl/types.hpp>
-#include <sbl/hal/uart/driver.hpp>
+#include <sbl/hw/hal/uart/driver.hpp>
 
 namespace sbl::driver {
 
@@ -129,7 +129,7 @@ private:
 };
 } // namespace sbl::driver
 // Compile-time interface validation
-#include <sbl/validation/uart_requirements.hpp>
+#include <sbl/hw/validation/uart_requirements.hpp>
 static_assert(sbl::validation::uart_driver_valid<sbl::driver::Uart<0>>,
               "RP2350 UART driver incomplete");
 

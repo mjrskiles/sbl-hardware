@@ -9,7 +9,7 @@
 #define SBL_HW_DRIVER_GPIO_HPP_
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
-#include <sbl/hal/gpio/driver.hpp>
+#include <sbl/hw/hal/gpio/driver.hpp>
 namespace sbl::driver {
 // Import canonical PinMode from core lib
 using sbl::gpio::PinMode;
@@ -88,7 +88,7 @@ public:
 };
 } // namespace sbl::driver
 // Compile-time interface validation
-#include <sbl/validation/gpio_requirements.hpp>
+#include <sbl/hw/validation/gpio_requirements.hpp>
 static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
               "RP2350 GPIO driver incomplete");
 
