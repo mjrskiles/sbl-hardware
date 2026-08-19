@@ -1,0 +1,7 @@
+{
+  "component": {
+    "name": "pot",
+    "type": "pot",
+    "pins": { "adc": null }
+  }
+}

@@ -16,32 +16,29 @@ class Timer {
 public:
     /**
      * @brief Get milliseconds since boot
+     * @note ISR-safe — reads volatile hardware timer register
      */
     static uint32_t millis() {
         return static_cast<uint32_t>(time_us_64() / 1000);
     }
     /**
      * @brief Get microseconds since boot
+     * @note ISR-safe — reads volatile hardware timer register
      */
     static uint32_t micros() {
         return static_cast<uint32_t>(time_us_64());
     }
     /**
      * @brief Blocking delay in milliseconds
+     * @note Not ISR-safe — blocking busy-wait.
      */
-    static void delay_ms(uint32_t ms) {
+    static void busy_wait_ms(uint32_t ms) {
         sleep_ms(ms);
-    }
-    /**
-     * @brief Blocking delay in microseconds
-     */
-    static void delay_us(uint32_t us) {
-        sleep_us(us);
     }
 };
 } // namespace sbl::driver
 // Compile-time interface validation
-#include <sbl/validation/timer_requirements.hpp>
+#include <sbl/hw/validation/timer_requirements.hpp>
 static_assert(sbl::validation::timer_driver_valid<sbl::driver::Timer>,
               "RP2350 Timer driver incomplete");
 

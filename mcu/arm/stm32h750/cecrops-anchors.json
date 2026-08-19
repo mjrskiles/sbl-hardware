@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "0.1",
+  "mcu": "stm32h750",
+  "source": "RM0433 Rev 8",
+  "peripherals": {
+    "RCC": {
+      "base_address": "0x58024400",
+      "registers": {
+        "CR":       { "offset": "0x000" },
+        "ICSCR":    { "offset": "0x004" },
+        "CRRCR":    { "offset": "0x008" },
+        "CFGR":     { "offset": "0x010" },
+        "D1CFGR":   { "offset": "0x018" },
+        "D2CFGR":   { "offset": "0x01C" },
+        "D3CFGR":   { "offset": "0x020" },
+        "PLLCKSELR":{ "offset": "0x028" },
+        "D1CCIPR":  { "offset": "0x04C" },
+        "D2CCIP1R": { "offset": "0x050" },
+        "D2CCIP2R": { "offset": "0x054" },
+        "D3CCIPR":  { "offset": "0x058" },
+        "CSR":      { "offset": "0x074", "size": 32 },
+        "AHB1ENR":  { "offset": "0x0D8" },
+        "AHB2ENR":  { "offset": "0x0DC" },
+        "AHB4ENR":  { "offset": "0x0E0" },
+        "APB1LENR": { "offset": "0x0E8", "fields": ["USART3EN", "USART2EN", "TIM2EN", "I2C1EN", "I2C2EN", "I2C3EN"] },
+        "APB2ENR":  { "offset": "0x0F0", "fields": ["USART1EN", "SPI1EN", "TIM1EN", "SAI1EN"] },
+        "APB4ENR":  { "offset": "0x0F4", "fields": ["I2C4EN"] }
+      },
+      "total_registers": { "min": 70 }
+    },
+    "GPIOA": {
+      "base_address": "0x58020000",
+      "registers": {
+        "GPIO_MODER":   { "offset": "0x00" },
+        "GPIO_OTYPER":  { "offset": "0x04" },
+        "GPIO_OSPEEDR": { "offset": "0x08" },
+        "GPIO_PUPDR":   { "offset": "0x0C" },
+        "GPIO_IDR":     { "offset": "0x10", "access": "read-only" },
+        "GPIO_ODR":     { "offset": "0x14" },
+        "GPIO_BSRR":    { "offset": "0x18", "access": "write-only" },
+        "GPIO_LCKR":    { "offset": "0x1C" },
+        "GPIO_AFRL":    { "offset": "0x20" },
+        "GPIO_AFRH":    { "offset": "0x24" }
+      }
+    },
+    "ADC1": {
+      "base_address": "0x40022000",
+      "registers": {
+        "ISR":   { "offset": "0x00" },
+        "IER":   { "offset": "0x04" },
+        "CR":    { "offset": "0x08" },
+        "CFGR":  { "offset": "0x0C" },
+        "CFGR2": { "offset": "0x10" },
+        "SMPR1": { "offset": "0x14" },
+        "SMPR2": { "offset": "0x18" },
+        "SQR1":  { "offset": "0x30" },
+        "DR":    { "offset": "0x40", "access": "read-only" }
+      }
+    },
+    "I2C1": {
+      "base_address": "0x40005400",
+      "registers": {
+        "I2C_CR1":     { "offset": "0x00", "fields": ["PE", "TXIE", "RXIE", "NACKIE"] },
+        "I2C_CR2":     { "offset": "0x04", "fields": ["RD_WRN", "START", "STOP", "NBYTES"] },
+        "I2C_TIMINGR": { "offset": "0x10", "fields": ["SCLL", "SCLH", "PRESC"] },
+        "I2C_ISR":     { "offset": "0x18", "fields": ["TXE", "TXIS", "RXNE", "NACKF", "BUSY"] },
+        "I2C_RXDR":    { "offset": "0x24", "access": "read-only" },
+        "I2C_TXDR":    { "offset": "0x28" }
+      }
+    },
+    "SDMMC1": {
+      "base_address": "0x52007000",
+      "registers": {
+        "SDMMC_POWER":  { "offset": "0x00" },
+        "SDMMC_CLKCR":  { "offset": "0x04" },
+        "SDMMC_ARGR":   { "offset": "0x08" },
+        "SDMMC_CMDR":   { "offset": "0x0C" },
+        "SDMMC_DTIMER": { "offset": "0x24" },
+        "SDMMC_DLENR":  { "offset": "0x28" },
+        "SDMMC_DCTRL":  { "offset": "0x2C" },
+        "SDMMC_STAR":   { "offset": "0x34" },
+        "SDMMC_IDMACTRLR":  { "offset": "0x50" },
+        "SDMMC_IDMABASE0R": { "offset": "0x58" }
+      }
+    }
+  }
+}

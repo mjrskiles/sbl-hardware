@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
-#include <sbl/hal/gpio/driver.hpp>
+#include <sbl/hw/hal/gpio/driver.hpp>
 
 namespace sbl::driver {
 
@@ -32,6 +32,7 @@ public:
      * @brief Set pin mode
      * @param handle GPIO handle from hardware.hpp
      * @param mode Pin mode (from sbl::gpio::PinMode)
+     * @note ISR-safe (atomic register writes), but typically init-only
      */
     static void set_mode(const sbl::GpioHandle& handle, PinMode mode) {
         enable_port_clock(handle.port);
@@ -60,6 +61,7 @@ public:
             case PinMode::OpenDrain:
                 gpio->GPIO_MODER |= (0x1u << (handle.pin * 2));  // General purpose output
                 gpio->GPIO_OTYPER |= (1u << handle.pin);          // Open-drain
+                gpio->GPIO_PUPDR &= ~(0x3u << (handle.pin * 2)); // No pull (defensive)
                 break;
             case PinMode::Analog:
                 gpio->GPIO_MODER |= (0x3u << (handle.pin * 2));  // Analog mode
@@ -71,6 +73,7 @@ public:
      * @brief Write logical value (handles active_low automatically)
      * @param handle GPIO handle from hardware.hpp
      * @param value Logical value (true = active, false = inactive)
+     * @note ISR-safe — atomic BSRR write
      */
     static void write(const sbl::GpioHandle& handle, bool value) {
         auto gpio = port_regs(handle.port);
@@ -86,6 +89,7 @@ public:
      * @brief Read logical value (handles active_low automatically)
      * @param handle GPIO handle from hardware.hpp
      * @return Logical value (true = active, false = inactive)
+     * @note ISR-safe — volatile IDR read
      */
     static bool read(const sbl::GpioHandle& handle) {
         auto gpio = port_regs(handle.port);
@@ -96,6 +100,7 @@ public:
     /**
      * @brief Toggle pin output
      * @param handle GPIO handle from hardware.hpp
+     * @note ISR-safe — single ODR XOR
      */
     static void toggle(const sbl::GpioHandle& handle) {
         auto gpio = port_regs(handle.port);
@@ -131,7 +136,7 @@ private:
 } // namespace sbl::driver
 
 // Compile-time interface validation
-#include <sbl/validation/gpio_requirements.hpp>
+#include <sbl/hw/validation/gpio_requirements.hpp>
 static_assert(sbl::validation::gpio_driver_valid<sbl::driver::Gpio>,
               "STM32H750 GPIO driver incomplete");
 

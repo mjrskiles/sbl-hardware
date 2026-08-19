@@ -17,6 +17,14 @@ extern "C" {
     extern uint32_t _edata;       // End of .data section
     extern uint32_t _sbss;        // Start of .bss section
     extern uint32_t _ebss;        // End of .bss section
+    extern uint32_t _sdma_buffer;   // Start of .dma_buffer section (RAM_D2)
+    extern uint32_t _edma_buffer;   // End of .dma_buffer section
+    extern uint32_t _saudio_buffer; // Start of .audio_buffer section (RAM_D1)
+    extern uint32_t _eaudio_buffer; // End of .audio_buffer section
+
+    // System core clock - required by TinyUSB
+    // Daisy Seed runs at 480MHz but boots with HSI (64MHz) until PLL init
+    uint32_t SystemCoreClock = 64000000;
 
     // Main entry point
     int main();
@@ -27,7 +35,7 @@ extern "C" {
     // Core exception handlers
     void Reset_Handler();
     void NMI_Handler()          __attribute__((weak, alias("Default_Handler")));
-    void HardFault_Handler()    __attribute__((weak, alias("Default_Handler")));
+    void HardFault_Handler();
     void MemManage_Handler()    __attribute__((weak, alias("Default_Handler")));
     void BusFault_Handler()     __attribute__((weak, alias("Default_Handler")));
     void UsageFault_Handler()   __attribute__((weak, alias("Default_Handler")));
@@ -56,7 +64,55 @@ extern "C" {
     void DMA1_Stream5_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
     void DMA1_Stream6_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
     void ADC_IRQHandler()               __attribute__((weak, alias("Default_Handler")));
-    // ... additional handlers can be added as needed
+
+    // DMA1 stream 7 (IRQ 47, non-contiguous with streams 0-6)
+    void DMA1_Stream7_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+
+    // DMA2 streams (IRQs 56-60, 68-70)
+    void DMA2_Stream0_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream1_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream2_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream3_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream4_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream5_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream6_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+    void DMA2_Stream7_IRQHandler()      __attribute__((weak, alias("Default_Handler")));
+
+    // TIM6/TIM7 interrupt handlers
+    void TIM6_DAC_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void TIM7_IRQHandler()           __attribute__((weak, alias("Default_Handler")));
+
+    // USB OTG interrupt handlers
+    // USB1_OTG_HS (at 0x40040000) - NOT used by Daisy Seed
+    void OTG_HS_EP1_OUT_IRQHandler() __attribute__((weak, alias("Default_Handler")));
+    void OTG_HS_EP1_IN_IRQHandler()  __attribute__((weak, alias("Default_Handler")));
+    void OTG_HS_IRQHandler()         __attribute__((weak, alias("Default_Handler")));
+
+    // USB2_OTG_FS (at 0x40080000) - USED by Daisy Seed on PA11/PA12!
+    // USB2 only has one IRQ (101), no separate EP1 IRQs. Positions 99-100 are other peripherals.
+    void OTG_FS_IRQHandler() __attribute__((weak, alias("Default_Handler")));  // USB2 main - position 101
+
+    // I2C interrupt handlers (overridden by i2c_irq.cpp when linked)
+    void I2C1_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C1_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C2_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C2_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C3_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C3_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C4_EV_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+    void I2C4_ER_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
+
+    // USART interrupt handlers (overridden by uart_irq.cpp when linked)
+    void USART1_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+    void USART2_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+    void USART3_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+    void USART6_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
+
+    // Fault handler callback — overridden by sbl/assert.hpp when included
+    __attribute__((weak)) void sbl_on_hard_fault(const uint32_t* frame) {
+        (void)frame;
+        while (true) { __asm__ volatile("bkpt #0"); }
+    }
 }
 
 /**
@@ -68,6 +124,31 @@ void Default_Handler() {
     while (true) {
         __asm__ volatile("bkpt #0");  // Breakpoint for debugger
     }
+}
+
+/**
+ * @brief HardFault handler with register dump
+ *
+ * The Cortex-M exception entry pushes {R0-R3, R12, LR, PC, xPSR}
+ * onto the active stack (MSP or PSP). Bit 2 of EXC_RETURN (in LR)
+ * indicates which stack was active:
+ *   LR[2] == 0 → MSP (handler mode or main thread without RTOS)
+ *   LR[2] == 1 → PSP (thread mode with RTOS)
+ *
+ * We extract the correct stack pointer and pass it to
+ * sbl_on_hard_fault() which dumps the frame. If sbl/assert.hpp
+ * is included, it provides the real implementation with formatted
+ * output. Otherwise the weak default just hits a breakpoint.
+ */
+__attribute__((naked))
+void HardFault_Handler() {
+    __asm__ volatile(
+        "tst lr, #4          \n"  // Test bit 2 of EXC_RETURN
+        "ite eq              \n"
+        "mrseq r0, msp       \n"  // LR[2]==0: fault used MSP
+        "mrsne r0, psp       \n"  // LR[2]==1: fault used PSP
+        "b sbl_on_hard_fault \n"  // Tail-call with frame pointer in R0
+    );
 }
 
 // Minimal delay for debug blinking
@@ -122,6 +203,18 @@ void Reset_Handler() {
         *dst++ = 0;
     }
 
+    // Zero .dma_buffer section (RAM_D2, NOLOAD — no flash LMA)
+    dst = &_sdma_buffer;
+    while (dst < &_edma_buffer) {
+        *dst++ = 0;
+    }
+
+    // Zero .audio_buffer section (RAM_D1, NOLOAD — reverb/delay pools)
+    dst = &_saudio_buffer;
+    while (dst < &_eaudio_buffer) {
+        *dst++ = 0;
+    }
+
     // Enable FPU (Cortex-M7 with FPU)
     // Set CP10 and CP11 to full access
     *reinterpret_cast<volatile uint32_t*>(0xE000ED88) |= (0xFu << 20);
@@ -131,7 +224,11 @@ void Reset_Handler() {
     __asm__ volatile("isb");
 
     // Call C++ constructors for static objects
-    // (if using static constructors, add __libc_init_array call here)
+    extern void (*__init_array_start[])();
+    extern void (*__init_array_end[])();
+    for (void (**p)() = __init_array_start; p < __init_array_end; p++) {
+        (*p)();
+    }
 
     // Call main
     main();
@@ -170,7 +267,8 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(PendSV_Handler),
     reinterpret_cast<void*>(SysTick_Handler),
 
-    // STM32H7 peripheral interrupts (first 16)
+    // STM32H7 peripheral interrupts
+    // Full table up to USB OTG FS at position 101
     reinterpret_cast<void*>(WWDG_IRQHandler),           // 0
     reinterpret_cast<void*>(PVD_AVD_IRQHandler),        // 1
     reinterpret_cast<void*>(TAMP_STAMP_IRQHandler),     // 2
@@ -190,6 +288,87 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(DMA1_Stream5_IRQHandler),   // 16
     reinterpret_cast<void*>(DMA1_Stream6_IRQHandler),   // 17
     reinterpret_cast<void*>(ADC_IRQHandler),            // 18
-    // Additional interrupt handlers would continue here...
-    // Full STM32H7 has 150+ interrupts, add as needed
+    reinterpret_cast<void*>(Default_Handler),           // 19
+    reinterpret_cast<void*>(Default_Handler),           // 20
+    reinterpret_cast<void*>(Default_Handler),           // 21
+    reinterpret_cast<void*>(Default_Handler),           // 22
+    reinterpret_cast<void*>(Default_Handler),           // 23
+    reinterpret_cast<void*>(Default_Handler),           // 24
+    reinterpret_cast<void*>(Default_Handler),           // 25
+    reinterpret_cast<void*>(Default_Handler),           // 26
+    reinterpret_cast<void*>(Default_Handler),           // 27
+    reinterpret_cast<void*>(Default_Handler),           // 28
+    reinterpret_cast<void*>(Default_Handler),           // 29
+    reinterpret_cast<void*>(Default_Handler),           // 30
+    reinterpret_cast<void*>(I2C1_EV_IRQHandler),         // 31 - I2C1 event
+    reinterpret_cast<void*>(I2C1_ER_IRQHandler),         // 32 - I2C1 error
+    reinterpret_cast<void*>(I2C2_EV_IRQHandler),         // 33 - I2C2 event
+    reinterpret_cast<void*>(I2C2_ER_IRQHandler),         // 34 - I2C2 error
+    reinterpret_cast<void*>(Default_Handler),           // 35
+    reinterpret_cast<void*>(Default_Handler),           // 36
+    reinterpret_cast<void*>(USART1_IRQHandler),         // 37 - USART1
+    reinterpret_cast<void*>(USART2_IRQHandler),         // 38 - USART2
+    reinterpret_cast<void*>(USART3_IRQHandler),         // 39 - USART3
+    reinterpret_cast<void*>(Default_Handler),           // 40
+    reinterpret_cast<void*>(Default_Handler),           // 41
+    reinterpret_cast<void*>(Default_Handler),           // 42
+    reinterpret_cast<void*>(Default_Handler),           // 43
+    reinterpret_cast<void*>(Default_Handler),           // 44
+    reinterpret_cast<void*>(Default_Handler),           // 45
+    reinterpret_cast<void*>(Default_Handler),           // 46
+    reinterpret_cast<void*>(DMA1_Stream7_IRQHandler),    // 47 - DMA1 stream 7
+    reinterpret_cast<void*>(Default_Handler),           // 48
+    reinterpret_cast<void*>(Default_Handler),           // 49
+    reinterpret_cast<void*>(Default_Handler),           // 50
+    reinterpret_cast<void*>(Default_Handler),           // 51
+    reinterpret_cast<void*>(Default_Handler),           // 52
+    reinterpret_cast<void*>(Default_Handler),           // 53
+    reinterpret_cast<void*>(TIM6_DAC_IRQHandler),        // 54 - TIM6 / DAC
+    reinterpret_cast<void*>(TIM7_IRQHandler),            // 55 - TIM7
+    reinterpret_cast<void*>(DMA2_Stream0_IRQHandler),    // 56 - DMA2 stream 0
+    reinterpret_cast<void*>(DMA2_Stream1_IRQHandler),    // 57 - DMA2 stream 1
+    reinterpret_cast<void*>(DMA2_Stream2_IRQHandler),    // 58 - DMA2 stream 2
+    reinterpret_cast<void*>(DMA2_Stream3_IRQHandler),    // 59 - DMA2 stream 3
+    reinterpret_cast<void*>(DMA2_Stream4_IRQHandler),    // 60 - DMA2 stream 4
+    reinterpret_cast<void*>(Default_Handler),           // 61
+    reinterpret_cast<void*>(Default_Handler),           // 62
+    reinterpret_cast<void*>(Default_Handler),           // 63
+    reinterpret_cast<void*>(Default_Handler),           // 64
+    reinterpret_cast<void*>(Default_Handler),           // 65
+    reinterpret_cast<void*>(Default_Handler),           // 66
+    reinterpret_cast<void*>(Default_Handler),           // 67
+    reinterpret_cast<void*>(DMA2_Stream5_IRQHandler),    // 68 - DMA2 stream 5
+    reinterpret_cast<void*>(DMA2_Stream6_IRQHandler),    // 69 - DMA2 stream 6
+    reinterpret_cast<void*>(DMA2_Stream7_IRQHandler),    // 70 - DMA2 stream 7
+    reinterpret_cast<void*>(USART6_IRQHandler),         // 71 - USART6
+    reinterpret_cast<void*>(I2C3_EV_IRQHandler),         // 72 - I2C3 event
+    reinterpret_cast<void*>(I2C3_ER_IRQHandler),         // 73 - I2C3 error
+    reinterpret_cast<void*>(OTG_HS_EP1_OUT_IRQHandler),  // 74 - USB1 EP1 OUT
+    reinterpret_cast<void*>(OTG_HS_EP1_IN_IRQHandler),  // 75 - USB1 EP1 IN
+    reinterpret_cast<void*>(Default_Handler),           // 76 - USB1 WKUP (unused)
+    reinterpret_cast<void*>(OTG_HS_IRQHandler),         // 77 - USB1 OTG HS
+    reinterpret_cast<void*>(Default_Handler),           // 78
+    reinterpret_cast<void*>(Default_Handler),           // 79
+    reinterpret_cast<void*>(Default_Handler),           // 80
+    reinterpret_cast<void*>(Default_Handler),           // 81
+    reinterpret_cast<void*>(Default_Handler),           // 82
+    reinterpret_cast<void*>(Default_Handler),           // 83
+    reinterpret_cast<void*>(Default_Handler),           // 84
+    reinterpret_cast<void*>(Default_Handler),           // 85
+    reinterpret_cast<void*>(Default_Handler),           // 86
+    reinterpret_cast<void*>(Default_Handler),           // 87
+    reinterpret_cast<void*>(Default_Handler),           // 88
+    reinterpret_cast<void*>(Default_Handler),           // 89
+    reinterpret_cast<void*>(Default_Handler),           // 90
+    reinterpret_cast<void*>(Default_Handler),           // 91
+    reinterpret_cast<void*>(Default_Handler),           // 92
+    reinterpret_cast<void*>(Default_Handler),           // 93
+    reinterpret_cast<void*>(Default_Handler),           // 94
+    reinterpret_cast<void*>(I2C4_EV_IRQHandler),         // 95 - I2C4 event
+    reinterpret_cast<void*>(I2C4_ER_IRQHandler),         // 96 - I2C4 error
+    reinterpret_cast<void*>(Default_Handler),           // 97
+    reinterpret_cast<void*>(Default_Handler),           // 98
+    reinterpret_cast<void*>(Default_Handler),           // 99 - Reserved (not USB2)
+    reinterpret_cast<void*>(Default_Handler),           // 100 - Reserved (not USB2)
+    reinterpret_cast<void*>(OTG_FS_IRQHandler),         // 101 - USB2 OTG FS (used by Daisy Seed!)
 };

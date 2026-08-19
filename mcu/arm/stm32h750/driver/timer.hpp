@@ -21,11 +21,15 @@ namespace sbl::driver {
  */
 class Timer {
 public:
+    static constexpr uint32_t DEFAULT_CPU_FREQ_HZ = 480'000'000;
+
     /**
      * @brief Initialize SysTick for 1ms ticks
      * @param cpu_freq_hz CPU frequency in Hz (default 480 MHz for STM32H750)
+     * @return true (always succeeds; matches init() pattern of other drivers)
+     * @note Not ISR-safe — init-time only
      */
-    static void init(uint32_t cpu_freq_hz = 480'000'000) {
+    static bool init(uint32_t cpu_freq_hz = DEFAULT_CPU_FREQ_HZ) {
         using namespace sbl::hw::reg;
 
         s_cpu_freq = cpu_freq_hz;
@@ -41,10 +45,13 @@ public:
 
         // Enable with processor clock and interrupt
         periph::systick->CTRL = SysTick::ENABLE | SysTick::TICKINT | SysTick::CLKSOURCE;
+
+        return true;
     }
 
     /**
      * @brief Get milliseconds since boot
+     * @note ISR-safe — volatile read
      */
     static uint32_t millis() {
         return s_tick_count;
@@ -52,6 +59,7 @@ public:
 
     /**
      * @brief Get microseconds since boot (approximate)
+     * @note ISR-safe — volatile reads (minor race between ms and counter is acceptable)
      */
     static uint32_t micros() {
         using namespace sbl::hw::reg;
@@ -66,66 +74,15 @@ public:
     /**
      * @brief Blocking delay in milliseconds
      *
-     * Uses SysTick COUNTFLAG polling - simple and reliable, no interrupt
-     * handler required. Updates tick count for millis() accuracy.
-     */
-    static void delay_ms(uint32_t ms) {
-        using namespace sbl::hw::reg;
-
-        while (ms > 0) {
-            // Wait for COUNTFLAG (set when counter reaches 0)
-            // Reading CTRL clears COUNTFLAG, so we check it each iteration
-            while ((periph::systick->CTRL & SysTick::COUNTFLAG) == 0) {
-                // Busy wait for 1ms tick
-            }
-            ++s_tick_count;  // Keep millis() accurate
-            --ms;
-        }
-    }
-
-    /**
-     * @brief Blocking delay in microseconds
+     * Polls millis() (driven by SysTick interrupt). Simple and correct —
+     * the interrupt is the sole tick source, so no double-counting.
      *
-     * For delays under 1ms, uses direct SysTick polling.
+     * @note Not ISR-safe — blocking busy-wait. Use NonBlockingDelay for main loop.
      */
-    static void delay_us(uint32_t us) {
-        using namespace sbl::hw::reg;
-
-        if (us == 0) return;
-
-        // Calculate ticks needed
-        uint32_t ticks_per_us = s_cpu_freq / 1'000'000;
-
-        while (us > 0) {
-            // SysTick is 24-bit, max ~16M ticks
-            uint32_t chunk = (us > 1000) ? 1000 : us;
-            uint32_t ticks = chunk * ticks_per_us;
-
-            if (ticks > SysTick::LOAD_MAX) {
-                ticks = SysTick::LOAD_MAX;
-            }
-
-            // Save current state
-            uint32_t saved_ctrl = periph::systick->CTRL;
-            uint32_t saved_load = periph::systick->LOAD;
-
-            periph::systick->CTRL = 0;  // Disable
-            periph::systick->LOAD = ticks - 1;
-            periph::systick->VAL = 0;
-            periph::systick->CTRL = SysTick::ENABLE | SysTick::CLKSOURCE;
-
-            // Wait for COUNTFLAG
-            while ((periph::systick->CTRL & SysTick::COUNTFLAG) == 0) {
-                // Busy wait
-            }
-
-            // Restore
-            periph::systick->CTRL = 0;
-            periph::systick->LOAD = saved_load;
-            periph::systick->VAL = 0;
-            periph::systick->CTRL = saved_ctrl;
-
-            us -= chunk;
+    static void busy_wait_ms(uint32_t ms) {
+        uint32_t start = s_tick_count;
+        while ((s_tick_count - start) < ms) {
+            // Busy wait — SysTick_Handler increments s_tick_count
         }
     }
 
@@ -138,7 +95,7 @@ public:
 
 private:
     static inline volatile uint32_t s_tick_count = 0;
-    static inline uint32_t s_cpu_freq = 480'000'000;
+    static inline uint32_t s_cpu_freq = DEFAULT_CPU_FREQ_HZ;
 };
 
 } // namespace sbl::driver
@@ -154,7 +111,7 @@ extern "C" {
 }
 
 // Compile-time interface validation
-#include <sbl/validation/timer_requirements.hpp>
+#include <sbl/hw/validation/timer_requirements.hpp>
 static_assert(sbl::validation::timer_driver_valid<sbl::driver::Timer>,
               "STM32H750 Timer driver incomplete");
 

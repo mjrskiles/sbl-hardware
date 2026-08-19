@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "0.1",
+  "device": {
+    "name": "daisy-pod",
+    "main": "sbl:modules/daisy-seed",
+    "modules": [
+      { "ref": "sbl:modules/daisy-pod" }
+    ]
+  }
+}

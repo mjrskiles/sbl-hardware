@@ -1,0 +1,112 @@
+{
+  "$schema": "https://soundbytelabs.net/schema/module.schema.json",
+  "schemaVersion": "0.1",
+  "module": {
+    "name": "daisy-pod",
+    "revision": "1.0",
+    "category": "boards"
+  },
+
+  "claims": {
+    "pins": [
+      {
+        "pin": "d20",
+        "function": "gpio",
+        "direction": "out",
+        "active_low": true,
+        "id": "led1_r"
+      },
+      {
+        "pin": "d19",
+        "function": "gpio",
+        "direction": "out",
+        "active_low": true,
+        "id": "led1_g"
+      },
+      {
+        "pin": "d18",
+        "function": "gpio",
+        "direction": "out",
+        "active_low": true,
+        "id": "led1_b"
+      },
+      {
+        "pin": "d17",
+        "function": "gpio",
+        "direction": "out",
+        "active_low": true,
+        "id": "led2_r"
+      },
+      {
+        "pin": "d24",
+        "function": "gpio",
+        "direction": "out",
+        "active_low": true,
+        "id": "led2_g"
+      },
+      {
+        "pin": "d23",
+        "function": "gpio",
+        "direction": "out",
+        "active_low": true,
+        "id": "led2_b"
+      },
+      {
+        "pin": "d26",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "id": "encoder_a"
+      },
+      {
+        "pin": "d25",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "id": "encoder_b"
+      },
+      {
+        "pin": "d13",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "encoder_click"
+      },
+      {
+        "pin": "d27",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "button1"
+      },
+      {
+        "pin": "d28",
+        "function": "gpio",
+        "direction": "in",
+        "pull": "up",
+        "active_low": true,
+        "id": "button2"
+      }
+    ],
+    "adc": [
+      { "pin": "a6", "id": "knob1" },
+      { "pin": "a0", "id": "knob2" }
+    ],
+    "uart": [
+      { "bus": "uart1", "id": "midi", "baud": 31250 }
+    ]
+  },
+
+  "components": {
+    "button1":       { "type": "button",  "pins": {"pin": "button1"} },
+    "button2":       { "type": "button",  "pins": {"pin": "button2"} },
+    "encoder":       { "type": "encoder", "pins": {"a": "encoder_a", "b": "encoder_b"} },
+    "encoder_click": { "type": "button",  "pins": {"pin": "encoder_click"} },
+    "knob1":         { "type": "pot",     "pins": {"adc": "knob1"} },
+    "knob2":         { "type": "pot",     "pins": {"adc": "knob2"} },
+    "led1":          { "type": "rgb_led", "pins": {"r": "led1_r", "g": "led1_g", "b": "led1_b"} },
+    "led2":          { "type": "rgb_led", "pins": {"r": "led2_r", "g": "led2_g", "b": "led2_b"} }
+  }
+}

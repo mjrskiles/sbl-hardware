@@ -40,6 +40,10 @@ MEMORY
 
     /* Backup SRAM - 4KB at 0x38800000 */
     BACKUP (rwx)    : ORIGIN = 0x38800000, LENGTH = 4K
+
+    /* External SDRAM - 64MB at 0xC0000000 (FMC Bank 1) */
+    /* Available after init_sdram(). Daisy Seed / Patch SM. */
+    SDRAM (rwx)     : ORIGIN = 0xC0000000, LENGTH = 64M
 }
 
 /* Stack size */
@@ -163,23 +167,38 @@ SECTIONS
     /* Stack pointer starts at end of DTCM */
     _estack = ORIGIN(DTCM) + LENGTH(DTCM);
 
-    /* DMA buffers in D2 SRAM (needed for peripherals) */
+    /* DMA buffers in D2 SRAM (needed for peripherals, zeroed at startup) */
     .dma_buffer (NOLOAD) :
     {
         . = ALIGN(4);
+        _sdma_buffer = .;
         *(.dma_buffer)
         *(.dma_buffer*)
         . = ALIGN(4);
+        _edma_buffer = .;
     } >RAM_D2
 
     /* Audio buffers in AXI SRAM (large, cache-able) */
     .audio_buffer (NOLOAD) :
     {
         . = ALIGN(4);
+        _saudio_buffer = .;
         *(.audio_buffer)
         *(.audio_buffer*)
         . = ALIGN(4);
+        _eaudio_buffer = .;
     } >RAM_D1
+
+    /* External SDRAM buffers (available after init_sdram()) */
+    .sdram_bss (NOLOAD) :
+    {
+        . = ALIGN(32);
+        _ssdram_bss = .;
+        *(.sdram_bss)
+        *(.sdram_bss*)
+        . = ALIGN(32);
+        _esdram_bss = .;
+    } >SDRAM
 
     /* Remove debug info from output */
     /DISCARD/ :

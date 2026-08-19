@@ -6,6 +6,11 @@
   "family": "rp2350",
   "vendor": "raspberry-pi",
   "arch": "arm-cortex-m33",
+  "capabilities": {
+    "fpu": "fpv5-sp-d16",
+    "dsp_extensions": false,
+    "timing": { "source": "sdk_timer" }
+  },
   "driver": "./driver",
   "sdk": {
     "type": "pico-sdk",

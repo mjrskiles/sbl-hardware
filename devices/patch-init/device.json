@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "0.1",
+  "device": {
+    "name": "patch-init",
+    "main": "sbl:modules/daisy-patch-sm",
+    "modules": [
+      { "ref": "sbl:modules/patch-init" }
+    ]
+  }
+}

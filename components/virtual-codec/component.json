@@ -1,0 +1,7 @@
+{
+  "component": {
+    "name": "virtual-codec",
+    "description": "No-op codec stub for virtual (host) targets",
+    "driver": "./driver"
+  }
+}

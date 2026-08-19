@@ -6,17 +6,11 @@ STMicroelectronics STM32H750 high-performance ARM Cortex-M7 microcontroller.
 
 | Aspect | Status |
 |--------|--------|
-| Schema | v1.0 (needs migration to v0.1) |
-| Pin definitions | Partial (subset of pins) |
-| Alternate functions | Not implemented |
-| Peripherals | Not implemented |
-| Driver | Not implemented |
-| Testing | Not tested |
-
-**TODO:** Migrate to new schema format with:
-- `schemaVersion: "0.1"`
-- `pins` object with alternate functions
-- `peripherals` object
+| Schema | v0.1 |
+| Pin definitions | Complete (PA, PB, PC, PD, PG with alt functions) |
+| Peripherals | GPIO, Timer, UART, ADC, DMA, SAI/I2S, USB OTG |
+| Driver | Bare-metal, SVD-generated registers |
+| Testing | Validated on Daisy Seed hardware |
 
 ## Specifications
 
@@ -30,7 +24,50 @@ STMicroelectronics STM32H750 high-performance ARM Cortex-M7 microcontroller.
 | ADC | 16-bit, 3 ADCs, 20+ channels |
 | DAC | 2x 12-bit |
 
-## Peripherals (To Be Defined)
+## Driver
+
+Bare-metal drivers with no vendor HAL dependencies:
+
+| Driver | File | Status |
+|--------|------|--------|
+| System init (480 MHz clock tree) | `driver/init.hpp` | Complete |
+| Audio init (PLL2, SAI GPIO, codec reset) | `driver/init.hpp` | Complete |
+| GPIO | `driver/gpio.hpp` | Complete |
+| Timer (SysTick) | `driver/timer.hpp` | Complete |
+| UART (USART3, polling) | `driver/uart.hpp` | Complete |
+| ADC (ADC1, polling) | `driver/adc.hpp` | Complete |
+| DMA (streams, circular, callbacks) | `driver/dma.hpp` | Complete |
+| DMA buffer placement macros | `driver/dma_buffer.hpp` | Complete |
+| DMA IRQ dispatch | `driver/dma_irq.cpp` | Complete |
+| SAI/I2S (full-duplex, DMA, MSB-Justified) | `driver/sai.hpp` | Complete |
+| Kernel clock mux helpers | `driver/clock.hpp` | Complete |
+| Blocking timeout utilities | `driver/timeout.hpp` | Complete |
+| Software PWM (TIM7 BCM engine) | `driver/soft_pwm.hpp` | Complete |
+| SoftPwm ISR (application source) | `driver/soft_pwm_irq.cpp` | Complete |
+| USB OTG (device mode setup) | `driver/usb.hpp` | Complete |
+| USB IRQ handler | `driver/usb_irq.cpp` | Complete |
+
+## Register Headers
+
+SVD-generated C++ register definitions via cecrops (`cecrops.json`):
+
+| Header | Peripheral | Source |
+|--------|-----------|--------|
+| `reg/rcc.hpp` | Reset & Clock Control | cecrops (SVD) |
+| `reg/gpio.hpp` | GPIO ports A-K | cecrops (SVD) |
+| `reg/pwr.hpp` | Power control | cecrops (SVD) |
+| `reg/flash.hpp` | Flash controller | cecrops (SVD) |
+| `reg/usart.hpp` | USART/UART | Manual |
+| `reg/adc.hpp` | ADC | cecrops (SVD) |
+| `reg/dma.hpp` | DMA1/2, DMAMUX, BDMA | cecrops (SVD) |
+| `reg/sai.hpp` | SAI1-4 | cecrops (SVD) |
+| `reg/cortex_m.hpp` | NVIC, SysTick, SCB | Manual |
+| `reg/usb_otg.hpp` | USB OTG FS/HS | Manual (SVD structurally broken) |
+| `reg/irq.hpp` | IRQ number enum | Manual |
+
+Manual headers are listed in `cecrops.json` to prevent overwrite during regeneration.
+
+## Peripherals (Available on Silicon)
 
 | Peripheral | Count | Notes |
 |------------|-------|-------|
@@ -40,15 +77,9 @@ STMicroelectronics STM32H750 high-performance ARM Cortex-M7 microcontroller.
 | SAI | 4 | Serial Audio Interface |
 | I2S | 3 | Via SPI peripherals |
 | SDMMC | 2 | SD card interface |
-| USB | 2 | FS and HS |
+| USB | 2 | FS and HS (OTG) |
 | ADC | 3 | 16-bit, up to 3.6 MSPS |
 | DAC | 2 | 12-bit |
-
-## Current Pin Definitions
-
-The current definition includes a subset of GPIO pins commonly used. Full alternate function mapping is pending.
-
-Ports defined: PA, PB, PC, PD, PG (partial)
 
 ## Usage
 
@@ -65,5 +96,5 @@ Reference this MCU from a mainboard definition:
 
 ## References
 
-- [STM32H750 Reference Manual](https://www.st.com/resource/en/reference_manual/dm00314099.pdf)
+- [STM32H750 Reference Manual (RM0433)](https://www.st.com/resource/en/reference_manual/dm00314099.pdf)
 - [STM32H750 Datasheet](https://www.st.com/resource/en/datasheet/stm32h750ib.pdf)

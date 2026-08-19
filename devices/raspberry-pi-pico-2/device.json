@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "0.1",
+  "device": {
+    "name": "raspberry-pi-pico-2",
+    "main": "sbl:modules/raspberry-pi-pico-2"
+  }
+}

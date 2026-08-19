@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "0.1",
+  "device": {
+    "name": "virtual-patch-init",
+    "main": "sbl:modules/virtual-patch-sm",
+    "modules": [
+      { "ref": "sbl:modules/patch-init" }
+    ]
+  }
+}

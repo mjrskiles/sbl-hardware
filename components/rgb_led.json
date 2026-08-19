@@ -1,0 +1,7 @@
+{
+  "component": {
+    "name": "rgb_led",
+    "type": "rgb_led",
+    "pins": { "r": null, "g": null, "b": null }
+  }
+}

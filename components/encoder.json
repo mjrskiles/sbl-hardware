@@ -1,0 +1,7 @@
+{
+  "component": {
+    "name": "encoder",
+    "type": "encoder",
+    "pins": { "a": null, "b": null }
+  }
+}
