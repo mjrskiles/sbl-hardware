@@ -27,3 +27,12 @@ Thumbs.db
 
 # Lock files (generated per-project, not part of hardware repo)
 sbl.lock
+
+# KiCad
+fp-info-cache
+*-backups/
+*.kicad_prl
+*.lck
+_autosave-*
+fab/
+gerbers/

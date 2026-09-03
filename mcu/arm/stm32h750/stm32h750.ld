@@ -167,7 +167,11 @@ SECTIONS
     /* Stack pointer starts at end of DTCM */
     _estack = ORIGIN(DTCM) + LENGTH(DTCM);
 
-    /* DMA buffers in D2 SRAM (needed for peripherals, zeroed at startup) */
+    /* DMA buffers in D2 SRAM (needed for peripherals, zeroed at startup).
+     * RAM_D2 (SRAM1, 128K) is exactly the MPU non-cacheable region set up by
+     * configure_mpu() in driver/sdram.hpp — keep LENGTH(RAM_D2) and
+     * MPU_RASR_SIZE_128KB in lockstep. DMA buffers must never be placed in
+     * RAM_D2_2/RAM_D2_3 (cacheable; silent corruption). */
     .dma_buffer (NOLOAD) :
     {
         . = ALIGN(4);
@@ -177,6 +181,8 @@ SECTIONS
         . = ALIGN(4);
         _edma_buffer = .;
     } >RAM_D2
+    ASSERT(_edma_buffer <= ORIGIN(RAM_D2) + 128K,
+           ".dma_buffer exceeds the 128K MPU non-cacheable region (sdram.hpp)")
 
     /* Audio buffers in AXI SRAM (large, cache-able) */
     .audio_buffer (NOLOAD) :

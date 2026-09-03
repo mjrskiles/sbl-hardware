@@ -109,10 +109,10 @@ inline constexpr uint32_t MPU_RASR_ADDR    = 0xE000'EDA0;
 inline constexpr uint32_t MPU_CTRL_ENABLE     = (1u << 0);
 inline constexpr uint32_t MPU_CTRL_PRIVDEFENA = (1u << 2);  // Default map for privileged access
 
-inline constexpr uint32_t MPU_RASR_ENABLE    = (1u << 0);
-inline constexpr uint32_t MPU_RASR_SIZE_32KB = (14u << 1);  // 2^(14+1) = 32 KB
-inline constexpr uint32_t MPU_RASR_SIZE_4KB  = (11u << 1);  // 2^(11+1) = 4 KB
-inline constexpr uint32_t MPU_RASR_SIZE_64MB = (25u << 1);  // 2^(25+1) = 64 MB
+inline constexpr uint32_t MPU_RASR_ENABLE     = (1u << 0);
+inline constexpr uint32_t MPU_RASR_SIZE_128KB = (16u << 1);  // 2^(16+1) = 128 KB
+inline constexpr uint32_t MPU_RASR_SIZE_4KB   = (11u << 1);  // 2^(11+1) = 4 KB
+inline constexpr uint32_t MPU_RASR_SIZE_64MB  = (25u << 1);  // 2^(25+1) = 64 MB
 inline constexpr uint32_t MPU_RASR_B         = (1u << 16);  // Bufferable
 inline constexpr uint32_t MPU_RASR_C         = (1u << 17);  // Cacheable
 inline constexpr uint32_t MPU_RASR_S         = (1u << 18);  // Shareable
@@ -234,8 +234,13 @@ inline void sdram_command(uint32_t mode, uint32_t nrfs = 0, uint32_t mrd = 0) {
 /**
  * @brief Configure MPU regions for SDRAM and DMA safety
  *
- * Matches libDaisy's proven MPU configuration (system.cpp ConfigureMpu):
- *   Region 0: RAM_D2 (0x30000000, 32KB) — Non-cacheable, for DMA buffers
+ * Derived from libDaisy's MPU configuration (system.cpp ConfigureMpu), with
+ * one deliberate difference: region 0 covers ALL of SRAM1 (128 KB), not
+ * libDaisy's 32 KB. libDaisy's region is smaller than its linker section, so
+ * DMA buffers past the 32 KB mark silently land in cacheable memory. Our
+ * region size must equal LENGTH(RAM_D2) in stm32h750.ld — the linker errors
+ * on .dma_buffer overflow, so the two limits fail loudly together.
+ *   Region 0: RAM_D2/SRAM1 (0x30000000, 128KB) — Non-cacheable, DMA buffers
  *   Region 1: SDRAM (0xC0000000, 64MB) — Normal, cacheable + bufferable
  *   Region 2: Backup SRAM (0x38800000, 4KB) — Non-cacheable
  *
@@ -255,13 +260,14 @@ inline void configure_mpu() {
 
     mpu_ctrl = 0;  // Disable MPU
 
-    // Region 0: RAM_D2 (SRAM1, 0x30000000, 32 KB) — Non-cacheable
-    // DMA audio buffers live here. Must bypass D-cache.
+    // Region 0: RAM_D2 (SRAM1, 0x30000000, 128 KB) — Non-cacheable
+    // DMA audio buffers live here. Must bypass D-cache. Size must match
+    // LENGTH(RAM_D2) in stm32h750.ld (see doc comment above).
     // TEX=1, C=0, B=0 = Normal, Non-cacheable; S=1 = Shareable
     mpu_rnr  = 0;
     mpu_rbar = 0x3000'0000;
     mpu_rasr = MPU_RASR_ENABLE
-             | MPU_RASR_SIZE_32KB
+             | MPU_RASR_SIZE_128KB
              | MPU_RASR_TEX_1
              | MPU_RASR_S
              | MPU_RASR_AP_FULL
