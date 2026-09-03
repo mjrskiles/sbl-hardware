@@ -49,6 +49,14 @@
     "fmc": {
       "peripherals": ["FMC"],
       "output": "reg/fmc.hpp"
+    },
+    "dbgmcu": {
+      "peripherals": ["DBGMCU"],
+      "output": "reg/dbgmcu.hpp"
+    },
+    "axi": {
+      "peripherals": ["AXI"],
+      "output": "reg/axi.hpp"
     }
   },
 

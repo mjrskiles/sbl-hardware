@@ -218,6 +218,27 @@ private:
 
 public:
     /**
+     * Hardware FIFO depth, all USART/UART/LPUART instances on the H7
+     * (RM0433 Rev 8 Table 399 "USART / LPUART features", p. 2020).
+     * With FIFOEN set, 16 bytes buffer before the receiver overruns: at the
+     * full threshold the RXFIFO holds FIFO size − 1 and USART_RDR holds one
+     * (RM0433 Rev 8 §48.5.4, p. 2025).
+     */
+    static constexpr uint32_t kRxFifoDepth = 16;
+
+    /** One MIDI byte on the wire: 10 bits at 31250 baud. */
+    static constexpr uint32_t kMidiByteUs = 320;
+
+    /**
+     * Longest the RX interrupt may be held off (by the audio ISR or any
+     * critical section) before a MIDI byte is lost: kRxFifoDepth × 320 µs.
+     * Compare against the audio block period when choosing block sizes —
+     * a 256-frame block at 48 kHz is 5333 µs, so a fully loaded block would
+     * exceed this; 48 frames (1000 µs) has 5× headroom.
+     */
+    static constexpr uint32_t kMidiRxDeadlineUs = kRxFifoDepth * kMidiByteUs;
+
+    /**
      * @brief Initialize UART (TX + RX) using handle from hardware manifest
      *
      * Configures both TX and RX pins. Both RX and TX are interrupt-driven
@@ -289,8 +310,8 @@ public:
      * like MIDI on Daisy Pod where the TX pin (PB6) is used by the encoder.
      *
      * RX bytes are buffered via NVIC interrupt into a 256-byte ring buffer.
-     * OVRDIS prevents overrun from blocking RXNE. FIFOEN enables the 8-byte
-     * hardware FIFO for additional buffering.
+     * OVRDIS prevents overrun from blocking RXNE. FIFOEN enables the 16-deep
+     * hardware FIFO (RM0433 Rev 8 Table 399, p. 2020) — see kRxFifoDepth.
      *
      * @param handle UartHandle — only peripheral, rx_port, rx_pin, rx_af, baud are used
      * @return true if initialized successfully

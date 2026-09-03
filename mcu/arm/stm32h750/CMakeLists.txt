@@ -50,7 +50,9 @@ set(SBL_STM32H750_DRIVER_HEADERS
 # SVD-generated register headers
 set(SBL_STM32H750_REG_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/adc.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/axi.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/cortex_m.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/dbgmcu.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/dma.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/flash.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/gpio.hpp
