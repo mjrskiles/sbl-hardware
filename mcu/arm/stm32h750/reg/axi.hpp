@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-09-03T15:06:16.445569
+ * Generated: 2026-09-06T09:18:38.421786
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -53,9 +53,9 @@ struct AXI_t {
     volatile uint32_t AXI_TARG5_FN_MOD_ISS_BM;  ///< AXI interconnect - TARG x bus matrix issuing           fu...
     uint8_t _reserved13[4092];
     volatile uint32_t AXI_TARG6_FN_MOD_ISS_BM;  ///< AXI interconnect - TARG x bus matrix issuing           fu...
-    uint8_t _reserved14[4096];
+    uint8_t _reserved14[4092];
     volatile uint32_t AXI_TARG7_FN_MOD_ISS_BM;  ///< AXI interconnect - TARG x bus matrix issuing           fu...
-    uint8_t _reserved15[20];
+    uint8_t _reserved15[24];
     volatile uint32_t AXI_TARG7_FN_MOD2;  ///< AXI interconnect - TARG x bus matrix           functional...
     uint8_t _reserved16[224];
     volatile uint32_t AXI_TARG7_FN_MOD;  ///< AXI interconnect - TARG x long burst           functional...

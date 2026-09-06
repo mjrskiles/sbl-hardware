@@ -82,6 +82,21 @@
         "SDMMC_IDMACTRLR":  { "offset": "0x50" },
         "SDMMC_IDMABASE0R": { "offset": "0x58" }
       }
+    },
+    "DBGMCU": {
+      "base_address": "0x5C001000",
+      "registers": {
+        "IDC": { "offset": "0x000", "fields": ["DEV_ID", "REV_ID"] }
+      }
+    },
+    "AXI": {
+      "base_address": "0x51000000",
+      "registers": {
+        "AXI_TARG1_FN_MOD_ISS_BM": { "offset": "0x2008" },
+        "AXI_TARG7_FN_MOD_ISS_BM": { "offset": "0x8008" },
+        "AXI_TARG7_FN_MOD2":       { "offset": "0x8024" },
+        "AXI_TARG7_FN_MOD":        { "offset": "0x8108", "fields": ["READ_ISS_OVERRIDE", "WRITE_ISS_OVERRIDE"] }
+      }
     }
   }
 }
