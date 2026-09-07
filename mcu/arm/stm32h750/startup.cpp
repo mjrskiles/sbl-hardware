@@ -9,6 +9,9 @@
 #include <cstdint>
 #include <cstring>
 
+#include <sbl/hw/reg/axi.hpp>
+#include <sbl/hw/reg/dbgmcu.hpp>
+
 // Linker-provided symbols
 extern "C" {
     extern uint32_t _estack;      // End of stack (top of RAM)
@@ -213,6 +216,29 @@ void Reset_Handler() {
     dst = &_saudio_buffer;
     while (dst < &_eaudio_buffer) {
         *dst++ = 0;
+    }
+
+    // ES0392 Rev 15 §2.2.10 (p. 13–14): on silicon revisions Y and W
+    // (DBGMCU_IDC REV_ID 0x1003) reads from AXI SRAM can return corrupted
+    // data when several reads are outstanding and a master delays its data
+    // acceptance. Workaround: set READ_ISS_OVERRIDE in AXI_TARG7_FN_MOD
+    // (RM0433 Rev 8 p. 118 — target 7 is the AXI SRAM), limiting read
+    // issuing capability to 1. ES0392 Table 3 (p. 2) lists it absent on
+    // X (0x2001) and V (0x2003); gating on "older than X" also covers any
+    // unlisted pre-X revision (ST's SystemInit gates on REV_ID < 0x2000 and
+    // stores 1 — same effect for every published revision).
+    // Ordering: the erratum concerns *reads* of AXI SRAM (RAM_D1,
+    // 0x24000000). .data/.bss/stack live in DTCM; the only RAM_D1 section
+    // is .audio_buffer, which the loop above only writes. The first RAM_D1
+    // reads come from static constructors and main(), so this must stay
+    // ahead of __init_array below. The register's reset value is 0 and the
+    // other bit (WRITE_ISS_OVERRIDE) is not wanted, hence a plain store.
+    {
+        using namespace sbl::hw::reg;
+        const uint32_t rev_id = (periph::dbgmcu->IDC & DBGMCU::IDC_REV_ID_Msk) >> DBGMCU::IDC_REV_ID_Pos;
+        if (rev_id < 0x2001u) {
+            periph::axi->AXI_TARG7_FN_MOD = AXI::AXI_TARG7_FN_MOD_READ_ISS_OVERRIDE;
+        }
     }
 
     // Enable FPU (Cortex-M7 with FPU)

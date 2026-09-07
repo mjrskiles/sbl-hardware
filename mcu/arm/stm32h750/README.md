@@ -61,6 +61,12 @@ SVD-generated C++ register definitions via cecrops (`cecrops.json`):
 | `reg/adc.hpp` | ADC | cecrops (SVD) |
 | `reg/dma.hpp` | DMA1/2, DMAMUX, BDMA | cecrops (SVD) |
 | `reg/sai.hpp` | SAI1-4 | cecrops (SVD) |
+| `reg/i2c.hpp` | I2C1-4 | cecrops (SVD) |
+| `reg/sdmmc.hpp` | SDMMC1/2 | cecrops (SVD) |
+| `reg/fmc.hpp` | FMC (SDRAM) | cecrops (SVD) |
+| `reg/dbgmcu.hpp` | DBGMCU (IDC silicon revision, freeze) | cecrops (SVD) |
+| `reg/axi.hpp` | AXI interconnect (ES0392 §2.2.10 workaround) | cecrops (SVD, TARG7_FN_MOD_ISS_BM offset patched) |
+| `reg/tim_basic.hpp` | TIM6/TIM7 | Manual |
 | `reg/cortex_m.hpp` | NVIC, SysTick, SCB | Manual |
 | `reg/usb_otg.hpp` | USB OTG FS/HS | Manual (SVD structurally broken) |
 | `reg/irq.hpp` | IRQ number enum | Manual |

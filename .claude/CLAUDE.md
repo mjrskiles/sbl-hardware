@@ -39,10 +39,15 @@ Regenerate:
 python -m cecrops generate sbl-hardware/mcu/arm/stm32h750
 ```
 
-Validate:
+Validate (read-only — checks the SVD against `cecrops-anchors.json`):
 ```bash
-python -m cecrops generate sbl-hardware/mcu/arm/stm32h750 --validate --strict
+python -m cecrops validate sbl-hardware/mcu/arm/stm32h750
 ```
+
+`generate --validate --strict` also validates but **rewrites every output header**
+(timestamp line changes even when content doesn't). Only use it when you mean to
+regenerate. Anchors exist only for peripherals listed in `cecrops-anchors.json`;
+add an anchor whenever code starts depending on a new peripheral's register offset.
 
 ## Manifests (ADR-010)
 
