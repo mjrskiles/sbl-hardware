@@ -55,10 +55,10 @@
       "cv_in_6": { "mcu_pin": "PC4",  "mcu_channel": "ADC1_IN4", "electrical": { "range_v": [-5.0, 5.0], "bits": 16, "inverted": true } },
       "cv_in_7": { "mcu_pin": "PC0",  "mcu_channel": "ADC1_IN10", "electrical": { "range_v": [-5.0, 5.0], "bits": 16, "inverted": true } },
       "cv_in_8": { "mcu_pin": "PC1",  "mcu_channel": "ADC1_IN11", "electrical": { "range_v": [-5.0, 5.0], "bits": 16, "inverted": true } },
-      "adc_9":   { "mcu_pin": "PA1",  "mcu_channel": "ADC1_IN17" },
-      "adc_10":  { "mcu_pin": "PA0",  "mcu_channel": "ADC1_IN16" },
-      "adc_11":  { "mcu_pin": "PC3",  "mcu_channel": "ADC1_IN13" },
-      "adc_12":  { "mcu_pin": "PC2",  "mcu_channel": "ADC1_IN12" }
+      "adc_9":   { "mcu_pin": "PA1",  "mcu_channel": "ADC1_IN17", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "adc_10":  { "mcu_pin": "PA0",  "mcu_channel": "ADC1_IN16", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "adc_11":  { "mcu_pin": "PC3",  "mcu_channel": "ADC1_IN13", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "adc_12":  { "mcu_pin": "PC2",  "mcu_channel": "ADC1_IN12", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } }
     },
     "buses": {
       "i2c1": {

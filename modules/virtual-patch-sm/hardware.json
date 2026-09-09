@@ -58,10 +58,10 @@
       "cv_in_6": { "mcu_pin": "GPIO17", "mcu_channel": "ADC0_IN6", "electrical": { "range_v": [-5.0, 5.0], "bits": 16, "inverted": true } },
       "cv_in_7": { "mcu_pin": "GPIO18", "mcu_channel": "ADC0_IN7", "electrical": { "range_v": [-5.0, 5.0], "bits": 16, "inverted": true } },
       "cv_in_8": { "mcu_pin": "GPIO19", "mcu_channel": "ADC0_IN10", "electrical": { "range_v": [-5.0, 5.0], "bits": 16, "inverted": true } },
-      "adc_9":   { "mcu_pin": "GPIO2",  "mcu_channel": "ADC0_IN8" },
-      "adc_10":  { "mcu_pin": "GPIO3",  "mcu_channel": "ADC0_IN9" },
-      "adc_11":  { "mcu_pin": "GPIO20", "mcu_channel": "ADC0_IN11" },
-      "adc_12":  { "mcu_pin": "GPIO11", "mcu_channel": "ADC0_IN0" }
+      "adc_9":   { "mcu_pin": "GPIO2",  "mcu_channel": "ADC0_IN8", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "adc_10":  { "mcu_pin": "GPIO3",  "mcu_channel": "ADC0_IN9", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "adc_11":  { "mcu_pin": "GPIO20", "mcu_channel": "ADC0_IN11", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "adc_12":  { "mcu_pin": "GPIO11", "mcu_channel": "ADC0_IN0", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } }
     }
   },
 
