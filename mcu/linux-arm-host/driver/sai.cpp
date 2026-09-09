@@ -13,6 +13,14 @@
 #define MA_NO_DECODING  // We don't need WAV/MP3 decoding
 #define MA_NO_GENERATION // We don't need waveform generation
 
+// SCHED_FIFO priority for miniaudio's device thread. Without this define
+// miniaudio asks for sched_get_priority_max(SCHED_FIFO) = 99, which exceeds
+// the rtprio limit pam_limits grants the 'pipewire' group (95) and is refused
+// with EPERM — miniaudio then falls back to SCHED_OTHER without a word.
+// 80 sits below the PipeWire server (rt.prio 88) and its clients (83), so
+// the audio server still preempts us, and inside any sane rtprio limit.
+#define MA_PTHREAD_REALTIME_THREAD_PRIORITY 80
+
 #include "miniaudio.h"
 #include "sai.hpp"
 
@@ -22,6 +30,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 
 namespace {
 
@@ -45,8 +54,12 @@ void report_audio_thread_sched(const ma_device& dev) {
         fprintf(stderr, "[native-sai] Audio thread: %s priority %d\n",
                 policy == SCHED_FIFO ? "SCHED_FIFO" : "SCHED_RR", param.sched_priority);
     } else {
-        fprintf(stderr, "[native-sai] Audio thread: SCHED_OTHER — realtime denied "
-                        "(rtprio limit); add this user to the 'pipewire' group\n");
+        rlimit rl{};
+        long limit = (getrlimit(RLIMIT_RTPRIO, &rl) == 0) ? static_cast<long>(rl.rlim_cur) : -1;
+        fprintf(stderr, "[native-sai] Audio thread: SCHED_OTHER — SCHED_FIFO %d refused; "
+                        "RLIMIT_RTPRIO is %ld (needs >= %d: add this user to the 'pipewire' "
+                        "group and start a fresh login)\n",
+                MA_PTHREAD_REALTIME_THREAD_PRIORITY, limit, MA_PTHREAD_REALTIME_THREAD_PRIORITY);
     }
 }
 
