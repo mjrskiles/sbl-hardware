@@ -9,7 +9,7 @@ Hosted Linux ARM64 platform for SBL. Provides driver implementations that bridge
 | SAI (audio) | miniaudio — real-time duplex via PulseAudio/ALSA |
 | MIDI (MidiPort) | Linux rawmidi `/dev/snd/midiC*D*` |
 | GPIO | In-memory boolean array |
-| ADC | Returns zeros |
+| ADC | Scan buffer initialized to each jack\'s idle code from the manifest electrics (`sbl::hw::electrical::idle_counts`); no updates until a VDH client lands (FDP-076) |
 | UART | stdout (write), stub (read) |
 | I2C | No-op (codec init succeeds silently) |
 | USB | No-op stubs + CDC routes to stdout |

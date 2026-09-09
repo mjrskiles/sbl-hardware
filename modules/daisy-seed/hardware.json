@@ -47,18 +47,18 @@
       "d30": { "mcu_pin": "PB15", "functions": ["gpio", "pwm"] }
     },
     "adc": {
-      "a0":  { "mcu_pin": "PC0",  "mcu_channel": "ADC1_IN10" },
-      "a1":  { "mcu_pin": "PA3",  "mcu_channel": "ADC1_IN15" },
-      "a2":  { "mcu_pin": "PB1",  "mcu_channel": "ADC1_IN5" },
-      "a3":  { "mcu_pin": "PA7",  "mcu_channel": "ADC1_IN7" },
-      "a4":  { "mcu_pin": "PA6",  "mcu_channel": "ADC1_IN3" },
-      "a5":  { "mcu_pin": "PC1",  "mcu_channel": "ADC1_IN11" },
-      "a6":  { "mcu_pin": "PC4",  "mcu_channel": "ADC1_IN4" },
-      "a7":  { "mcu_pin": "PA5",  "mcu_channel": "ADC1_IN19" },
-      "a8":  { "mcu_pin": "PA4",  "mcu_channel": "ADC1_IN18" },
-      "a9":  { "mcu_pin": "PA1",  "mcu_channel": "ADC1_IN17" },
-      "a10": { "mcu_pin": "PA0",  "mcu_channel": "ADC1_IN16" },
-      "a11": { "mcu_pin": "PA2",  "mcu_channel": "ADC1_IN14" }
+      "a0":  { "mcu_pin": "PC0",  "mcu_channel": "ADC1_IN10", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a1":  { "mcu_pin": "PA3",  "mcu_channel": "ADC1_IN15", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a2":  { "mcu_pin": "PB1",  "mcu_channel": "ADC1_IN5", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a3":  { "mcu_pin": "PA7",  "mcu_channel": "ADC1_IN7", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a4":  { "mcu_pin": "PA6",  "mcu_channel": "ADC1_IN3", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a5":  { "mcu_pin": "PC1",  "mcu_channel": "ADC1_IN11", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a6":  { "mcu_pin": "PC4",  "mcu_channel": "ADC1_IN4", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a7":  { "mcu_pin": "PA5",  "mcu_channel": "ADC1_IN19", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a8":  { "mcu_pin": "PA4",  "mcu_channel": "ADC1_IN18", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a9":  { "mcu_pin": "PA1",  "mcu_channel": "ADC1_IN17", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a10": { "mcu_pin": "PA0",  "mcu_channel": "ADC1_IN16", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
+      "a11": { "mcu_pin": "PA2",  "mcu_channel": "ADC1_IN14", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } }
     },
     "buses": {
       "spi1": {
