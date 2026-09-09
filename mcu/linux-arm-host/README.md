@@ -37,8 +37,12 @@ cmake --preset workbench --fresh -S sbl-apps/davis-jr && cmake --build sbl-apps/
 SBL_AUDIO_DEVICE=H5studio SBL_MIDI_DEVICE=LCXL3 sbl-apps/davis-jr/build/workbench/davis_jr
 ```
 
-Startup logs `[native-sai] Audio thread: SCHED_FIFO priority N` when the user has rtprio
-(the `pipewire` group grants it on RPi OS); `SCHED_OTHER — realtime denied` otherwise.
+Startup logs `[native-sai] Audio thread: SCHED_FIFO priority 80` when the user has rtprio
+(the `pipewire` group grants 95 on RPi OS; needs a fresh login to apply), or
+`SCHED_OTHER — SCHED_FIFO 80 refused; RLIMIT_RTPRIO is N` otherwise. The driver pins the
+request at 80 (`MA_PTHREAD_REALTIME_THREAD_PRIORITY`): miniaudio's default asks for 99,
+which the 95 limit refuses, and it falls back to `SCHED_OTHER` silently. 80 stays below
+PipeWire's own threads (88) so the server always preempts the app.
 
 ## Tested on
 
