@@ -5,7 +5,8 @@
 // (/dev/snd/midiC*D*) for USB MIDI controller input on the native workbench.
 //
 // Device selection via SBL_MIDI_DEVICE environment variable:
-//   SBL_MIDI_DEVICE="Keystep"  — substring match on card name
+//   SBL_MIDI_DEVICE="Keystep"           — substring match on card name
+//   SBL_MIDI_DEVICE="/dev/snd/midiC4D1" — exact device node (sidecar passes this)
 //   SBL_MIDI_DEVICE="list"     — print available MIDI devices and exit
 //   (unset)                    — open first available rawmidi device
 
@@ -208,10 +209,13 @@ void midi_init() {
     }
 
     for (int i = 0; i < device_count && s_midi_fd_count < MAX_MIDI_FDS; ++i) {
-        // Apply filter if set
+        // Apply filter if set: card short name, card long name, or the device
+        // node path. The path form (/dev/snd/midiC4D1) selects exactly one port
+        // — what sidecar passes, since all virmidi ports share one card name.
         if (filter && filter[0] != '\0') {
             if (!midi_contains_icase(devices[i].name, filter) &&
-                !midi_contains_icase(devices[i].longname, filter)) {
+                !midi_contains_icase(devices[i].longname, filter) &&
+                !midi_contains_icase(devices[i].path, filter)) {
                 continue;
             }
         }

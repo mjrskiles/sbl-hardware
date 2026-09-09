@@ -19,6 +19,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <pthread.h>
+#include <sched.h>
+#include <sys/mman.h>
 
 namespace {
 
@@ -30,6 +33,29 @@ static ma_context s_context;
 static bool s_context_initialized = false;
 static bool s_device_initialized = false;
 static constexpr uint16_t MAX_BLOCK_SIZE = 256;
+static constexpr ma_uint32 kHostPeriodBlocks = 2;  // host period = 2 app blocks
+static constexpr ma_uint32 kHostPeriods = 3;       // ring of 3 host periods
+
+/// Report the scheduling the device thread actually got (SCHED_FIFO was requested).
+void report_audio_thread_sched(const ma_device& dev) {
+    int policy = 0;
+    sched_param param{};
+    if (pthread_getschedparam(dev.thread, &policy, &param) != 0) return;
+    if (policy == SCHED_FIFO || policy == SCHED_RR) {
+        fprintf(stderr, "[native-sai] Audio thread: %s priority %d\n",
+                policy == SCHED_FIFO ? "SCHED_FIFO" : "SCHED_RR", param.sched_priority);
+    } else {
+        fprintf(stderr, "[native-sai] Audio thread: SCHED_OTHER — realtime denied "
+                        "(rtprio limit); add this user to the 'pipewire' group\n");
+    }
+}
+
+/// Pin the process's pages so the audio thread never takes a page fault.
+void lock_memory() {
+    if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
+        fprintf(stderr, "[native-sai] mlockall failed (memlock limit) — continuing unpinned\n");
+    }
+}
 
 /// Case-insensitive substring search
 bool contains_icase(const char* haystack, const char* needle) {
@@ -186,6 +212,11 @@ bool Sai::init() {
 }
 
 bool Sai::init(const sbl::hal::audio::AudioConfig& config) {
+    if (config.block_size == 0 || config.block_size > MAX_BLOCK_SIZE) {
+        fprintf(stderr, "[native-sai] block_size %u out of range (1..%u)\n",
+                config.block_size, MAX_BLOCK_SIZE);
+        return false;
+    }
     s_config = config;
     return true;
 }
@@ -201,7 +232,12 @@ void Sai::start() {
 
     // Initialize miniaudio context for device enumeration
     if (!s_context_initialized) {
-        if (ma_context_init(nullptr, 0, nullptr, &s_context) != MA_SUCCESS) {
+        // Realtime scheduling for miniaudio's device thread. miniaudio asks for
+        // SCHED_FIFO and falls back to SCHED_OTHER on EPERM (rtprio limit 0 —
+        // add the user to the 'pipewire' group, or raise rtprio in limits.d).
+        ma_context_config ctx_config = ma_context_config_init();
+        ctx_config.threadPriority = ma_thread_priority_realtime;
+        if (ma_context_init(nullptr, 0, &ctx_config, &s_context) != MA_SUCCESS) {
             fprintf(stderr, "[native-sai] Failed to initialize audio context\n");
             return;
         }
@@ -245,10 +281,15 @@ void Sai::start() {
     } else {
         dev_config = ma_device_config_init(ma_device_type_playback);
     }
+    // Host period = two app blocks, three periods. The callback re-blocks to
+    // block_size, so the app still sees 48-frame blocks; the extra host slack
+    // absorbs scheduler jitter (workbench #14) at ~2 ms of added latency.
+    const ma_uint32 host_period = static_cast<ma_uint32>(s_config.block_size) * kHostPeriodBlocks;
     dev_config.playback.format = ma_format_f32;
     dev_config.playback.channels = 2;
     dev_config.sampleRate = s_config.sample_rate;
-    dev_config.periodSizeInFrames = s_config.block_size;
+    dev_config.periodSizeInFrames = host_period;
+    dev_config.periods = kHostPeriods;
     dev_config.dataCallback = ma_data_callback;
 
     if (have_playback) dev_config.playback.pDeviceID = &playback_id;
@@ -260,7 +301,8 @@ void Sai::start() {
             dev_config.playback.format = ma_format_f32;
             dev_config.playback.channels = 2;
             dev_config.sampleRate = s_config.sample_rate;
-            dev_config.periodSizeInFrames = s_config.block_size;
+            dev_config.periodSizeInFrames = host_period;
+            dev_config.periods = kHostPeriods;
             dev_config.dataCallback = ma_data_callback;
             if (have_playback) dev_config.playback.pDeviceID = &playback_id;
         }
@@ -284,7 +326,10 @@ void Sai::start() {
         return;
     }
 
-    fprintf(stderr, "[native-sai] Audio streaming started\n");
+    lock_memory();
+    report_audio_thread_sched(s_device);
+    fprintf(stderr, "[native-sai] Audio streaming started (host period %u frames x %u)\n",
+            host_period, kHostPeriods);
 }
 
 bool Sai::check_underrun() {
