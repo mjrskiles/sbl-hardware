@@ -97,14 +97,14 @@
       }
     ],
     "adc": [
-      { "pin": "cv_in_1", "id": "knob_1" },
-      { "pin": "cv_in_2", "id": "knob_2" },
-      { "pin": "cv_in_3", "id": "knob_3" },
-      { "pin": "cv_in_4", "id": "knob_4" },
-      { "pin": "cv_in_8", "id": "cv_5" },
-      { "pin": "cv_in_7", "id": "cv_6" },
-      { "pin": "cv_in_5", "id": "cv_7" },
-      { "pin": "cv_in_6", "id": "cv_8" }
+      { "pin": "cv_in_1", "id": "knob_1", "idle_v": 0.0 },
+      { "pin": "cv_in_2", "id": "knob_2", "idle_v": 0.0 },
+      { "pin": "cv_in_3", "id": "knob_3", "idle_v": 0.0 },
+      { "pin": "cv_in_4", "id": "knob_4", "idle_v": 0.0 },
+      { "pin": "cv_in_8", "id": "cv_5", "idle_v": 0.0 },
+      { "pin": "cv_in_7", "id": "cv_6", "idle_v": 0.0 },
+      { "pin": "cv_in_5", "id": "cv_7", "idle_v": 0.0 },
+      { "pin": "cv_in_6", "id": "cv_8", "idle_v": 0.0 }
     ]
   },
 
