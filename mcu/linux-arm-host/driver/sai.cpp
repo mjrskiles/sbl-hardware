@@ -24,6 +24,8 @@
 #include "miniaudio.h"
 #include "sai.hpp"
 
+#include <sbl/hw/hal/audio/sample_clock.hpp>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -165,6 +167,7 @@ void ma_data_callback(ma_device* device, void* output, const void* input,
 
     if (!s_callback) {
         memset(output, 0, frame_count * 2 * sizeof(float));
+        sbl::hal::audio::SampleClock::advance(frame_count);
         return;
     }
 
@@ -200,6 +203,7 @@ void ma_data_callback(ma_device* device, void* output, const void* input,
 
         // Call the SBL audio callback (same signature as on hardware)
         s_callback(tx_buf, rx_buf, frames);
+        sbl::hal::audio::SampleClock::advance(frames);
 
         // Convert output int32 (24-bit MSB-justified) → float [-1,1]
         // This is the reverse of interleave_from_float
