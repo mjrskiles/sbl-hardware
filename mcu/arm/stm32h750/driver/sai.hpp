@@ -37,6 +37,7 @@
 #include <sbl/hw/driver/dma_buffer.hpp>
 #include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hw/hal/audio/types.hpp>
+#include <sbl/hw/hal/audio/sample_clock.hpp>
 
 namespace sbl::driver {
 
@@ -425,21 +426,25 @@ private:
      * Called from the TX stream's ISR. The ISR fires on the TX stream so
      * we know exactly which half-buffer the DMA just finished reading —
      * that's the half we can safely overwrite.
+     *
+     * Every half-transfer is one block clocked out, callback or not, so
+     * SampleClock advances unconditionally.
      */
     static void dma_callback() {
-        if (!s_callback) return;
+        if (s_callback) {
+            const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
+            const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
 
-        const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
-        const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
+            uint16_t half_samples = s_block_size * 2;  // stereo samples per half
+            bool is_half = Dma::is_half_transfer(tx_stream);
 
-        uint16_t half_samples = s_block_size * 2;  // stereo samples per half
-        bool is_half = Dma::is_half_transfer(tx_stream);
+            int32_t* tx_buf = a_is_tx ? s_buf_a : s_buf_b;
+            int32_t* rx_buf = a_is_tx ? s_buf_b : s_buf_a;
 
-        int32_t* tx_buf = a_is_tx ? s_buf_a : s_buf_b;
-        int32_t* rx_buf = a_is_tx ? s_buf_b : s_buf_a;
-
-        uint32_t offset = is_half ? 0 : half_samples;
-        s_callback(&tx_buf[offset], &rx_buf[offset], s_block_size);
+            uint32_t offset = is_half ? 0 : half_samples;
+            s_callback(&tx_buf[offset], &rx_buf[offset], s_block_size);
+        }
+        sbl::hal::audio::SampleClock::advance(s_block_size);
     }
 };
 
