@@ -10,45 +10,340 @@
   "capabilities": {
     "fpu": "host",
     "dsp_extensions": false,
-    "timing": { "source": "posix_monotonic" }
+    "timing": {
+      "source": "posix_monotonic"
+    },
+    "usb": "stub",
+    "filesystem": "posix"
   },
   "driver": "./driver",
   "sdk": {
     "type": "none"
   },
-
   "pins": {
-    "GPIO0":  { "functions": { "gpio": { "port": 0, "pin": 0 } } },
-    "GPIO1":  { "functions": { "gpio": { "port": 0, "pin": 1 } } },
-    "GPIO2":  { "functions": { "gpio": { "port": 0, "pin": 2 },  "adc": { "peripheral": "ADC0", "channel": 8 } } },
-    "GPIO3":  { "functions": { "gpio": { "port": 0, "pin": 3 },  "adc": { "peripheral": "ADC0", "channel": 9 } } },
-    "GPIO4":  { "functions": { "gpio": { "port": 0, "pin": 4 }, "uart": { "peripheral": "UART0", "signal": "tx", "af": 0 } } },
-    "GPIO5":  { "functions": { "gpio": { "port": 0, "pin": 5 }, "uart": { "peripheral": "UART0", "signal": "rx", "af": 0 } } },
-    "GPIO6":  { "functions": { "gpio": { "port": 0, "pin": 6 }, "i2c": { "peripheral": "I2C0", "signal": "scl", "af": 0 } } },
-    "GPIO7":  { "functions": { "gpio": { "port": 0, "pin": 7 }, "i2c": { "peripheral": "I2C0", "signal": "sda", "af": 0 } } },
-    "GPIO8":  { "functions": { "gpio": { "port": 0, "pin": 8 } } },
-    "GPIO9":  { "functions": { "gpio": { "port": 0, "pin": 9 } } },
-    "GPIO10": { "functions": { "gpio": { "port": 0, "pin": 10 } } },
-    "GPIO11": { "functions": { "gpio": { "port": 0, "pin": 11 }, "adc": { "peripheral": "ADC0", "channel": 0 } } },
-    "GPIO12": { "functions": { "gpio": { "port": 0, "pin": 12 }, "adc": { "peripheral": "ADC0", "channel": 1 } } },
-    "GPIO13": { "functions": { "gpio": { "port": 0, "pin": 13 }, "adc": { "peripheral": "ADC0", "channel": 2 } } },
-    "GPIO14": { "functions": { "gpio": { "port": 0, "pin": 14 }, "adc": { "peripheral": "ADC0", "channel": 3 } } },
-    "GPIO15": { "functions": { "gpio": { "port": 0, "pin": 15 }, "adc": { "peripheral": "ADC0", "channel": 4 } } },
-    "GPIO16": { "functions": { "gpio": { "port": 0, "pin": 16 }, "adc": { "peripheral": "ADC0", "channel": 5 } } },
-    "GPIO17": { "functions": { "gpio": { "port": 0, "pin": 17 }, "adc": { "peripheral": "ADC0", "channel": 6 } } },
-    "GPIO18": { "functions": { "gpio": { "port": 0, "pin": 18 }, "adc": { "peripheral": "ADC0", "channel": 7 } } },
-    "GPIO19": { "functions": { "gpio": { "port": 0, "pin": 19 }, "adc": { "peripheral": "ADC0", "channel": 10 } } },
-    "GPIO20": { "functions": { "gpio": { "port": 0, "pin": 20 }, "adc": { "peripheral": "ADC0", "channel": 11 } } },
-    "GPIO21": { "functions": { "gpio": { "port": 0, "pin": 21 } } },
-    "GPIO22": { "functions": { "gpio": { "port": 0, "pin": 22 } } },
-    "GPIO23": { "functions": { "gpio": { "port": 0, "pin": 23 } } },
-    "GPIO24": { "functions": { "gpio": { "port": 0, "pin": 24 } } },
-    "GPIO25": { "functions": { "gpio": { "port": 0, "pin": 25 } } },
-    "GPIO26": { "functions": { "gpio": { "port": 0, "pin": 26 } } },
-    "GPIO27": { "functions": { "gpio": { "port": 0, "pin": 27 } } },
-    "GPIO28": { "functions": { "gpio": { "port": 0, "pin": 28 } } },
-    "GPIO29": { "functions": { "gpio": { "port": 0, "pin": 29 } } },
-    "GPIO30": { "functions": { "gpio": { "port": 0, "pin": 30 } } },
-    "GPIO31": { "functions": { "gpio": { "port": 0, "pin": 31 } } }
+    "GPIO0": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 0
+        }
+      }
+    },
+    "GPIO1": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 1
+        }
+      }
+    },
+    "GPIO2": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 2
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 8
+        }
+      }
+    },
+    "GPIO3": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 3
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 9
+        }
+      }
+    },
+    "GPIO4": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 4
+        },
+        "uart": {
+          "peripheral": "UART0",
+          "signal": "tx",
+          "af": 0
+        }
+      }
+    },
+    "GPIO5": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 5
+        },
+        "uart": {
+          "peripheral": "UART0",
+          "signal": "rx",
+          "af": 0
+        }
+      }
+    },
+    "GPIO6": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 6
+        },
+        "i2c": {
+          "peripheral": "I2C0",
+          "signal": "scl",
+          "af": 0
+        }
+      }
+    },
+    "GPIO7": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 7
+        },
+        "i2c": {
+          "peripheral": "I2C0",
+          "signal": "sda",
+          "af": 0
+        }
+      }
+    },
+    "GPIO8": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 8
+        }
+      }
+    },
+    "GPIO9": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 9
+        }
+      }
+    },
+    "GPIO10": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 10
+        }
+      }
+    },
+    "GPIO11": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 11
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 0
+        }
+      }
+    },
+    "GPIO12": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 12
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 1
+        }
+      }
+    },
+    "GPIO13": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 13
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 2
+        }
+      }
+    },
+    "GPIO14": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 14
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 3
+        }
+      }
+    },
+    "GPIO15": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 15
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 4
+        }
+      }
+    },
+    "GPIO16": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 16
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 5
+        }
+      }
+    },
+    "GPIO17": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 17
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 6
+        }
+      }
+    },
+    "GPIO18": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 18
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 7
+        }
+      }
+    },
+    "GPIO19": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 19
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 10
+        }
+      }
+    },
+    "GPIO20": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 20
+        },
+        "adc": {
+          "peripheral": "ADC0",
+          "channel": 11
+        }
+      }
+    },
+    "GPIO21": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 21
+        }
+      }
+    },
+    "GPIO22": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 22
+        }
+      }
+    },
+    "GPIO23": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 23
+        }
+      }
+    },
+    "GPIO24": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 24
+        }
+      }
+    },
+    "GPIO25": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 25
+        }
+      }
+    },
+    "GPIO26": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 26
+        }
+      }
+    },
+    "GPIO27": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 27
+        }
+      }
+    },
+    "GPIO28": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 28
+        }
+      }
+    },
+    "GPIO29": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 29
+        }
+      }
+    },
+    "GPIO30": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 30
+        }
+      }
+    },
+    "GPIO31": {
+      "functions": {
+        "gpio": {
+          "port": 0,
+          "pin": 31
+        }
+      }
+    }
   }
 }
