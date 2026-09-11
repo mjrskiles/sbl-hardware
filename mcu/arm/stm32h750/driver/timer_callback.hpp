@@ -6,7 +6,7 @@
  * TIM6 is a basic timer on APB1 (240 MHz timer clock post-init).
  * PSC = 239 → 1 MHz tick (1 us resolution). Max period = 65535 us (~65 ms).
  *
- * NVIC priority 8: below audio DMA (2) and MIDI UART (4),
+ * Runs at prio::kControlTick (level 8): below audio DMA (2) and USB/MIDI (4),
  * above debug UART (12).
  *
  * Usage:
@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/tim_basic.hpp>
+#include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/cortex_m.hpp>
@@ -63,10 +64,8 @@ public:
         // Enable update interrupt
         tim->DIER = TIM_Basic::DIER_UIE;
 
-        // NVIC: enable TIM6_DAC IRQ (position 54), priority 8
-        constexpr auto irq = static_cast<int32_t>(IRQn::TIM6_DAC);
-        periph::nvic->IP[irq] = (IRQ_PRIORITY << 4);
-        periph::nvic->ISER[irq / 32] = (1u << (irq % 32));
+        // NVIC: TIM6_DAC at the control-tick level (the BASEPRI ceiling)
+        prio::enable_irq(IRQn::TIM6_DAC, prio::kControlTick);
 
         s_running = true;
 
@@ -117,7 +116,6 @@ public:
     static bool running() { return s_running; }
 
 private:
-    static constexpr uint8_t IRQ_PRIORITY = 8;
 
     static inline Callback s_callback = nullptr;
     static inline volatile bool s_running = false;

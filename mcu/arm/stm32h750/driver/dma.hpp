@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/dma.hpp>
+#include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/cortex_m.hpp>
@@ -180,13 +181,13 @@ public:
      * @param stream DMA controller + stream number
      * @note ISR-safe — register write
      */
-    static void enable(DmaStream stream) {
+    static void enable(DmaStream stream, prio::Level level = prio::kOtherDma) {
         auto* regs = stream_regs(stream);
         regs->CR |= (1u << 0);  // EN
 
         // Enable NVIC interrupt if any IRQs are configured
         if (regs->CR & ((1u << 3) | (1u << 4))) {  // HTIE or TCIE
-            enable_nvic(stream);
+            enable_nvic(stream, level);
         }
     }
 
@@ -393,13 +394,15 @@ private:
         }
     }
 
-    /** Enable NVIC interrupt for a DMA stream */
-    static void enable_nvic(DmaStream stream) {
-        using namespace sbl::hw::reg;
-        auto irq = stream_irqn(stream);
-        uint32_t n = static_cast<uint32_t>(irq);
-        periph::nvic->ISER[n >> 5] = (1u << (n & 0x1Fu));
-        periph::nvic->IP[n] = (2u << 4);  // Priority 2 (higher than USB at 4)
+    /**
+     * @brief Enable NVIC interrupt for a DMA stream at a given level.
+     *
+     * Audio's level belongs to the SAI streams alone (equal priority cannot
+     * preempt, so any peer would hold the audio handler off for its whole
+     * duration). Everything else defaults to prio::kOtherDma.
+     */
+    static void enable_nvic(DmaStream stream, prio::Level level = prio::kOtherDma) {
+        prio::enable_irq(stream_irqn(stream), level);
     }
 };
 

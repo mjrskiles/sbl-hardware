@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/rcc.hpp>
+#include "priorities.hpp"
 #include <sbl/hw/reg/pwr.hpp>
 #include <sbl/hw/reg/flash.hpp>
 #include <sbl/hw/reg/gpio.hpp>
@@ -644,7 +645,7 @@ inline void enable_usb2_nvic() {
     periph::nvic->ISER[n >> 5] = (1u << (n & 0x1Fu));
 
     // Set priority (lower number = higher priority, shifted to upper nibble)
-    periph::nvic->IP[n] = (4u << 4);  // Priority 4
+    periph::nvic->IP[n] = prio::encode(prio::kUsbOtg);
 }
 
 /**
@@ -742,7 +743,7 @@ inline void enable_usb1_nvic() {
     constexpr uint32_t n = static_cast<uint32_t>(irq);
 
     periph::nvic->ISER[n >> 5] = (1u << (n & 0x1Fu));
-    periph::nvic->IP[n] = (4u << 4);  // Priority 4
+    periph::nvic->IP[n] = prio::encode(prio::kUsbOtg);
 }
 
 /**

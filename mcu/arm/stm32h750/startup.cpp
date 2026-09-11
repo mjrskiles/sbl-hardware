@@ -11,6 +11,7 @@
 
 #include <sbl/hw/reg/axi.hpp>
 #include <sbl/hw/reg/dbgmcu.hpp>
+#include <sbl/hw/reg/cortex_m.hpp>
 
 // Linker-provided symbols
 extern "C" {
@@ -37,6 +38,13 @@ extern "C" {
 
     // Core exception handlers
     void Reset_Handler();
+}
+
+// Defined below with the .isr_vector section attribute; Reset_Handler
+// writes its address to VTOR before anything else runs.
+extern const void* const vector_table[];
+
+extern "C" {
     void NMI_Handler()          __attribute__((weak, alias("Default_Handler")));
     void HardFault_Handler();
     void MemManage_Handler()    __attribute__((weak, alias("Default_Handler")));
@@ -192,6 +200,10 @@ void Reset_Handler() {
         GPIOC_ODR ^= (1u << 7);
         debug_delay();
     }
+
+    // Point the core at our vector table. The reset value of VTOR is
+    // implementation-defined; ST's SystemInit writes it, so do we.
+    sbl::hw::reg::periph::scb->VTOR = reinterpret_cast<uint32_t>(vector_table);
 
     // Copy .data section from Flash to RAM
     uint32_t* src = &_sidata;

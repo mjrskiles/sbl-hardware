@@ -35,6 +35,7 @@ set(SBL_STM32H750_DRIVER_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/gpio.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/i2c.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/init.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/priorities.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/sai.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/sdmmc.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/sdram.hpp

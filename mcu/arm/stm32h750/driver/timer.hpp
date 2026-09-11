@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/cortex_m.hpp>
+#include "priorities.hpp"
 
 namespace sbl::driver {
 
@@ -33,6 +34,9 @@ public:
         using namespace sbl::hw::reg;
 
         s_cpu_freq = cpu_freq_hz;
+
+        // System handlers reset to level 0, above audio. Assign them first.
+        prio::set_system_handler_levels();
 
         // Disable SysTick during configuration
         periph::systick->CTRL = 0;

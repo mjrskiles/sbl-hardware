@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <sbl/types.hpp>
 #include <sbl/hw/reg/gpio.hpp>
+#include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/usart.hpp>
 #include <sbl/hw/reg/irq.hpp>
@@ -168,18 +169,11 @@ inline sbl::hw::reg::IRQn get_usart_irqn(uint32_t peripheral) {
 /**
  * @brief Enable NVIC interrupt for a USART peripheral
  * @param peripheral USART peripheral number
- * @param priority NVIC priority (lower = higher priority)
- *
- * Priority scheme from FDP-018:
- *   4 (High) — UART RX-only (MIDI): must not be delayed by debug TX
- *  12 (Low)  — UART TX+RX (debug): bulk output, not latency-sensitive
+ * @param level Execution level (prio::kMidiUart for RX-only MIDI,
+ *              prio::kDebugUart for TX+RX debug — see priorities.hpp)
  */
-inline void enable_usart_nvic(uint32_t peripheral, uint8_t priority) {
-    using namespace sbl::hw::reg;
-    auto irq = get_usart_irqn(peripheral);
-    uint32_t n = static_cast<uint32_t>(irq);
-    periph::nvic->IP[n] = (priority << 4);
-    periph::nvic->ISER[n >> 5] = (1u << (n & 0x1Fu));
+inline void enable_usart_nvic(uint32_t peripheral, prio::Level level) {
+    prio::enable_irq(get_usart_irqn(peripheral), level);
 }
 
 } // namespace uart_detail
@@ -242,7 +236,7 @@ public:
      * @brief Initialize UART (TX + RX) using handle from hardware manifest
      *
      * Configures both TX and RX pins. Both RX and TX are interrupt-driven
-     * with 256-byte ring buffers. NVIC priority 12 (Low) — suitable for
+     * with 256-byte ring buffers. Level prio::kDebugUart — suitable for
      * debug output where latency is not critical.
      *
      * @param handle UartHandle with resolved peripheral, pins, AF, and baud
@@ -294,8 +288,8 @@ public:
         // Wait for transmit enable acknowledge
         bool teack_ok = detail::wait_for(&s_usart->ISR, USART::TEACK, USART::TEACK, 100'000);
 
-        // Enable NVIC — priority 12 (Low) for debug TX+RX
-        uart_detail::enable_usart_nvic(handle.peripheral, 12);
+        // Debug TX+RX: bulk output, not latency-sensitive
+        uart_detail::enable_usart_nvic(handle.peripheral, prio::kDebugUart);
 
         // Continue even if TEACK timeout — debug UART should still try to work
         s_initialized = true;
@@ -355,8 +349,8 @@ public:
         // UE + RE + RXNEIE + FIFOEN
         s_usart->CR1 = USART::UE | USART::RE | USART::RXNEIE | (1u << 29);
 
-        // Enable NVIC — priority 4 (High) for MIDI RX
-        uart_detail::enable_usart_nvic(handle.peripheral, 4);
+        // MIDI RX: must not be delayed by debug TX; FIFO gives it slack
+        uart_detail::enable_usart_nvic(handle.peripheral, prio::kMidiUart);
 
         s_initialized = true;
         return true;

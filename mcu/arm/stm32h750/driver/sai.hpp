@@ -154,12 +154,12 @@ public:
             // A = Primary TX, B = Secondary RX
 
             // Secondary RX (B): SAIXEN → DMAEN (before master per RM0433)
-            Dma::enable(STREAM_B);
+            Dma::enable(STREAM_B, prio::kAudioDma);
             periph::sai1->SAI_BCR1 |= SAI1::SAI_BCR1_SAIXEN;
             periph::sai1->SAI_BCR1 |= SAI1::SAI_BCR1_DMAEN;
 
             // Primary TX (A): DMAEN → wait FIFO → SAIXEN
-            Dma::enable(STREAM_A);
+            Dma::enable(STREAM_A, prio::kAudioDma);
             periph::sai1->SAI_ACR1 |= SAI1::SAI_ACR1_DMAEN;
             wait_fifo_fill(&periph::sai1->SAI_ASR);
             periph::sai1->SAI_ACR1 |= SAI1::SAI_ACR1_SAIXEN;
@@ -174,13 +174,13 @@ public:
             // Once FIFO is non-empty, set SAIXEN. Then start master.
 
             // Secondary TX (B): DMA → DMAEN → wait FIFO fill → SAIXEN
-            Dma::enable(STREAM_B);
+            Dma::enable(STREAM_B, prio::kAudioDma);
             periph::sai1->SAI_BCR1 |= SAI1::SAI_BCR1_DMAEN;
             wait_fifo_fill(&periph::sai1->SAI_BSR);
             periph::sai1->SAI_BCR1 |= SAI1::SAI_BCR1_SAIXEN;
 
             // Primary RX (A): DMA → SAIXEN (starts clocks) → DMAEN
-            Dma::enable(STREAM_A);
+            Dma::enable(STREAM_A, prio::kAudioDma);
             periph::sai1->SAI_ACR1 |= SAI1::SAI_ACR1_SAIXEN;
             periph::sai1->SAI_ACR1 |= SAI1::SAI_ACR1_DMAEN;
         }

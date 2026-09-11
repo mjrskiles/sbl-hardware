@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <sbl/hw/hal/gpio/handle.hpp>
 #include <sbl/hw/reg/tim_basic.hpp>
+#include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/irq.hpp>
@@ -72,8 +73,6 @@ public:
     // Timer prescaler: 240 MHz APB1 timer / 240 = 1 MHz tick (1 us/count)
     static constexpr uint32_t TIM7_PSC = 239;
 
-    // NVIC priority for BCM timer (below audio DMA at priority 4)
-    static constexpr uint8_t BCM_IRQ_PRIORITY = 8;
 
     /**
      * @brief Start BCM engine (enables TIM7 + NVIC)
@@ -104,10 +103,9 @@ public:
         // Enable update interrupt
         tim->DIER = TIM_Basic::DIER_UIE;
 
-        // NVIC: enable TIM7 IRQ (position 55), below audio DMA priority
-        constexpr auto irq = static_cast<int32_t>(IRQn::TIM7);
-        periph::nvic->IP[irq] = (BCM_IRQ_PRIORITY << 4);
-        periph::nvic->ISER[irq / 32] = (1u << (irq % 32));
+        // NVIC: TIM7 one level below the control tick so the tick can preempt
+        // it (BCM timing tolerates that; tick jitter matters more)
+        prio::enable_irq(IRQn::TIM7, prio::kSoftPwm);
 
         // Initialize active buffer to match pending
         for (uint8_t i = 0; i < num_channels_; ++i) {
