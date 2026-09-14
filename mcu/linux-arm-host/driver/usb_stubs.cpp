@@ -73,6 +73,11 @@ void CdcSerial::flush() { fflush(stdout); }
 namespace {
 
 static constexpr int MAX_MIDI_FDS = 4;
+
+// How many rawmidi devices a scan can see. A bench with several VirMIDI cards
+// has a lot of them — four cards is sixteen, before any controller — and a
+// device past the end of this is invisible to every filter.
+static constexpr int MAX_SCAN_DEVICES = 64;
 static int s_midi_fds[MAX_MIDI_FDS] = {-1, -1, -1, -1};
 static int s_midi_fd_count = 0;
 static bool s_midi_initialized = false;
@@ -209,8 +214,8 @@ void midi_init() {
     if (s_midi_initialized) return;
     s_midi_initialized = true;
 
-    MidiDevice devices[8];
-    int device_count = scan_midi_devices(devices, 8);
+    MidiDevice devices[MAX_SCAN_DEVICES];
+    int device_count = scan_midi_devices(devices, MAX_SCAN_DEVICES);
 
     const char* filter = getenv("SBL_MIDI_DEVICE");
 
@@ -259,8 +264,8 @@ void midi_out_init() {
     if (s_midi_out_initialized) return;
     s_midi_out_initialized = true;
 
-    MidiDevice devices[8];
-    const int device_count = scan_midi_devices(devices, 8);
+    MidiDevice devices[MAX_SCAN_DEVICES];
+    const int device_count = scan_midi_devices(devices, MAX_SCAN_DEVICES);
 
     for (uint8_t port = 0; port < MIDI_OUT_PORTS; ++port) {
         const char* filter = getenv(MIDI_OUT_ENV[port]);
