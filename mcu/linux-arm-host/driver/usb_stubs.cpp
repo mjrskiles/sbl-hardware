@@ -2,13 +2,21 @@
 // declare but only TinyUSB-backed .cpp files normally provide.
 //
 // CDC Serial routes to stdout. MIDI Port reads from Linux rawmidi devices
-// (/dev/snd/midiC*D*) for USB MIDI controller input on the native workbench.
+// (/dev/snd/midiC*D*) for USB MIDI controller input on the native workbench,
+// and writes to rawmidi devices for output.
 //
 // Device selection via SBL_MIDI_DEVICE environment variable:
 //   SBL_MIDI_DEVICE="Keystep"           — substring match on card name
 //   SBL_MIDI_DEVICE="/dev/snd/midiC4D1" — exact device node (sidecar passes this)
 //   SBL_MIDI_DEVICE="list"     — print available MIDI devices and exit
 //   (unset)                    — open first available rawmidi device
+//
+// Output ports are named the same way, one environment variable per port
+// (FDP-078): SBL_MIDI_OUT_1 … SBL_MIDI_OUT_4 are ports 0–3 and SBL_MIDI_THRU
+// is port 4. A port whose variable is unset, or whose device will not open,
+// silently drops what is sent to it; the ports that did open are logged at
+// first use. This is the bridge until FDP-076 Phase 2's VDH client drivers
+// carry MIDI out; it is deleted when they land.
 
 #include <cstddef>
 #include <cstdint>
@@ -68,6 +76,14 @@ static constexpr int MAX_MIDI_FDS = 4;
 static int s_midi_fds[MAX_MIDI_FDS] = {-1, -1, -1, -1};
 static int s_midi_fd_count = 0;
 static bool s_midi_initialized = false;
+
+/// Output ports, in port order: SBL_MIDI_OUT_1..4 then SBL_MIDI_THRU.
+static const char* const MIDI_OUT_ENV[] = {
+    "SBL_MIDI_OUT_1", "SBL_MIDI_OUT_2", "SBL_MIDI_OUT_3", "SBL_MIDI_OUT_4", "SBL_MIDI_THRU",
+};
+static constexpr uint8_t MIDI_OUT_PORTS = sizeof(MIDI_OUT_ENV) / sizeof(MIDI_OUT_ENV[0]);
+static int s_midi_out_fds[MIDI_OUT_PORTS] = {-1, -1, -1, -1, -1};
+static bool s_midi_out_initialized = false;
 
 /// Case-insensitive substring search
 bool midi_contains_icase(const char* haystack, const char* needle) {
@@ -238,6 +254,43 @@ void midi_init() {
     }
 }
 
+/// Open every output port whose environment variable names a device we can find.
+void midi_out_init() {
+    if (s_midi_out_initialized) return;
+    s_midi_out_initialized = true;
+
+    MidiDevice devices[8];
+    const int device_count = scan_midi_devices(devices, 8);
+
+    for (uint8_t port = 0; port < MIDI_OUT_PORTS; ++port) {
+        const char* filter = getenv(MIDI_OUT_ENV[port]);
+        if (filter == nullptr || filter[0] == '\0') continue;
+
+        const MidiDevice* match = nullptr;
+        for (int i = 0; i < device_count && match == nullptr; ++i) {
+            if (midi_contains_icase(devices[i].name, filter) ||
+                midi_contains_icase(devices[i].longname, filter) ||
+                midi_contains_icase(devices[i].path, filter)) {
+                match = &devices[i];
+            }
+        }
+        if (match == nullptr) {
+            fprintf(stderr, "[native-midi] %s: no device matching '%s'\n", MIDI_OUT_ENV[port], filter);
+            continue;
+        }
+
+        const int fd = open(match->path, O_WRONLY | O_NONBLOCK);
+        if (fd < 0) {
+            fprintf(stderr, "[native-midi] %s: failed to open %s: %s\n",
+                    MIDI_OUT_ENV[port], match->path, strerror(errno));
+            continue;
+        }
+        s_midi_out_fds[port] = fd;
+        fprintf(stderr, "[native-midi] out %u (%s) -> %s (%s)\n", port, MIDI_OUT_ENV[port],
+                match->path, match->name);
+    }
+}
+
 } // anonymous namespace
 
 bool MidiPort::connected() {
@@ -259,15 +312,35 @@ uint32_t MidiPort::read(uint8_t* buf, uint32_t max_len) {
     return total;
 }
 
-bool MidiPort::send(const sbl::midi::MidiEvent& event) {
-    (void)event;
-    return false;
+bool MidiPort::send(const sbl::midi::MidiEvent& event, uint8_t port) {
+    uint8_t msg[3];
+    const uint8_t len = event.to_bytes(msg);
+    if (len == 0) return false;
+    return MidiPort::write(msg, len, port) == len;
 }
 
-uint32_t MidiPort::write(const uint8_t* data, uint32_t len) {
-    (void)data; (void)len;
-    return 0;
+uint32_t MidiPort::write(const uint8_t* data, uint32_t len, uint8_t port) {
+    if (!s_midi_out_initialized) midi_out_init();
+    if (port >= MIDI_OUT_PORTS || s_midi_out_fds[port] < 0) return 0;
+
+    // A non-blocking rawmidi write can take part of a message when the
+    // device's buffer fills. Push what is left rather than splitting a
+    // message across a caller's next write; give up when the buffer stays
+    // full, so a stuck reader cannot stall the audio thread.
+    uint32_t written = 0;
+    while (written < len) {
+        const ssize_t n = ::write(s_midi_out_fds[port], data + written, len - written);
+        if (n > 0) {
+            written += static_cast<uint32_t>(n);
+            continue;
+        }
+        if (n < 0 && errno == EINTR) continue;
+        break;
+    }
+    return written;
 }
+
+uint8_t MidiPort::out_port_count() { return MIDI_OUT_PORTS; }
 
 } // namespace sbl::usb
 
