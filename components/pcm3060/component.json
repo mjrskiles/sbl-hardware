@@ -2,7 +2,8 @@
   "component": {
     "name": "pcm3060",
     "description": "TI PCM3060 stereo audio codec (I2C control)",
-    "driver": "./driver"
+    "driver": "./driver",
+    "audio": { "in": 2, "out": 2 }
   },
   "claims": {
     "i2c": [

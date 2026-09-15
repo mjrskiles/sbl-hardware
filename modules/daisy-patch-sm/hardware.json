@@ -60,6 +60,10 @@
       "adc_11":  { "mcu_pin": "PC3",  "mcu_channel": "ADC1_IN13", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
       "adc_12":  { "mcu_pin": "PC2",  "mcu_channel": "ADC1_IN12", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } }
     },
+    "dac": {
+      "cv_out_1": { "mcu_pin": "PA4", "mcu_channel": "DAC1_OUT1", "electrical": { "range_v": [0.0, 5.0], "bits": 12 } },
+      "cv_out_2": { "mcu_pin": "PA5", "mcu_channel": "DAC1_OUT2", "electrical": { "range_v": [0.0, 5.0], "bits": 12 } }
+    },
     "buses": {
       "i2c1": {
         "type": "i2c",
