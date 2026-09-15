@@ -62,6 +62,10 @@
       "adc_10":  { "mcu_pin": "GPIO3",  "mcu_channel": "ADC0_IN9", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
       "adc_11":  { "mcu_pin": "GPIO20", "mcu_channel": "ADC0_IN11", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } },
       "adc_12":  { "mcu_pin": "GPIO11", "mcu_channel": "ADC0_IN0", "electrical": { "range_v": [0.0, 3.3], "bits": 16 } }
+    },
+    "dac": {
+      "cv_out_1": { "mcu_pin": "GPIO20", "electrical": { "range_v": [0.0, 5.0], "bits": 12 } },
+      "cv_out_2": { "mcu_pin": "GPIO11", "electrical": { "range_v": [0.0, 5.0], "bits": 12 } }
     }
   },
 
