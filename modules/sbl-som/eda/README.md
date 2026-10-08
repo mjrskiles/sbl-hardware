@@ -2,9 +2,9 @@
 
 Board design files for the SBL SoM: the reusable compute section for
 SBL Eurorack modules. STM32H743IIT6 (LQFP176), PCM3168A codec (6 in /
-8 out, SAI TDM), SDRAM (16-bit FMC), USB, power. The 2mm dual-row
-header pinout is the long-lived contract between the SoM and its
-carriers.
+8 out, SAI TDM), SDRAM (16-bit FMC), USB, power. The pinout of its
+260-contact DDR4 SO-DIMM card edge is the long-lived contract between
+the SoM and its carriers. The design is currently tentative.
 
 Design authority: `docs/planning/sketchbook/dev-board.md` in the
 workspace repo.
