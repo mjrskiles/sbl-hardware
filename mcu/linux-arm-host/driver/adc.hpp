@@ -10,7 +10,7 @@
 #pragma once
 
 #include <cstdint>
-#include <sbl/types.hpp>
+#include <sbl/hw/hal/adc/handle.hpp>
 #include <sbl/hw/hal/adc/types.hpp>
 #include <sbl/hw/config/electrical.hpp>
 

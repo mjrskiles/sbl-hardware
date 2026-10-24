@@ -81,7 +81,7 @@ public:
      * Polls millis() (driven by SysTick interrupt). Simple and correct —
      * the interrupt is the sole tick source, so no double-counting.
      *
-     * @note Not ISR-safe — blocking busy-wait. Use NonBlockingDelay for main loop.
+     * @note Not ISR-safe — blocking busy-wait.
      */
     static void busy_wait_ms(uint32_t ms) {
         uint32_t start = s_tick_count;

@@ -22,7 +22,7 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <sbl/types.hpp>
+#include <sbl/hw/hal/uart/handle.hpp>
 #include <sbl/hw/reg/gpio.hpp>
 #include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
