@@ -3,7 +3,7 @@
  * @brief STM32H750 — every interrupt vector's execution level, in one place
  *
  * The scheme (level names, invariants, the BASEPRI ceiling) is the library's:
- * <sbl/hw/hal/interrupts/types.hpp>. This file maps this MCU's vectors onto
+ * <sbl/hw/hal/interrupts.hpp>. This file maps this MCU's vectors onto
  * it. Drivers take their priority from here and never write a number.
  *
  * Numbers are ARM NVIC levels, lower = more urgent, four implemented bits.
@@ -26,14 +26,17 @@
 #define SBL_HW_DRIVER_PRIORITIES_HPP_
 
 #include <cstdint>
-#include <sbl/hw/hal/interrupts/types.hpp>
+#include <sbl/hw/hal/interrupts.hpp>
+#include "interrupts.hpp"
 #include <sbl/hw/reg/cortex_m.hpp>
 #include <sbl/hw/reg/irq.hpp>
 
 namespace sbl::driver::prio {
 
 using Level = sbl::hal::interrupts::Level;
-using sbl::hal::interrupts::encode;
+
+/// This MCU's level encoding (Interrupts::encode), under the name the vector table uses.
+constexpr uint8_t encode(Level level) { return Interrupts::encode(level); }
 
 inline constexpr Level kAudioDma    = Level::Audio;        ///< SAI1 A/B DMA streams
 inline constexpr Level kUsbOtg      = Level::UsbMidi;      ///< OTG_FS / OTG_HS
