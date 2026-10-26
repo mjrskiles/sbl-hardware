@@ -6,7 +6,7 @@
 #pragma once
 
 #include <cstdint>
-#include <sbl/types.hpp>
+#include <sbl/hw/hal/gpio/handle.hpp>
 #include <sbl/hw/hal/gpio/driver.hpp>
 
 namespace sbl::driver {

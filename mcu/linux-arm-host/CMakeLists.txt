@@ -23,6 +23,7 @@ set(SBL_NATIVE_DRIVER_HEADERS
     ${SBL_NATIVE_DRIVER_DIR}/gpio.hpp
     ${SBL_NATIVE_DRIVER_DIR}/i2c.hpp
     ${SBL_NATIVE_DRIVER_DIR}/init.hpp
+    ${SBL_NATIVE_DRIVER_DIR}/interrupts.hpp
     ${SBL_NATIVE_DRIVER_DIR}/sai.hpp
     ${SBL_NATIVE_DRIVER_DIR}/sdmmc.hpp
     ${SBL_NATIVE_DRIVER_DIR}/sdram.hpp

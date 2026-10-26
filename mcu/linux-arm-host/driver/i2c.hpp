@@ -5,7 +5,7 @@
 #pragma once
 
 #include <cstdint>
-#include <sbl/types.hpp>
+#include <sbl/hw/hal/i2c/handle.hpp>
 
 namespace sbl::driver {
 

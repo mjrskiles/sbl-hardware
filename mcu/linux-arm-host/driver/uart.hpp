@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <sbl/types.hpp>
+#include <sbl/hw/hal/uart/handle.hpp>
 
 namespace sbl::driver {
 

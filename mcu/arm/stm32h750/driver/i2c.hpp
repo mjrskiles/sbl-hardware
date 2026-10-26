@@ -23,7 +23,7 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <sbl/types.hpp>
+#include <sbl/hw/hal/i2c/handle.hpp>
 #include <sbl/hw/reg/gpio.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/i2c.hpp>
