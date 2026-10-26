@@ -73,7 +73,7 @@ class Sai {
 
 public:
     /**
-     * @brief Configure SAI1 for I2S operation (default: 48 samples/block, A_TX_B_RX)
+     * @brief Configure SAI1 for I2S operation (default: 48 frames per block, A_TX_B_RX)
      * @return true (always succeeds; matches init() pattern of other drivers)
      * @note Not ISR-safe — init-time only
      */

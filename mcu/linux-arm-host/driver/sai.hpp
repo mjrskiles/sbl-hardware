@@ -4,7 +4,7 @@
 // miniaudio float I/O and the SBL int32_t DMA callback format, exercising
 // the full pipeline including interleave_from_float / deinterleave_to_float.
 //
-// The DMA boundary conversion (float↔int32 MSB-justified 24-bit) happens
+// The DMA boundary conversion (float ↔ s24_rj_i32) happens
 // in the application's audio callback, exactly as on hardware. We convert
 // miniaudio's float↔int32 here to bridge the gap.
 
