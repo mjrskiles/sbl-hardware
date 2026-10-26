@@ -47,6 +47,11 @@ static constexpr uint16_t MAX_BLOCK_SIZE = 256;
 static constexpr ma_uint32 kHostPeriodBlocks = 2;  // host period = 2 app blocks
 static constexpr ma_uint32 kHostPeriods = 3;       // ring of 3 host periods
 
+// s24_rj_i32: 24-bit data right-aligned in a 32-bit word. The SAI leaves the
+// RX upper byte zero and ignores the TX upper byte; the host does the same.
+static constexpr uint32_t S24_PAD_BITS = 8;
+static constexpr int32_t S24_DATA_MASK = 0x00FFFFFF;
+
 /// Report the scheduling the device thread actually got (SCHED_FIFO was requested).
 void report_audio_thread_sched(const ma_device& dev) {
     int policy = 0;
@@ -158,7 +163,7 @@ bool find_device(ma_context* ctx, const char* query,
 
 /// miniaudio callback — bridges float audio to SBL int32_t callback format.
 ///
-/// SBL audio callbacks receive interleaved int32_t (24-bit MSB-justified).
+/// SBL audio callbacks receive interleaved int32_t words in s24_rj_i32.
 /// The application's callback uses interleave_from_float/deinterleave_to_float
 /// at the DMA boundary, exactly as on hardware.
 void ma_data_callback(ma_device* device, void* output, const void* input,
@@ -185,14 +190,14 @@ void ma_data_callback(ma_device* device, void* output, const void* input,
     while (remaining > 0) {
         uint16_t frames = (remaining > block_size) ? block_size : static_cast<uint16_t>(remaining);
 
-        // Convert input float [-1,1] → int32 (24-bit MSB-justified)
-        // This matches the format that deinterleave_to_float expects
+        // Convert input float [-1,1] → s24_rj_i32, upper byte zero as the SAI
+        // writes it
         if (in_f32) {
             for (uint16_t i = 0; i < frames * 2; ++i) {
                 float s = in_f32[i];
                 if (s > 1.0f) s = 1.0f;
                 if (s < -1.0f) s = -1.0f;
-                rx_buf[i] = static_cast<int32_t>(s * 8388607.0f);
+                rx_buf[i] = static_cast<int32_t>(s * 8388607.0f) & S24_DATA_MASK;
             }
         } else {
             memset(rx_buf, 0, frames * 2 * sizeof(int32_t));
@@ -205,10 +210,13 @@ void ma_data_callback(ma_device* device, void* output, const void* input,
         s_callback(tx_buf, rx_buf, frames);
         sbl::hal::audio::SampleClock::advance(frames);
 
-        // Convert output int32 (24-bit MSB-justified) → float [-1,1]
-        // This is the reverse of interleave_from_float
+        // Convert output s24_rj_i32 → float [-1,1], sign-extending from bit 23
+        // so the upper byte is ignored as the SAI ignores it. The left shift is
+        // unsigned: shifting a negative int32_t left is undefined in C++17.
         for (uint16_t i = 0; i < frames * 2; ++i) {
-            out_f32[i] = static_cast<float>(tx_buf[i]) / 8388607.0f;
+            const int32_t word =
+                static_cast<int32_t>(static_cast<uint32_t>(tx_buf[i]) << S24_PAD_BITS) >> S24_PAD_BITS;
+            out_f32[i] = static_cast<float>(word) / 8388607.0f;
         }
 
         out_f32 += frames * 2;
