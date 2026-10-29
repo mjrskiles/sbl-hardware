@@ -23,13 +23,13 @@
 #define SBL_HW_DRIVER_INTERRUPTS_HPP_
 
 #include <cstdint>
-#include <sbl/hw/hal/interrupts.hpp>
+#include <sbl/system/interrupts.hpp>
 
 namespace sbl::driver {
 
 class Interrupts {
 public:
-    using Level = sbl::hal::interrupts::Level;
+    using Level = sbl::system::interrupts::Level;
 
     /** NVIC priority bits this MCU implements: 4 of 8. */
     static constexpr uint8_t PRIORITY_BITS = 4;

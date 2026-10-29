@@ -7,13 +7,13 @@
 #pragma once
 
 #include <cstdint>
-#include <sbl/hw/hal/interrupts.hpp>
+#include <sbl/system/interrupts.hpp>
 
 namespace sbl::driver {
 
 class Interrupts {
 public:
-    using Level = sbl::hal::interrupts::Level;
+    using Level = sbl::system::interrupts::Level;
 
     static uint32_t save_ceiling() { return 0; }
     static void raise_ceiling(Level level) { (void)level; }

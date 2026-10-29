@@ -32,7 +32,7 @@
 #include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hw/driver/clock.hpp>
 #include <sbl/hw/hal/uart/driver.hpp>
-#include <sbl/hw/util/ring_buffer.hpp>
+#include <sbl/system/ring_buffer.hpp>
 
 namespace sbl::driver {
 
@@ -202,10 +202,10 @@ private:
     static inline volatile sbl::hw::reg::USART_t* s_usart = nullptr;
 
     /** RX ring buffer — ISR pushes, main loop pops */
-    static inline sbl::primitives::buffers::RingBuffer<uint8_t, 256> s_rx_buf;
+    static inline sbl::system::RingBuffer<uint8_t, 256> s_rx_buf;
 
     /** TX ring buffer — main loop pushes, ISR pops */
-    static inline sbl::primitives::buffers::RingBuffer<uint8_t, 256> s_tx_buf;
+    static inline sbl::system::RingBuffer<uint8_t, 256> s_tx_buf;
 
 public:
     /**
