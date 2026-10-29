@@ -119,7 +119,7 @@ extern "C" {
     void USART3_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
     void USART6_IRQHandler()        __attribute__((weak, alias("Default_Handler")));
 
-    // Fault handler callback — overridden by sbl/assert.hpp when included
+    // Fault handler callback — overridden by sbl/system/fault.hpp when included
     __attribute__((weak)) void sbl_on_hard_fault(const uint32_t* frame) {
         (void)frame;
         while (true) { __asm__ volatile("bkpt #0"); }
@@ -147,7 +147,7 @@ void Default_Handler() {
  *   LR[2] == 1 → PSP (thread mode with RTOS)
  *
  * We extract the correct stack pointer and pass it to
- * sbl_on_hard_fault() which dumps the frame. If sbl/assert.hpp
+ * sbl_on_hard_fault() which dumps the frame. If sbl/system/fault.hpp
  * is included, it provides the real implementation with formatted
  * output. Otherwise the weak default just hits a breakpoint.
  */
