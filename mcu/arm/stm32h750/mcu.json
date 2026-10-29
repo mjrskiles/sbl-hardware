@@ -9,9 +9,6 @@
   "capabilities": {
     "fpu": "fpv5-d16",
     "dsp_extensions": false,
-    "timing": {
-      "source": "dwt"
-    },
     "usb": "tinyusb",
     "filesystem": "sdmmc-fatfs"
   },

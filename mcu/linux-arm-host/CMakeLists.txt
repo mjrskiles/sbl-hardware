@@ -16,6 +16,7 @@ set(SBL_NATIVE_DRIVER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/driver)
 
 set(SBL_NATIVE_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
 file(MAKE_DIRECTORY ${SBL_NATIVE_INCLUDE_DIR}/sbl/hw/driver)
+file(MAKE_DIRECTORY ${SBL_NATIVE_INCLUDE_DIR}/sbl/system/port)
 
 set(SBL_NATIVE_DRIVER_HEADERS
     ${SBL_NATIVE_DRIVER_DIR}/adc.hpp
@@ -38,13 +39,19 @@ set(SBL_NATIVE_C_HEADERS
     ${SBL_NATIVE_DRIVER_DIR}/ff.h
 )
 
+# System ports, mounted as <sbl/system/port/...> (same pattern as stm32h750)
+set(SBL_NATIVE_SYSTEM_PORT_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/system/port/cycles.hpp
+)
+
 set(_STAMP ${CMAKE_CURRENT_BINARY_DIR}/headers_copied.stamp)
 add_custom_command(
     OUTPUT ${_STAMP}
     COMMAND ${CMAKE_COMMAND} -E copy ${SBL_NATIVE_DRIVER_HEADERS} ${SBL_NATIVE_INCLUDE_DIR}/sbl/hw/driver/
     COMMAND ${CMAKE_COMMAND} -E copy ${SBL_NATIVE_C_HEADERS} ${SBL_NATIVE_INCLUDE_DIR}/
+    COMMAND ${CMAKE_COMMAND} -E copy ${SBL_NATIVE_SYSTEM_PORT_HEADERS} ${SBL_NATIVE_INCLUDE_DIR}/sbl/system/port/
     COMMAND ${CMAKE_COMMAND} -E touch ${_STAMP}
-    DEPENDS ${SBL_NATIVE_DRIVER_HEADERS} ${SBL_NATIVE_C_HEADERS}
+    DEPENDS ${SBL_NATIVE_DRIVER_HEADERS} ${SBL_NATIVE_C_HEADERS} ${SBL_NATIVE_SYSTEM_PORT_HEADERS}
     COMMENT "Copying native driver headers"
 )
 add_custom_target(sbl_linux_arm_host_copy_headers DEPENDS ${_STAMP})
@@ -52,6 +59,7 @@ add_custom_target(sbl_linux_arm_host_copy_headers DEPENDS ${_STAMP})
 # Configure-time copy for first build
 file(COPY ${SBL_NATIVE_DRIVER_HEADERS} DESTINATION ${SBL_NATIVE_INCLUDE_DIR}/sbl/hw/driver)
 file(COPY ${SBL_NATIVE_C_HEADERS} DESTINATION ${SBL_NATIVE_INCLUDE_DIR})
+file(COPY ${SBL_NATIVE_SYSTEM_PORT_HEADERS} DESTINATION ${SBL_NATIVE_INCLUDE_DIR}/sbl/system/port)
 
 # --- Driver library ---
 

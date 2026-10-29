@@ -70,6 +70,12 @@ set(SBL_STM32H750_REG_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/usb_otg.hpp
 )
 
+# System ports — what sound-byte-libs' system layer needs from this MCU,
+# mounted as <sbl/system/port/...> beside the drivers.
+set(SBL_STM32H750_SYSTEM_PORT_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/system/port/cycles.hpp
+)
+
 # Copy headers to build include structure at build time.
 # Using a custom command + stamp file ensures edits to source headers
 # trigger recompilation of dependent targets (file(COPY) only runs at
@@ -79,15 +85,17 @@ add_custom_command(
     OUTPUT ${_STAMP}
     COMMAND ${CMAKE_COMMAND} -E copy ${SBL_STM32H750_DRIVER_HEADERS} ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver/
     COMMAND ${CMAKE_COMMAND} -E copy ${SBL_STM32H750_REG_HEADERS} ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg/
+    COMMAND ${CMAKE_COMMAND} -E copy ${SBL_STM32H750_SYSTEM_PORT_HEADERS} ${SBL_STM32H750_INCLUDE_DIR}/sbl/system/port/
     COMMAND ${CMAKE_COMMAND} -E touch ${_STAMP}
-    DEPENDS ${SBL_STM32H750_DRIVER_HEADERS} ${SBL_STM32H750_REG_HEADERS}
-    COMMENT "Copying STM32H750 driver/reg headers"
+    DEPENDS ${SBL_STM32H750_DRIVER_HEADERS} ${SBL_STM32H750_REG_HEADERS} ${SBL_STM32H750_SYSTEM_PORT_HEADERS}
+    COMMENT "Copying STM32H750 driver/reg/port headers"
 )
 add_custom_target(sbl_stm32h750_copy_headers DEPENDS ${_STAMP})
 
 # Keep configure-time copy for first build (custom command needs dirs to exist)
 file(COPY ${SBL_STM32H750_DRIVER_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/driver)
 file(COPY ${SBL_STM32H750_REG_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
+file(COPY ${SBL_STM32H750_SYSTEM_PORT_HEADERS} DESTINATION ${SBL_STM32H750_INCLUDE_DIR}/sbl/system/port)
 
 # Startup code + malloc trap (compiled)
 add_library(sbl_stm32h750_startup STATIC
