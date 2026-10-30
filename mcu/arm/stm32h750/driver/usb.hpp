@@ -7,7 +7,7 @@
  * Supports USB2_OTG_FS on PA11/PA12 (Daisy Seed) or
  * USB1_OTG_HS on PB14/PB15 (Patch SM) via SBL_USB_OTG_HS define.
  *
- * TinyUSB is included as source files via CMake (not via Pico SDK).
+ * TinyUSB is included as source files via CMake.
  * The sbl_usb_shim.h provides CMSIS-style definitions that TinyUSB expects.
  */
 
