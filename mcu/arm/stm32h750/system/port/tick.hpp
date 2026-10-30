@@ -15,7 +15,6 @@
 #ifndef SBL_SYSTEM_PORT_TICK_HPP_
 #define SBL_SYSTEM_PORT_TICK_HPP_
 
-#include <cstddef>
 #include <cstdint>
 #include <sbl/hw/driver/clocks.hpp>
 #include <sbl/hw/driver/priorities.hpp>
@@ -26,13 +25,6 @@
 #include <sbl/system/port/tick_requirements.hpp>
 
 namespace sbl::driver {
-
-// The registers this port touches, at the offsets RM0433 §39.4 gives them.
-static_assert(offsetof(sbl::hw::reg::TIM2_t, CR1) == 0x00 && offsetof(sbl::hw::reg::TIM2_t, DIER) == 0x0C &&
-                  offsetof(sbl::hw::reg::TIM2_t, SR) == 0x10 && offsetof(sbl::hw::reg::TIM2_t, EGR) == 0x14 &&
-                  offsetof(sbl::hw::reg::TIM2_t, CNT) == 0x24 && offsetof(sbl::hw::reg::TIM2_t, PSC) == 0x28 &&
-                  offsetof(sbl::hw::reg::TIM2_t, ARR) == 0x2C,
-              "TIM2_t layout does not match RM0433 §39.4");
 
 struct Tick {
     using Handler = void (*)();

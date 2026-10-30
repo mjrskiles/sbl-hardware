@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-03-09T09:57:25.144283
+ * Generated: 2026-10-30T11:01:09.103950
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -19,7 +19,10 @@ namespace sbl::hw::reg {
 /** Reset and clock control */
 struct RCC_t {
     volatile uint32_t CR;  ///< clock control register
-    volatile uint32_t ICSCR;  ///< RCC Internal Clock Source Calibration           Register
+    union {  // 0x4: alternate views of one register
+        volatile uint32_t ICSCR;  ///< RCC Internal Clock Source Calibration           Register
+        volatile uint32_t HSICFGR;  ///< RCC HSI configuration register
+    };
     volatile uint32_t CRRCR;  ///< RCC Clock Recovery RC Register
     uint8_t _reserved0[4];
     volatile uint32_t CFGR;  ///< RCC Clock Configuration           Register
@@ -182,6 +185,12 @@ namespace RCC {
     inline constexpr uint32_t ICSCR_CSICAL_Msk = 0x03FC0000;
     inline constexpr uint32_t ICSCR_CSITRIM_Pos = 26;
     inline constexpr uint32_t ICSCR_CSITRIM_Msk = 0x7C000000;
+
+    // HSICFGR fields
+    inline constexpr uint32_t HSICFGR_HSICAL_Pos = 0;
+    inline constexpr uint32_t HSICFGR_HSICAL_Msk = 0x00000FFF;
+    inline constexpr uint32_t HSICFGR_HSITRIM_Pos = 24;
+    inline constexpr uint32_t HSICFGR_HSITRIM_Msk = 0x7F000000;
 
     // CRRCR fields
     inline constexpr uint32_t CRRCR_RC48CAL_Pos = 0;

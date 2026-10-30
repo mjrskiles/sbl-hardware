@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-10-30T09:32:10.130608
+ * Generated: 2026-10-30T11:01:09.145127
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -24,8 +24,14 @@ struct TIM2_t {
     volatile uint32_t DIER;  ///< DMA/Interrupt enable register
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
-    volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-    volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
+    union {  // 0x18: alternate views of one register
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+    };
+    union {  // 0x1C: alternate views of one register
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    };
     volatile uint32_t CCER;  ///< capture/compare enable           register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
@@ -52,10 +58,14 @@ struct TIM3_t {
     volatile uint32_t DIER;  ///< DMA/Interrupt enable register
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
-    volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-    volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
-    volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-    volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    union {  // 0x18: alternate views of one register
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+    };
+    union {  // 0x1C: alternate views of one register
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    };
     volatile uint32_t CCER;  ///< capture/compare enable           register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
@@ -82,10 +92,14 @@ struct TIM4_t {
     volatile uint32_t DIER;  ///< DMA/Interrupt enable register
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
-    volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-    volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
-    volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-    volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    union {  // 0x18: alternate views of one register
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+    };
+    union {  // 0x1C: alternate views of one register
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    };
     volatile uint32_t CCER;  ///< capture/compare enable           register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
@@ -112,10 +126,14 @@ struct TIM5_t {
     volatile uint32_t DIER;  ///< DMA/Interrupt enable register
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
-    volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-    volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
-    volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-    volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    union {  // 0x18: alternate views of one register
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+    };
+    union {  // 0x1C: alternate views of one register
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+    };
     volatile uint32_t CCER;  ///< capture/compare enable           register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
@@ -320,6 +338,20 @@ namespace TIM2 {
     inline constexpr uint32_t CCMR1_Output_OC2M_3_Msk = 0x01000000;
     inline constexpr uint32_t CCMR1_Output_OC2M_3 = (1U << 24);
 
+    // CCMR1_Input fields
+    inline constexpr uint32_t CCMR1_Input_CC1S_Pos = 0;
+    inline constexpr uint32_t CCMR1_Input_CC1S_Msk = 0x00000003;
+    inline constexpr uint32_t CCMR1_Input_ICPCS_Pos = 2;
+    inline constexpr uint32_t CCMR1_Input_ICPCS_Msk = 0x0000000C;
+    inline constexpr uint32_t CCMR1_Input_IC1F_Pos = 4;
+    inline constexpr uint32_t CCMR1_Input_IC1F_Msk = 0x000000F0;
+    inline constexpr uint32_t CCMR1_Input_CC2S_Pos = 8;
+    inline constexpr uint32_t CCMR1_Input_CC2S_Msk = 0x00000300;
+    inline constexpr uint32_t CCMR1_Input_IC2PCS_Pos = 10;
+    inline constexpr uint32_t CCMR1_Input_IC2PCS_Msk = 0x00000C00;
+    inline constexpr uint32_t CCMR1_Input_IC2F_Pos = 12;
+    inline constexpr uint32_t CCMR1_Input_IC2F_Msk = 0x0000F000;
+
     // CCMR2_Output fields
     inline constexpr uint32_t CCMR2_Output_CC3S_Pos = 0;
     inline constexpr uint32_t CCMR2_Output_CC3S_Msk = 0x00000003;
@@ -353,6 +385,20 @@ namespace TIM2 {
     inline constexpr uint32_t CCMR2_Output_OC4M_3_Pos = 24;
     inline constexpr uint32_t CCMR2_Output_OC4M_3_Msk = 0x01000000;
     inline constexpr uint32_t CCMR2_Output_OC4M_3 = (1U << 24);
+
+    // CCMR2_Input fields
+    inline constexpr uint32_t CCMR2_Input_CC3S_Pos = 0;
+    inline constexpr uint32_t CCMR2_Input_CC3S_Msk = 0x00000003;
+    inline constexpr uint32_t CCMR2_Input_IC3PSC_Pos = 2;
+    inline constexpr uint32_t CCMR2_Input_IC3PSC_Msk = 0x0000000C;
+    inline constexpr uint32_t CCMR2_Input_IC3F_Pos = 4;
+    inline constexpr uint32_t CCMR2_Input_IC3F_Msk = 0x000000F0;
+    inline constexpr uint32_t CCMR2_Input_CC4S_Pos = 8;
+    inline constexpr uint32_t CCMR2_Input_CC4S_Msk = 0x00000300;
+    inline constexpr uint32_t CCMR2_Input_IC4PSC_Pos = 10;
+    inline constexpr uint32_t CCMR2_Input_IC4PSC_Msk = 0x00000C00;
+    inline constexpr uint32_t CCMR2_Input_IC4F_Pos = 12;
+    inline constexpr uint32_t CCMR2_Input_IC4F_Msk = 0x0000F000;
 
     // CCER fields
     inline constexpr uint32_t CCER_CC1E_Pos = 0;
