@@ -34,6 +34,7 @@ Bare-metal drivers with no vendor HAL dependencies:
 | Audio init (PLL2, SAI GPIO, codec reset) | `driver/init.hpp` | Complete |
 | GPIO | `driver/gpio.hpp` | Complete |
 | Timer (SysTick) | `driver/timer.hpp` | Complete |
+| Cycle port (DWT CYCCNT) | `system/port/cycles.hpp` | Complete |
 | UART (USART3, polling) | `driver/uart.hpp` | Complete |
 | ADC (ADC1, polling) | `driver/adc.hpp` | Complete |
 | DMA (streams, circular, callbacks) | `driver/dma.hpp` | Complete |

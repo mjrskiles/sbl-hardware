@@ -10,9 +10,6 @@
   "capabilities": {
     "fpu": "host",
     "dsp_extensions": false,
-    "timing": {
-      "source": "posix_monotonic"
-    },
     "usb": "stub",
     "filesystem": "posix"
   },

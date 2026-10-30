@@ -101,6 +101,7 @@ Each MCU directory contains:
 
 - `mcu.json` - MCU metadata, pin definitions with alternate functions, peripheral definitions
 - `driver/` - Bare-metal driver implementation
+- `system/port/` - What sound-byte-libs' system layer needs from the MCU (the cycle port), mounted as `<sbl/system/port/>`
   - `gpio.hpp`, `timer.hpp`, `uart.hpp`, `init.hpp` - High-level drivers
   - `sai.hpp` - SAI/I2S audio driver with DMA (STM32H7)
   - `dma.hpp`, `dma_buffer.hpp` - DMA controller and buffer placement (STM32H7)
