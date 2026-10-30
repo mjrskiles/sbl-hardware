@@ -27,6 +27,7 @@
 
 #include "clocks.hpp"
 #include <sbl/system/port/tick.hpp>
+#include <sbl/system/timer.hpp>
 
 namespace sbl::driver {
 
@@ -494,6 +495,7 @@ inline bool init() {
     if (!enable_hse()) {
         // HSE failed - stay on HSI
         Tick::init();
+        sbl::system::timer::init();
         return false;
     }
 
@@ -550,12 +552,14 @@ inline bool init() {
             // Reinit timer for actual frequency
             Timer::init(sysclk_mhz * 1'000'000);
             Tick::init();
+            sbl::system::timer::init();
             return true;
         }
     }
 
     // PLL failed to lock - stay on HSI
     Tick::init();
+    sbl::system::timer::init();
     return false;
 }
 
@@ -572,6 +576,7 @@ inline void init_hsi() {
     // Just initialize the timers
     Timer::init(64'000'000);
     Tick::init();
+    sbl::system::timer::init();
 }
 
 /**

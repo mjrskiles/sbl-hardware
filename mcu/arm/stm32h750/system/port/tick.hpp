@@ -9,7 +9,8 @@
  * boot path counts at 1 MHz. The counter freezes while the core is halted
  * (DBGMCU_APB1LFZ1.DBG_TIM5), so a breakpoint does not age every pending
  * wait. The overflow interrupt, once every 71.6 min, calls the handler the
- * system timer registers.
+ * system timer registers; it runs at Level::ShortDeadline so no reader of the
+ * 64-bit count can preempt its two writes (see sbl/system/epoch.hpp).
  */
 #ifndef SBL_SYSTEM_PORT_TICK_HPP_
 #define SBL_SYSTEM_PORT_TICK_HPP_

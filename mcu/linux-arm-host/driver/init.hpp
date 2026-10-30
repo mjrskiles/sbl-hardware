@@ -10,12 +10,14 @@
 
 #include <sbl/hw/driver/timer.hpp>
 #include <sbl/system/port/tick.hpp>
+#include <sbl/system/timer.hpp>
 
 namespace sbl::driver {
 
 inline bool init() {
     Timer::init();
     Tick::init();
+    sbl::system::timer::init();
     fprintf(stderr, "[host] SBL linux-arm-host driver initialized\n");
     return true;
 }

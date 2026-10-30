@@ -12,13 +12,14 @@
  * | Level | Vector(s)                              |
  * |-------|----------------------------------------|
  * |   0   | (empty by design)                      |
+ * |   1   | TIM5 overflow (the system timer's epoch)|
  * |   2   | DMA1 streams carrying SAI1 A/B (audio) |
  * |   4   | OTG_FS / OTG_HS, MIDI USART RX         |
  * |   5   | any other DMA stream                   |
  * |   8   | TIM6 control tick — BASEPRI ceiling    |
  * |   9   | TIM7 soft PWM (BCM)                    |
  * |  12   | debug USART                            |
- * |  14   | TIM5 system-timer overflow, SysTick    |
+ * |  14   | SysTick                                |
  * |  15   | PendSV, SVCall                         |
  */
 
@@ -46,7 +47,7 @@ inline constexpr Level kControlTick = Level::ControlTick;  ///< TIM6 — the BAS
 inline constexpr Level kSoftPwm     = Level::SoftPwm;      ///< TIM7 BCM engine
 inline constexpr Level kDebugUart   = Level::Debug;        ///< USART TX+RX (debug)
 inline constexpr Level kSysTick     = Level::SysTick;
-inline constexpr Level kSystemTimer = Level::SysTick;      ///< TIM5 overflow: the system timer's epoch, lowest urgency
+inline constexpr Level kSystemTimer = Level::ShortDeadline; ///< TIM5 overflow: the epoch handler, a few instructions once per 71.6 min, above every reader of count64()
 inline constexpr Level kPendSv      = Level::PendSv;
 inline constexpr Level kSvCall      = Level::PendSv;
 
