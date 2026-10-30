@@ -65,6 +65,7 @@ set(SBL_STM32H750_REG_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/sai.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/sdmmc.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/tim_basic.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/reg/tim_general.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/fmc.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/usart.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/reg/usb_otg.hpp

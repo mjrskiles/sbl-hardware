@@ -54,6 +54,10 @@
       "peripherals": ["DBGMCU"],
       "output": "reg/dbgmcu.hpp"
     },
+    "tim_general": {
+      "peripherals": ["TIM2", "TIM3", "TIM4", "TIM5"],
+      "output": "reg/tim_general.hpp"
+    },
     "axi": {
       "peripherals": ["AXI"],
       "output": "reg/axi.hpp"
@@ -109,6 +113,7 @@
   },
 
   "manual": [
+    "reg/tim_basic.hpp",
     "reg/usart.hpp",
     "reg/cortex_m.hpp",
     "reg/usb_otg.hpp",
