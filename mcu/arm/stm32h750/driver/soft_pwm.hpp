@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <sbl/hw/hal/gpio/handle.hpp>
 #include <sbl/hw/reg/tim_basic.hpp>
+#include "init.hpp"  // timer_kernel_clock_hz
 #include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/gpio.hpp>
@@ -70,16 +71,13 @@ public:
         pending_dirty_ = true;
     }
 
-    // Timer prescaler: 240 MHz APB1 timer / 240 = 1 MHz tick (1 us/count)
-    static constexpr uint32_t TIM7_PSC = 239;
-
 
     /**
      * @brief Start BCM engine (enables TIM7 + NVIC)
      *
      * Call after all channels are registered via add_channel().
-     * TIM7 clock: APB1 timer = 240 MHz (post-init).
-     * PSC = 239 -> 1 MHz tick. ARR = 3 -> 4 us for bit 0.
+     * The prescaler gives a 1 MHz count from the timer kernel clock init()
+     * achieved. ARR = 3 -> 4 us for bit 0.
      * @note Not ISR-safe — init-time only
      */
     static void start() {
@@ -92,7 +90,7 @@ public:
 
         auto* tim = periph::tim7;
 
-        tim->PSC = TIM7_PSC;
+        tim->PSC = timer_kernel_clock_hz / 1'000'000 - 1;
         tim->ARR = BASE_ARR;
         // Enable auto-reload preload so ARR changes take effect at next update
         tim->CR1 = TIM_Basic::CR1_ARPE;
