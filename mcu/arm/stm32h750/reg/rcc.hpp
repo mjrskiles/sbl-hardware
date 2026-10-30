@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-10-30T11:01:09.103950
+ * Generated: 2026-10-30T11:17:11.789707
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -20,50 +20,50 @@ namespace sbl::hw::reg {
 struct RCC_t {
     volatile uint32_t CR;  ///< clock control register
     union {  // 0x4: alternate views of one register
-        volatile uint32_t ICSCR;  ///< RCC Internal Clock Source Calibration           Register
+        volatile uint32_t ICSCR;  ///< RCC Internal Clock Source Calibration Register
         volatile uint32_t HSICFGR;  ///< RCC HSI configuration register
     };
     volatile uint32_t CRRCR;  ///< RCC Clock Recovery RC Register
     uint8_t _reserved0[4];
-    volatile uint32_t CFGR;  ///< RCC Clock Configuration           Register
+    volatile uint32_t CFGR;  ///< RCC Clock Configuration Register
     uint8_t _reserved1[4];
-    volatile uint32_t D1CFGR;  ///< RCC Domain 1 Clock Configuration           Register
-    volatile uint32_t D2CFGR;  ///< RCC Domain 2 Clock Configuration           Register
-    volatile uint32_t D3CFGR;  ///< RCC Domain 3 Clock Configuration           Register
+    volatile uint32_t D1CFGR;  ///< RCC Domain 1 Clock Configuration Register
+    volatile uint32_t D2CFGR;  ///< RCC Domain 2 Clock Configuration Register
+    volatile uint32_t D3CFGR;  ///< RCC Domain 3 Clock Configuration Register
     uint8_t _reserved2[4];
-    volatile uint32_t PLLCKSELR;  ///< RCC PLLs Clock Source Selection           Register
-    volatile uint32_t PLLCFGR;  ///< RCC PLLs Configuration           Register
-    volatile uint32_t PLL1DIVR;  ///< RCC PLL1 Dividers Configuration           Register
-    volatile uint32_t PLL1FRACR;  ///< RCC PLL1 Fractional Divider           Register
-    volatile uint32_t PLL2DIVR;  ///< RCC PLL2 Dividers Configuration           Register
-    volatile uint32_t PLL2FRACR;  ///< RCC PLL2 Fractional Divider           Register
-    volatile uint32_t PLL3DIVR;  ///< RCC PLL3 Dividers Configuration           Register
-    volatile uint32_t PLL3FRACR;  ///< RCC PLL3 Fractional Divider           Register
+    volatile uint32_t PLLCKSELR;  ///< RCC PLLs Clock Source Selection Register
+    volatile uint32_t PLLCFGR;  ///< RCC PLLs Configuration Register
+    volatile uint32_t PLL1DIVR;  ///< RCC PLL1 Dividers Configuration Register
+    volatile uint32_t PLL1FRACR;  ///< RCC PLL1 Fractional Divider Register
+    volatile uint32_t PLL2DIVR;  ///< RCC PLL2 Dividers Configuration Register
+    volatile uint32_t PLL2FRACR;  ///< RCC PLL2 Fractional Divider Register
+    volatile uint32_t PLL3DIVR;  ///< RCC PLL3 Dividers Configuration Register
+    volatile uint32_t PLL3FRACR;  ///< RCC PLL3 Fractional Divider Register
     uint8_t _reserved3[4];
-    volatile uint32_t D1CCIPR;  ///< RCC Domain 1 Kernel Clock Configuration           Register
-    volatile uint32_t D2CCIP1R;  ///< RCC Domain 2 Kernel Clock Configuration           Register
-    volatile uint32_t D2CCIP2R;  ///< RCC Domain 2 Kernel Clock Configuration           Register
-    volatile uint32_t D3CCIPR;  ///< RCC Domain 3 Kernel Clock Configuration           Register
+    volatile uint32_t D1CCIPR;  ///< RCC Domain 1 Kernel Clock Configuration Register
+    volatile uint32_t D2CCIP1R;  ///< RCC Domain 2 Kernel Clock Configuration Register
+    volatile uint32_t D2CCIP2R;  ///< RCC Domain 2 Kernel Clock Configuration Register
+    volatile uint32_t D3CCIPR;  ///< RCC Domain 3 Kernel Clock Configuration Register
     uint8_t _reserved4[4];
-    volatile uint32_t CIER;  ///< RCC Clock Source Interrupt Enable           Register
-    volatile uint32_t CIFR;  ///< RCC Clock Source Interrupt Flag           Register
-    volatile uint32_t CICR;  ///< RCC Clock Source Interrupt Clear           Register
+    volatile uint32_t CIER;  ///< RCC Clock Source Interrupt Enable Register
+    volatile uint32_t CIFR;  ///< RCC Clock Source Interrupt Flag Register
+    volatile uint32_t CICR;  ///< RCC Clock Source Interrupt Clear Register
     uint8_t _reserved5[4];
-    volatile uint32_t BDCR;  ///< RCC Backup Domain Control           Register
-    volatile uint32_t CSR;  ///< RCC Clock Control and Status           Register
+    volatile uint32_t BDCR;  ///< RCC Backup Domain Control Register
+    volatile uint32_t CSR;  ///< RCC Clock Control and Status Register
     uint8_t _reserved6[4];
     volatile uint32_t AHB3RSTR;  ///< RCC AHB3 Reset Register
-    volatile uint32_t AHB1RSTR;  ///< RCC AHB1 Peripheral Reset           Register
-    volatile uint32_t AHB2RSTR;  ///< RCC AHB2 Peripheral Reset           Register
-    volatile uint32_t AHB4RSTR;  ///< RCC AHB4 Peripheral Reset           Register
-    volatile uint32_t APB3RSTR;  ///< RCC APB3 Peripheral Reset           Register
-    volatile uint32_t APB1LRSTR;  ///< RCC APB1 Peripheral Reset           Register
-    volatile uint32_t APB1HRSTR;  ///< RCC APB1 Peripheral Reset           Register
-    volatile uint32_t APB2RSTR;  ///< RCC APB2 Peripheral Reset           Register
-    volatile uint32_t APB4RSTR;  ///< RCC APB4 Peripheral Reset           Register
+    volatile uint32_t AHB1RSTR;  ///< RCC AHB1 Peripheral Reset Register
+    volatile uint32_t AHB2RSTR;  ///< RCC AHB2 Peripheral Reset Register
+    volatile uint32_t AHB4RSTR;  ///< RCC AHB4 Peripheral Reset Register
+    volatile uint32_t APB3RSTR;  ///< RCC APB3 Peripheral Reset Register
+    volatile uint32_t APB1LRSTR;  ///< RCC APB1 Peripheral Reset Register
+    volatile uint32_t APB1HRSTR;  ///< RCC APB1 Peripheral Reset Register
+    volatile uint32_t APB2RSTR;  ///< RCC APB2 Peripheral Reset Register
+    volatile uint32_t APB4RSTR;  ///< RCC APB4 Peripheral Reset Register
     volatile uint32_t GCR;  ///< RCC Global Control Register
     uint8_t _reserved7[4];
-    volatile uint32_t D3AMR;  ///< RCC D3 Autonomous mode           Register
+    volatile uint32_t D3AMR;  ///< RCC D3 Autonomous mode Register
     uint8_t _reserved8[36];
     volatile uint32_t RSR;  ///< RCC Reset Status Register
     volatile uint32_t AHB3ENR;  ///< RCC AHB3 Clock Register
@@ -81,8 +81,8 @@ struct RCC_t {
     volatile uint32_t AHB2LPENR;  ///< RCC AHB2 Sleep Clock Register
     volatile uint32_t AHB4LPENR;  ///< RCC AHB4 Sleep Clock Register
     volatile uint32_t APB3LPENR;  ///< RCC APB3 Sleep Clock Register
-    volatile uint32_t APB1LLPENR;  ///< RCC APB1 Low Sleep Clock           Register
-    volatile uint32_t APB1HLPENR;  ///< RCC APB1 High Sleep Clock           Register
+    volatile uint32_t APB1LLPENR;  ///< RCC APB1 Low Sleep Clock Register
+    volatile uint32_t APB1HLPENR;  ///< RCC APB1 High Sleep Clock Register
     volatile uint32_t APB2LPENR;  ///< RCC APB2 Sleep Clock Register
     volatile uint32_t APB4LPENR;  ///< RCC APB4 Sleep Clock Register
     uint8_t _reserved10[16];
@@ -102,8 +102,8 @@ struct RCC_t {
     volatile uint32_t C1_AHB2LPENR;  ///< RCC AHB2 Sleep Clock Register
     volatile uint32_t C1_AHB4LPENR;  ///< RCC AHB4 Sleep Clock Register
     volatile uint32_t C1_APB3LPENR;  ///< RCC APB3 Sleep Clock Register
-    volatile uint32_t C1_APB1LLPENR;  ///< RCC APB1 Low Sleep Clock           Register
-    volatile uint32_t C1_APB1HLPENR;  ///< RCC APB1 High Sleep Clock           Register
+    volatile uint32_t C1_APB1LLPENR;  ///< RCC APB1 Low Sleep Clock Register
+    volatile uint32_t C1_APB1HLPENR;  ///< RCC APB1 High Sleep Clock Register
     volatile uint32_t C1_APB2LPENR;  ///< RCC APB2 Sleep Clock Register
     volatile uint32_t C1_APB4LPENR;  ///< RCC APB4 Sleep Clock Register
 };

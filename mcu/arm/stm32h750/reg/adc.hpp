@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-03-09T09:57:25.155399
+ * Generated: 2026-10-30T11:17:11.795968
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -18,131 +18,131 @@ namespace sbl::hw::reg {
 
 /** Analog to Digital Converter */
 struct ADC3_t {
-    volatile uint32_t ISR;  ///< ADC interrupt and status           register
+    volatile uint32_t ISR;  ///< ADC interrupt and status register
     volatile uint32_t IER;  ///< ADC interrupt enable register
     volatile uint32_t CR;  ///< ADC control register
     volatile uint32_t CFGR;  ///< ADC configuration register 1
     volatile uint32_t CFGR2;  ///< ADC configuration register 2
     volatile uint32_t SMPR1;  ///< ADC sampling time register 1
     volatile uint32_t SMPR2;  ///< ADC sampling time register 2
-    volatile uint32_t PCSEL;  ///< ADC pre channel selection           register
-    volatile uint32_t LTR1;  ///< ADC analog watchdog 1 threshold           register
-    volatile uint32_t LHTR1;  ///< ADC analog watchdog 2 threshold           register
+    volatile uint32_t PCSEL;  ///< ADC pre channel selection register
+    volatile uint32_t LTR1;  ///< ADC analog watchdog 1 threshold register
+    volatile uint32_t LHTR1;  ///< ADC analog watchdog 2 threshold register
     uint8_t _reserved0[8];
-    volatile uint32_t SQR1;  ///< ADC group regular sequencer ranks register           1
-    volatile uint32_t SQR2;  ///< ADC group regular sequencer ranks register           2
-    volatile uint32_t SQR3;  ///< ADC group regular sequencer ranks register           3
-    volatile uint32_t SQR4;  ///< ADC group regular sequencer ranks register           4
-    volatile uint32_t DR;  ///< ADC group regular conversion data           register
+    volatile uint32_t SQR1;  ///< ADC group regular sequencer ranks register 1
+    volatile uint32_t SQR2;  ///< ADC group regular sequencer ranks register 2
+    volatile uint32_t SQR3;  ///< ADC group regular sequencer ranks register 3
+    volatile uint32_t SQR4;  ///< ADC group regular sequencer ranks register 4
+    volatile uint32_t DR;  ///< ADC group regular conversion data register
     uint8_t _reserved1[8];
-    volatile uint32_t JSQR;  ///< ADC group injected sequencer           register
+    volatile uint32_t JSQR;  ///< ADC group injected sequencer register
     uint8_t _reserved2[16];
     volatile uint32_t OFR1;  ///< ADC offset number 1 register
     volatile uint32_t OFR2;  ///< ADC offset number 2 register
     volatile uint32_t OFR3;  ///< ADC offset number 3 register
     volatile uint32_t OFR4;  ///< ADC offset number 4 register
     uint8_t _reserved3[16];
-    volatile uint32_t JDR1;  ///< ADC group injected sequencer rank 1           register
-    volatile uint32_t JDR2;  ///< ADC group injected sequencer rank 2           register
-    volatile uint32_t JDR3;  ///< ADC group injected sequencer rank 3           register
-    volatile uint32_t JDR4;  ///< ADC group injected sequencer rank 4           register
+    volatile uint32_t JDR1;  ///< ADC group injected sequencer rank 1 register
+    volatile uint32_t JDR2;  ///< ADC group injected sequencer rank 2 register
+    volatile uint32_t JDR3;  ///< ADC group injected sequencer rank 3 register
+    volatile uint32_t JDR4;  ///< ADC group injected sequencer rank 4 register
     uint8_t _reserved4[16];
-    volatile uint32_t AWD2CR;  ///< ADC analog watchdog 2 configuration           register
-    volatile uint32_t AWD3CR;  ///< ADC analog watchdog 3 configuration           register
+    volatile uint32_t AWD2CR;  ///< ADC analog watchdog 2 configuration register
+    volatile uint32_t AWD3CR;  ///< ADC analog watchdog 3 configuration register
     uint8_t _reserved5[8];
-    volatile uint32_t LTR2;  ///< ADC watchdog lower threshold register           2
-    volatile uint32_t HTR2;  ///< ADC watchdog higher threshold register           2
-    volatile uint32_t LTR3;  ///< ADC watchdog lower threshold register           3
-    volatile uint32_t HTR3;  ///< ADC watchdog higher threshold register           3
-    volatile uint32_t DIFSEL;  ///< ADC channel differential or single-ended           mode s...
-    volatile uint32_t CALFACT;  ///< ADC calibration factors           register
-    volatile uint32_t CALFACT2;  ///< ADC Calibration Factor register           2
+    volatile uint32_t LTR2;  ///< ADC watchdog lower threshold register 2
+    volatile uint32_t HTR2;  ///< ADC watchdog higher threshold register 2
+    volatile uint32_t LTR3;  ///< ADC watchdog lower threshold register 3
+    volatile uint32_t HTR3;  ///< ADC watchdog higher threshold register 3
+    volatile uint32_t DIFSEL;  ///< ADC channel differential or single-ended mode selection r...
+    volatile uint32_t CALFACT;  ///< ADC calibration factors register
+    volatile uint32_t CALFACT2;  ///< ADC Calibration Factor register 2
 };
 
 /** Analog to Digital Converter */
 struct ADC1_t {
-    volatile uint32_t ISR;  ///< ADC interrupt and status           register
+    volatile uint32_t ISR;  ///< ADC interrupt and status register
     volatile uint32_t IER;  ///< ADC interrupt enable register
     volatile uint32_t CR;  ///< ADC control register
     volatile uint32_t CFGR;  ///< ADC configuration register 1
     volatile uint32_t CFGR2;  ///< ADC configuration register 2
     volatile uint32_t SMPR1;  ///< ADC sampling time register 1
     volatile uint32_t SMPR2;  ///< ADC sampling time register 2
-    volatile uint32_t PCSEL;  ///< ADC pre channel selection           register
-    volatile uint32_t LTR1;  ///< ADC analog watchdog 1 threshold           register
-    volatile uint32_t LHTR1;  ///< ADC analog watchdog 2 threshold           register
+    volatile uint32_t PCSEL;  ///< ADC pre channel selection register
+    volatile uint32_t LTR1;  ///< ADC analog watchdog 1 threshold register
+    volatile uint32_t LHTR1;  ///< ADC analog watchdog 2 threshold register
     uint8_t _reserved0[8];
-    volatile uint32_t SQR1;  ///< ADC group regular sequencer ranks register           1
-    volatile uint32_t SQR2;  ///< ADC group regular sequencer ranks register           2
-    volatile uint32_t SQR3;  ///< ADC group regular sequencer ranks register           3
-    volatile uint32_t SQR4;  ///< ADC group regular sequencer ranks register           4
-    volatile uint32_t DR;  ///< ADC group regular conversion data           register
+    volatile uint32_t SQR1;  ///< ADC group regular sequencer ranks register 1
+    volatile uint32_t SQR2;  ///< ADC group regular sequencer ranks register 2
+    volatile uint32_t SQR3;  ///< ADC group regular sequencer ranks register 3
+    volatile uint32_t SQR4;  ///< ADC group regular sequencer ranks register 4
+    volatile uint32_t DR;  ///< ADC group regular conversion data register
     uint8_t _reserved1[8];
-    volatile uint32_t JSQR;  ///< ADC group injected sequencer           register
+    volatile uint32_t JSQR;  ///< ADC group injected sequencer register
     uint8_t _reserved2[16];
     volatile uint32_t OFR1;  ///< ADC offset number 1 register
     volatile uint32_t OFR2;  ///< ADC offset number 2 register
     volatile uint32_t OFR3;  ///< ADC offset number 3 register
     volatile uint32_t OFR4;  ///< ADC offset number 4 register
     uint8_t _reserved3[16];
-    volatile uint32_t JDR1;  ///< ADC group injected sequencer rank 1           register
-    volatile uint32_t JDR2;  ///< ADC group injected sequencer rank 2           register
-    volatile uint32_t JDR3;  ///< ADC group injected sequencer rank 3           register
-    volatile uint32_t JDR4;  ///< ADC group injected sequencer rank 4           register
+    volatile uint32_t JDR1;  ///< ADC group injected sequencer rank 1 register
+    volatile uint32_t JDR2;  ///< ADC group injected sequencer rank 2 register
+    volatile uint32_t JDR3;  ///< ADC group injected sequencer rank 3 register
+    volatile uint32_t JDR4;  ///< ADC group injected sequencer rank 4 register
     uint8_t _reserved4[16];
-    volatile uint32_t AWD2CR;  ///< ADC analog watchdog 2 configuration           register
-    volatile uint32_t AWD3CR;  ///< ADC analog watchdog 3 configuration           register
+    volatile uint32_t AWD2CR;  ///< ADC analog watchdog 2 configuration register
+    volatile uint32_t AWD3CR;  ///< ADC analog watchdog 3 configuration register
     uint8_t _reserved5[8];
-    volatile uint32_t LTR2;  ///< ADC watchdog lower threshold register           2
-    volatile uint32_t HTR2;  ///< ADC watchdog higher threshold register           2
-    volatile uint32_t LTR3;  ///< ADC watchdog lower threshold register           3
-    volatile uint32_t HTR3;  ///< ADC watchdog higher threshold register           3
-    volatile uint32_t DIFSEL;  ///< ADC channel differential or single-ended           mode s...
-    volatile uint32_t CALFACT;  ///< ADC calibration factors           register
-    volatile uint32_t CALFACT2;  ///< ADC Calibration Factor register           2
+    volatile uint32_t LTR2;  ///< ADC watchdog lower threshold register 2
+    volatile uint32_t HTR2;  ///< ADC watchdog higher threshold register 2
+    volatile uint32_t LTR3;  ///< ADC watchdog lower threshold register 3
+    volatile uint32_t HTR3;  ///< ADC watchdog higher threshold register 3
+    volatile uint32_t DIFSEL;  ///< ADC channel differential or single-ended mode selection r...
+    volatile uint32_t CALFACT;  ///< ADC calibration factors register
+    volatile uint32_t CALFACT2;  ///< ADC Calibration Factor register 2
 };
 
 /** Analog to Digital Converter */
 struct ADC2_t {
-    volatile uint32_t ISR;  ///< ADC interrupt and status           register
+    volatile uint32_t ISR;  ///< ADC interrupt and status register
     volatile uint32_t IER;  ///< ADC interrupt enable register
     volatile uint32_t CR;  ///< ADC control register
     volatile uint32_t CFGR;  ///< ADC configuration register 1
     volatile uint32_t CFGR2;  ///< ADC configuration register 2
     volatile uint32_t SMPR1;  ///< ADC sampling time register 1
     volatile uint32_t SMPR2;  ///< ADC sampling time register 2
-    volatile uint32_t PCSEL;  ///< ADC pre channel selection           register
-    volatile uint32_t LTR1;  ///< ADC analog watchdog 1 threshold           register
-    volatile uint32_t LHTR1;  ///< ADC analog watchdog 2 threshold           register
+    volatile uint32_t PCSEL;  ///< ADC pre channel selection register
+    volatile uint32_t LTR1;  ///< ADC analog watchdog 1 threshold register
+    volatile uint32_t LHTR1;  ///< ADC analog watchdog 2 threshold register
     uint8_t _reserved0[8];
-    volatile uint32_t SQR1;  ///< ADC group regular sequencer ranks register           1
-    volatile uint32_t SQR2;  ///< ADC group regular sequencer ranks register           2
-    volatile uint32_t SQR3;  ///< ADC group regular sequencer ranks register           3
-    volatile uint32_t SQR4;  ///< ADC group regular sequencer ranks register           4
-    volatile uint32_t DR;  ///< ADC group regular conversion data           register
+    volatile uint32_t SQR1;  ///< ADC group regular sequencer ranks register 1
+    volatile uint32_t SQR2;  ///< ADC group regular sequencer ranks register 2
+    volatile uint32_t SQR3;  ///< ADC group regular sequencer ranks register 3
+    volatile uint32_t SQR4;  ///< ADC group regular sequencer ranks register 4
+    volatile uint32_t DR;  ///< ADC group regular conversion data register
     uint8_t _reserved1[8];
-    volatile uint32_t JSQR;  ///< ADC group injected sequencer           register
+    volatile uint32_t JSQR;  ///< ADC group injected sequencer register
     uint8_t _reserved2[16];
     volatile uint32_t OFR1;  ///< ADC offset number 1 register
     volatile uint32_t OFR2;  ///< ADC offset number 2 register
     volatile uint32_t OFR3;  ///< ADC offset number 3 register
     volatile uint32_t OFR4;  ///< ADC offset number 4 register
     uint8_t _reserved3[16];
-    volatile uint32_t JDR1;  ///< ADC group injected sequencer rank 1           register
-    volatile uint32_t JDR2;  ///< ADC group injected sequencer rank 2           register
-    volatile uint32_t JDR3;  ///< ADC group injected sequencer rank 3           register
-    volatile uint32_t JDR4;  ///< ADC group injected sequencer rank 4           register
+    volatile uint32_t JDR1;  ///< ADC group injected sequencer rank 1 register
+    volatile uint32_t JDR2;  ///< ADC group injected sequencer rank 2 register
+    volatile uint32_t JDR3;  ///< ADC group injected sequencer rank 3 register
+    volatile uint32_t JDR4;  ///< ADC group injected sequencer rank 4 register
     uint8_t _reserved4[16];
-    volatile uint32_t AWD2CR;  ///< ADC analog watchdog 2 configuration           register
-    volatile uint32_t AWD3CR;  ///< ADC analog watchdog 3 configuration           register
+    volatile uint32_t AWD2CR;  ///< ADC analog watchdog 2 configuration register
+    volatile uint32_t AWD3CR;  ///< ADC analog watchdog 3 configuration register
     uint8_t _reserved5[8];
-    volatile uint32_t LTR2;  ///< ADC watchdog lower threshold register           2
-    volatile uint32_t HTR2;  ///< ADC watchdog higher threshold register           2
-    volatile uint32_t LTR3;  ///< ADC watchdog lower threshold register           3
-    volatile uint32_t HTR3;  ///< ADC watchdog higher threshold register           3
-    volatile uint32_t DIFSEL;  ///< ADC channel differential or single-ended           mode s...
-    volatile uint32_t CALFACT;  ///< ADC calibration factors           register
-    volatile uint32_t CALFACT2;  ///< ADC Calibration Factor register           2
+    volatile uint32_t LTR2;  ///< ADC watchdog lower threshold register 2
+    volatile uint32_t HTR2;  ///< ADC watchdog higher threshold register 2
+    volatile uint32_t LTR3;  ///< ADC watchdog lower threshold register 3
+    volatile uint32_t HTR3;  ///< ADC watchdog higher threshold register 3
+    volatile uint32_t DIFSEL;  ///< ADC channel differential or single-ended mode selection r...
+    volatile uint32_t CALFACT;  ///< ADC calibration factors register
+    volatile uint32_t CALFACT2;  ///< ADC Calibration Factor register 2
 };
 
 /** Analog-to-Digital Converter */
@@ -150,7 +150,7 @@ struct ADC3_Common_t {
     volatile uint32_t CSR;  ///< ADC Common status register
     uint8_t _reserved0[4];
     volatile uint32_t CCR;  ///< ADC common control register
-    volatile uint32_t CDR;  ///< ADC common regular data register for dual           and t...
+    volatile uint32_t CDR;  ///< ADC common regular data register for dual and triple modes
 };
 
 /** Analog-to-Digital Converter */
@@ -158,7 +158,7 @@ struct ADC12_Common_t {
     volatile uint32_t CSR;  ///< ADC Common status register
     uint8_t _reserved0[4];
     volatile uint32_t CCR;  ///< ADC common control register
-    volatile uint32_t CDR;  ///< ADC common regular data register for dual           and t...
+    volatile uint32_t CDR;  ///< ADC common regular data register for dual and triple modes
 };
 
 namespace ADC3 {

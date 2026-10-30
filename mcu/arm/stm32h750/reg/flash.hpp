@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-03-09T09:57:25.156739
+ * Generated: 2026-10-30T11:17:11.802138
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -21,52 +21,52 @@ struct Flash_t {
     volatile uint32_t ACR;  ///< Access control register
     volatile uint32_t KEYR1;  ///< FLASH key register for bank 1
     volatile uint32_t OPTKEYR;  ///< FLASH option key register
-    volatile uint32_t CR1;  ///< FLASH control register for bank           1
-    volatile uint32_t SR1;  ///< FLASH status register for bank           1
-    volatile uint32_t CCR1;  ///< FLASH clear control register for bank           1
+    volatile uint32_t CR1;  ///< FLASH control register for bank 1
+    volatile uint32_t SR1;  ///< FLASH status register for bank 1
+    volatile uint32_t CCR1;  ///< FLASH clear control register for bank 1
     volatile uint32_t OPTCR;  ///< FLASH option control register
     volatile uint32_t OPTSR_CUR;  ///< FLASH option status register
     volatile uint32_t OPTSR_PRG;  ///< FLASH option status register
-    volatile uint32_t OPTCCR;  ///< FLASH option clear control           register
-    volatile uint32_t PRAR_CUR1;  ///< FLASH protection address for bank           1
-    volatile uint32_t PRAR_PRG1;  ///< FLASH protection address for bank           1
-    volatile uint32_t SCAR_CUR1;  ///< FLASH secure address for bank           1
-    volatile uint32_t SCAR_PRG1;  ///< FLASH secure address for bank           1
-    volatile uint32_t WPSN_CUR1R;  ///< FLASH write sector protection for bank           1
-    volatile uint32_t WPSN_PRG1R;  ///< FLASH write sector protection for bank           1
-    volatile uint32_t BOOT_CURR;  ///< FLASH register with boot           address
-    volatile uint32_t BOOT_PRGR;  ///< FLASH register with boot           address
+    volatile uint32_t OPTCCR;  ///< FLASH option clear control register
+    volatile uint32_t PRAR_CUR1;  ///< FLASH protection address for bank 1
+    volatile uint32_t PRAR_PRG1;  ///< FLASH protection address for bank 1
+    volatile uint32_t SCAR_CUR1;  ///< FLASH secure address for bank 1
+    volatile uint32_t SCAR_PRG1;  ///< FLASH secure address for bank 1
+    volatile uint32_t WPSN_CUR1R;  ///< FLASH write sector protection for bank 1
+    volatile uint32_t WPSN_PRG1R;  ///< FLASH write sector protection for bank 1
+    volatile uint32_t BOOT_CURR;  ///< FLASH register with boot address
+    volatile uint32_t BOOT_PRGR;  ///< FLASH register with boot address
     uint8_t _reserved0[8];
-    volatile uint32_t CRCCR1;  ///< FLASH CRC control register for bank           1
-    volatile uint32_t CRCSADD1R;  ///< FLASH CRC start address register for bank           1
-    volatile uint32_t CRCEADD1R;  ///< FLASH CRC end address register for bank           1
+    volatile uint32_t CRCCR1;  ///< FLASH CRC control register for bank 1
+    volatile uint32_t CRCSADD1R;  ///< FLASH CRC start address register for bank 1
+    volatile uint32_t CRCEADD1R;  ///< FLASH CRC end address register for bank 1
     volatile uint32_t CRCDATAR;  ///< FLASH CRC data register
-    volatile uint32_t ECC_FA1R;  ///< FLASH ECC fail address for bank           1
+    volatile uint32_t ECC_FA1R;  ///< FLASH ECC fail address for bank 1
     uint8_t _reserved1[156];
     volatile uint32_t ACR_;  ///< Access control register
     volatile uint32_t KEYR2;  ///< FLASH key register for bank 2
     volatile uint32_t OPTKEYR_;  ///< FLASH option key register
-    volatile uint32_t CR2;  ///< FLASH control register for bank           2
-    volatile uint32_t SR2;  ///< FLASH status register for bank           2
-    volatile uint32_t CCR2;  ///< FLASH clear control register for bank           2
+    volatile uint32_t CR2;  ///< FLASH control register for bank 2
+    volatile uint32_t SR2;  ///< FLASH status register for bank 2
+    volatile uint32_t CCR2;  ///< FLASH clear control register for bank 2
     volatile uint32_t OPTCR_;  ///< FLASH option control register
     volatile uint32_t OPTSR_CUR_;  ///< FLASH option status register
     volatile uint32_t OPTSR_PRG_;  ///< FLASH option status register
-    volatile uint32_t OPTCCR_;  ///< FLASH option clear control           register
-    volatile uint32_t PRAR_CUR2;  ///< FLASH protection address for bank           1
-    volatile uint32_t PRAR_PRG2;  ///< FLASH protection address for bank           2
-    volatile uint32_t SCAR_CUR2;  ///< FLASH secure address for bank           2
-    volatile uint32_t SCAR_PRG2;  ///< FLASH secure address for bank           2
-    volatile uint32_t WPSN_CUR2R;  ///< FLASH write sector protection for bank           2
-    volatile uint32_t WPSN_PRG2R;  ///< FLASH write sector protection for bank           2
-    volatile uint32_t BOOT_CURR_;  ///< FLASH register with boot           address
-    volatile uint32_t BOOT_PRGR_;  ///< FLASH register with boot           address
+    volatile uint32_t OPTCCR_;  ///< FLASH option clear control register
+    volatile uint32_t PRAR_CUR2;  ///< FLASH protection address for bank 1
+    volatile uint32_t PRAR_PRG2;  ///< FLASH protection address for bank 2
+    volatile uint32_t SCAR_CUR2;  ///< FLASH secure address for bank 2
+    volatile uint32_t SCAR_PRG2;  ///< FLASH secure address for bank 2
+    volatile uint32_t WPSN_CUR2R;  ///< FLASH write sector protection for bank 2
+    volatile uint32_t WPSN_PRG2R;  ///< FLASH write sector protection for bank 2
+    volatile uint32_t BOOT_CURR_;  ///< FLASH register with boot address
+    volatile uint32_t BOOT_PRGR_;  ///< FLASH register with boot address
     uint8_t _reserved2[8];
-    volatile uint32_t CRCCR2;  ///< FLASH CRC control register for bank           1
-    volatile uint32_t CRCSADD2R;  ///< FLASH CRC start address register for bank           2
-    volatile uint32_t CRCEADD2R;  ///< FLASH CRC end address register for bank           2
+    volatile uint32_t CRCCR2;  ///< FLASH CRC control register for bank 1
+    volatile uint32_t CRCSADD2R;  ///< FLASH CRC start address register for bank 2
+    volatile uint32_t CRCEADD2R;  ///< FLASH CRC end address register for bank 2
     volatile uint32_t CRCDATAR_;  ///< FLASH CRC data register
-    volatile uint32_t ECC_FA2R;  ///< FLASH ECC fail address for bank           2
+    volatile uint32_t ECC_FA2R;  ///< FLASH ECC fail address for bank 2
 };
 
 namespace Flash {

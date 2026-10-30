@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-10-30T11:01:09.145127
+ * Generated: 2026-10-30T11:17:11.833266
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -25,14 +25,14 @@ struct TIM2_t {
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
     union {  // 0x18: alternate views of one register
-        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input mode)
     };
     union {  // 0x1C: alternate views of one register
-        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input mode)
     };
-    volatile uint32_t CCER;  ///< capture/compare enable           register
+    volatile uint32_t CCER;  ///< capture/compare enable register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
     volatile uint32_t ARR;  ///< auto-reload register
@@ -45,9 +45,9 @@ struct TIM2_t {
     volatile uint32_t DCR;  ///< DMA control register
     volatile uint32_t DMAR;  ///< DMA address for full transfer
     uint8_t _reserved2[16];
-    volatile uint32_t AF1;  ///< TIM alternate function option register           1
+    volatile uint32_t AF1;  ///< TIM alternate function option register 1
     uint8_t _reserved3[4];
-    volatile uint32_t TISEL;  ///< TIM timer input selection           register
+    volatile uint32_t TISEL;  ///< TIM timer input selection register
 };
 
 /** General purpose timers */
@@ -59,14 +59,14 @@ struct TIM3_t {
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
     union {  // 0x18: alternate views of one register
-        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input mode)
     };
     union {  // 0x1C: alternate views of one register
-        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input mode)
     };
-    volatile uint32_t CCER;  ///< capture/compare enable           register
+    volatile uint32_t CCER;  ///< capture/compare enable register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
     volatile uint32_t ARR;  ///< auto-reload register
@@ -79,9 +79,9 @@ struct TIM3_t {
     volatile uint32_t DCR;  ///< DMA control register
     volatile uint32_t DMAR;  ///< DMA address for full transfer
     uint8_t _reserved2[16];
-    volatile uint32_t AF1;  ///< TIM alternate function option register           1
+    volatile uint32_t AF1;  ///< TIM alternate function option register 1
     uint8_t _reserved3[4];
-    volatile uint32_t TISEL;  ///< TIM timer input selection           register
+    volatile uint32_t TISEL;  ///< TIM timer input selection register
 };
 
 /** General purpose timers */
@@ -93,14 +93,14 @@ struct TIM4_t {
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
     union {  // 0x18: alternate views of one register
-        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input mode)
     };
     union {  // 0x1C: alternate views of one register
-        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input mode)
     };
-    volatile uint32_t CCER;  ///< capture/compare enable           register
+    volatile uint32_t CCER;  ///< capture/compare enable register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
     volatile uint32_t ARR;  ///< auto-reload register
@@ -113,9 +113,9 @@ struct TIM4_t {
     volatile uint32_t DCR;  ///< DMA control register
     volatile uint32_t DMAR;  ///< DMA address for full transfer
     uint8_t _reserved2[16];
-    volatile uint32_t AF1;  ///< TIM alternate function option register           1
+    volatile uint32_t AF1;  ///< TIM alternate function option register 1
     uint8_t _reserved3[4];
-    volatile uint32_t TISEL;  ///< TIM timer input selection           register
+    volatile uint32_t TISEL;  ///< TIM timer input selection register
 };
 
 /** General purpose timers */
@@ -127,14 +127,14 @@ struct TIM5_t {
     volatile uint32_t SR;  ///< status register
     volatile uint32_t EGR;  ///< event generation register
     union {  // 0x18: alternate views of one register
-        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output           mode)
-        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input           mode)
+        volatile uint32_t CCMR1_Output;  ///< capture/compare mode register 1 (output mode)
+        volatile uint32_t CCMR1_Input;  ///< capture/compare mode register 1 (input mode)
     };
     union {  // 0x1C: alternate views of one register
-        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output           mode)
-        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input           mode)
+        volatile uint32_t CCMR2_Output;  ///< capture/compare mode register 2 (output mode)
+        volatile uint32_t CCMR2_Input;  ///< capture/compare mode register 2 (input mode)
     };
-    volatile uint32_t CCER;  ///< capture/compare enable           register
+    volatile uint32_t CCER;  ///< capture/compare enable register
     volatile uint32_t CNT;  ///< counter
     volatile uint32_t PSC;  ///< prescaler
     volatile uint32_t ARR;  ///< auto-reload register
@@ -147,9 +147,9 @@ struct TIM5_t {
     volatile uint32_t DCR;  ///< DMA control register
     volatile uint32_t DMAR;  ///< DMA address for full transfer
     uint8_t _reserved2[16];
-    volatile uint32_t AF1;  ///< TIM alternate function option register           1
+    volatile uint32_t AF1;  ///< TIM alternate function option register 1
     uint8_t _reserved3[4];
-    volatile uint32_t TISEL;  ///< TIM timer input selection           register
+    volatile uint32_t TISEL;  ///< TIM timer input selection register
 };
 
 namespace TIM2 {

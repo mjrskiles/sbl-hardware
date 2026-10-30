@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-03-09T09:57:25.157823
+ * Generated: 2026-10-30T11:17:11.807924
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -65,25 +65,25 @@ struct BDMA_t {
 /** DMA2D */
 struct DMA2D_t {
     volatile uint32_t DMA2D_CR;  ///< DMA2D control register
-    volatile uint32_t DMA2D_ISR;  ///< DMA2D Interrupt Status           Register
-    volatile uint32_t DMA2D_IFCR;  ///< DMA2D interrupt flag clear           register
-    volatile uint32_t DMA2D_FGMAR;  ///< DMA2D foreground memory address           register
-    volatile uint32_t DMA2D_FGOR;  ///< DMA2D foreground offset           register
-    volatile uint32_t DMA2D_BGMAR;  ///< DMA2D background memory address           register
-    volatile uint32_t DMA2D_BGOR;  ///< DMA2D background offset           register
-    volatile uint32_t DMA2D_FGPFCCR;  ///< DMA2D foreground PFC control           register
-    volatile uint32_t DMA2D_FGCOLR;  ///< DMA2D foreground color           register
-    volatile uint32_t DMA2D_BGPFCCR;  ///< DMA2D background PFC control           register
-    volatile uint32_t DMA2D_BGCOLR;  ///< DMA2D background color           register
-    volatile uint32_t DMA2D_FGCMAR;  ///< DMA2D foreground CLUT memory address           register
-    volatile uint32_t DMA2D_BGCMAR;  ///< DMA2D background CLUT memory address           register
-    volatile uint32_t DMA2D_OPFCCR;  ///< DMA2D output PFC control           register
+    volatile uint32_t DMA2D_ISR;  ///< DMA2D Interrupt Status Register
+    volatile uint32_t DMA2D_IFCR;  ///< DMA2D interrupt flag clear register
+    volatile uint32_t DMA2D_FGMAR;  ///< DMA2D foreground memory address register
+    volatile uint32_t DMA2D_FGOR;  ///< DMA2D foreground offset register
+    volatile uint32_t DMA2D_BGMAR;  ///< DMA2D background memory address register
+    volatile uint32_t DMA2D_BGOR;  ///< DMA2D background offset register
+    volatile uint32_t DMA2D_FGPFCCR;  ///< DMA2D foreground PFC control register
+    volatile uint32_t DMA2D_FGCOLR;  ///< DMA2D foreground color register
+    volatile uint32_t DMA2D_BGPFCCR;  ///< DMA2D background PFC control register
+    volatile uint32_t DMA2D_BGCOLR;  ///< DMA2D background color register
+    volatile uint32_t DMA2D_FGCMAR;  ///< DMA2D foreground CLUT memory address register
+    volatile uint32_t DMA2D_BGCMAR;  ///< DMA2D background CLUT memory address register
+    volatile uint32_t DMA2D_OPFCCR;  ///< DMA2D output PFC control register
     volatile uint32_t DMA2D_OCOLR;  ///< DMA2D output color register
-    volatile uint32_t DMA2D_OMAR;  ///< DMA2D output memory address           register
+    volatile uint32_t DMA2D_OMAR;  ///< DMA2D output memory address register
     volatile uint32_t DMA2D_OOR;  ///< DMA2D output offset register
     volatile uint32_t DMA2D_NLR;  ///< DMA2D number of line register
     volatile uint32_t DMA2D_LWR;  ///< DMA2D line watermark register
-    volatile uint32_t DMA2D_AMTCR;  ///< DMA2D AXI master timer configuration           register
+    volatile uint32_t DMA2D_AMTCR;  ///< DMA2D AXI master timer configuration register
 };
 
 /** DMAMUX */
@@ -123,26 +123,26 @@ struct DMAMUX1_t {
 
 /** DMAMUX */
 struct DMAMUX2_t {
-    volatile uint32_t C0CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C1CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C2CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C3CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C4CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C5CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C6CR;  ///< DMAMux - DMA request line multiplexer           channel x...
-    volatile uint32_t C7CR;  ///< DMAMux - DMA request line multiplexer           channel x...
+    volatile uint32_t C0CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C1CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C2CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C3CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C4CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C5CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C6CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
+    volatile uint32_t C7CR;  ///< DMAMux - DMA request line multiplexer channel x control r...
     uint8_t _reserved0[96];
     volatile uint32_t CSR;  ///< 
     volatile uint32_t CFR;  ///< 
     uint8_t _reserved1[120];
-    volatile uint32_t RG0CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG1CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG2CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG3CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG4CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG5CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG6CR;  ///< DMAMux - DMA request generator channel x           contro...
-    volatile uint32_t RG7CR;  ///< DMAMux - DMA request generator channel x           contro...
+    volatile uint32_t RG0CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG1CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG2CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG3CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG4CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG5CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG6CR;  ///< DMAMux - DMA request generator channel x control register
+    volatile uint32_t RG7CR;  ///< DMAMux - DMA request generator channel x control register
     uint8_t _reserved2[32];
     volatile uint32_t RGSR;  ///< 
     volatile uint32_t RGCFR;  ///< 
@@ -152,55 +152,55 @@ struct DMAMUX2_t {
 struct DMA1_t {
     volatile uint32_t LISR;  ///< low interrupt status register
     volatile uint32_t HISR;  ///< high interrupt status register
-    volatile uint32_t LIFCR;  ///< low interrupt flag clear           register
-    volatile uint32_t HIFCR;  ///< high interrupt flag clear           register
-    volatile uint32_t S0CR;  ///< stream x configuration           register
-    volatile uint32_t S0NDTR;  ///< stream x number of data           register
-    volatile uint32_t S0PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S0M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S0M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t LIFCR;  ///< low interrupt flag clear register
+    volatile uint32_t HIFCR;  ///< high interrupt flag clear register
+    volatile uint32_t S0CR;  ///< stream x configuration register
+    volatile uint32_t S0NDTR;  ///< stream x number of data register
+    volatile uint32_t S0PAR;  ///< stream x peripheral address register
+    volatile uint32_t S0M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S0M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S0FCR;  ///< stream x FIFO control register
-    volatile uint32_t S1CR;  ///< stream x configuration           register
-    volatile uint32_t S1NDTR;  ///< stream x number of data           register
-    volatile uint32_t S1PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S1M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S1M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S1CR;  ///< stream x configuration register
+    volatile uint32_t S1NDTR;  ///< stream x number of data register
+    volatile uint32_t S1PAR;  ///< stream x peripheral address register
+    volatile uint32_t S1M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S1M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S1FCR;  ///< stream x FIFO control register
-    volatile uint32_t S2CR;  ///< stream x configuration           register
-    volatile uint32_t S2NDTR;  ///< stream x number of data           register
-    volatile uint32_t S2PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S2M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S2M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S2CR;  ///< stream x configuration register
+    volatile uint32_t S2NDTR;  ///< stream x number of data register
+    volatile uint32_t S2PAR;  ///< stream x peripheral address register
+    volatile uint32_t S2M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S2M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S2FCR;  ///< stream x FIFO control register
-    volatile uint32_t S3CR;  ///< stream x configuration           register
-    volatile uint32_t S3NDTR;  ///< stream x number of data           register
-    volatile uint32_t S3PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S3M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S3M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S3CR;  ///< stream x configuration register
+    volatile uint32_t S3NDTR;  ///< stream x number of data register
+    volatile uint32_t S3PAR;  ///< stream x peripheral address register
+    volatile uint32_t S3M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S3M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S3FCR;  ///< stream x FIFO control register
-    volatile uint32_t S4CR;  ///< stream x configuration           register
-    volatile uint32_t S4NDTR;  ///< stream x number of data           register
-    volatile uint32_t S4PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S4M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S4M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S4CR;  ///< stream x configuration register
+    volatile uint32_t S4NDTR;  ///< stream x number of data register
+    volatile uint32_t S4PAR;  ///< stream x peripheral address register
+    volatile uint32_t S4M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S4M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S4FCR;  ///< stream x FIFO control register
-    volatile uint32_t S5CR;  ///< stream x configuration           register
-    volatile uint32_t S5NDTR;  ///< stream x number of data           register
-    volatile uint32_t S5PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S5M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S5M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S5CR;  ///< stream x configuration register
+    volatile uint32_t S5NDTR;  ///< stream x number of data register
+    volatile uint32_t S5PAR;  ///< stream x peripheral address register
+    volatile uint32_t S5M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S5M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S5FCR;  ///< stream x FIFO control register
-    volatile uint32_t S6CR;  ///< stream x configuration           register
-    volatile uint32_t S6NDTR;  ///< stream x number of data           register
-    volatile uint32_t S6PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S6M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S6M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S6CR;  ///< stream x configuration register
+    volatile uint32_t S6NDTR;  ///< stream x number of data register
+    volatile uint32_t S6PAR;  ///< stream x peripheral address register
+    volatile uint32_t S6M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S6M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S6FCR;  ///< stream x FIFO control register
-    volatile uint32_t S7CR;  ///< stream x configuration           register
-    volatile uint32_t S7NDTR;  ///< stream x number of data           register
-    volatile uint32_t S7PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S7M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S7M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S7CR;  ///< stream x configuration register
+    volatile uint32_t S7NDTR;  ///< stream x number of data register
+    volatile uint32_t S7PAR;  ///< stream x peripheral address register
+    volatile uint32_t S7M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S7M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S7FCR;  ///< stream x FIFO control register
 };
 
@@ -208,55 +208,55 @@ struct DMA1_t {
 struct DMA2_t {
     volatile uint32_t LISR;  ///< low interrupt status register
     volatile uint32_t HISR;  ///< high interrupt status register
-    volatile uint32_t LIFCR;  ///< low interrupt flag clear           register
-    volatile uint32_t HIFCR;  ///< high interrupt flag clear           register
-    volatile uint32_t S0CR;  ///< stream x configuration           register
-    volatile uint32_t S0NDTR;  ///< stream x number of data           register
-    volatile uint32_t S0PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S0M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S0M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t LIFCR;  ///< low interrupt flag clear register
+    volatile uint32_t HIFCR;  ///< high interrupt flag clear register
+    volatile uint32_t S0CR;  ///< stream x configuration register
+    volatile uint32_t S0NDTR;  ///< stream x number of data register
+    volatile uint32_t S0PAR;  ///< stream x peripheral address register
+    volatile uint32_t S0M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S0M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S0FCR;  ///< stream x FIFO control register
-    volatile uint32_t S1CR;  ///< stream x configuration           register
-    volatile uint32_t S1NDTR;  ///< stream x number of data           register
-    volatile uint32_t S1PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S1M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S1M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S1CR;  ///< stream x configuration register
+    volatile uint32_t S1NDTR;  ///< stream x number of data register
+    volatile uint32_t S1PAR;  ///< stream x peripheral address register
+    volatile uint32_t S1M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S1M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S1FCR;  ///< stream x FIFO control register
-    volatile uint32_t S2CR;  ///< stream x configuration           register
-    volatile uint32_t S2NDTR;  ///< stream x number of data           register
-    volatile uint32_t S2PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S2M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S2M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S2CR;  ///< stream x configuration register
+    volatile uint32_t S2NDTR;  ///< stream x number of data register
+    volatile uint32_t S2PAR;  ///< stream x peripheral address register
+    volatile uint32_t S2M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S2M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S2FCR;  ///< stream x FIFO control register
-    volatile uint32_t S3CR;  ///< stream x configuration           register
-    volatile uint32_t S3NDTR;  ///< stream x number of data           register
-    volatile uint32_t S3PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S3M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S3M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S3CR;  ///< stream x configuration register
+    volatile uint32_t S3NDTR;  ///< stream x number of data register
+    volatile uint32_t S3PAR;  ///< stream x peripheral address register
+    volatile uint32_t S3M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S3M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S3FCR;  ///< stream x FIFO control register
-    volatile uint32_t S4CR;  ///< stream x configuration           register
-    volatile uint32_t S4NDTR;  ///< stream x number of data           register
-    volatile uint32_t S4PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S4M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S4M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S4CR;  ///< stream x configuration register
+    volatile uint32_t S4NDTR;  ///< stream x number of data register
+    volatile uint32_t S4PAR;  ///< stream x peripheral address register
+    volatile uint32_t S4M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S4M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S4FCR;  ///< stream x FIFO control register
-    volatile uint32_t S5CR;  ///< stream x configuration           register
-    volatile uint32_t S5NDTR;  ///< stream x number of data           register
-    volatile uint32_t S5PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S5M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S5M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S5CR;  ///< stream x configuration register
+    volatile uint32_t S5NDTR;  ///< stream x number of data register
+    volatile uint32_t S5PAR;  ///< stream x peripheral address register
+    volatile uint32_t S5M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S5M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S5FCR;  ///< stream x FIFO control register
-    volatile uint32_t S6CR;  ///< stream x configuration           register
-    volatile uint32_t S6NDTR;  ///< stream x number of data           register
-    volatile uint32_t S6PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S6M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S6M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S6CR;  ///< stream x configuration register
+    volatile uint32_t S6NDTR;  ///< stream x number of data register
+    volatile uint32_t S6PAR;  ///< stream x peripheral address register
+    volatile uint32_t S6M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S6M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S6FCR;  ///< stream x FIFO control register
-    volatile uint32_t S7CR;  ///< stream x configuration           register
-    volatile uint32_t S7NDTR;  ///< stream x number of data           register
-    volatile uint32_t S7PAR;  ///< stream x peripheral address           register
-    volatile uint32_t S7M0AR;  ///< stream x memory 0 address           register
-    volatile uint32_t S7M1AR;  ///< stream x memory 1 address           register
+    volatile uint32_t S7CR;  ///< stream x configuration register
+    volatile uint32_t S7NDTR;  ///< stream x number of data register
+    volatile uint32_t S7PAR;  ///< stream x peripheral address register
+    volatile uint32_t S7M0AR;  ///< stream x memory 0 address register
+    volatile uint32_t S7M1AR;  ///< stream x memory 1 address register
     volatile uint32_t S7FCR;  ///< stream x FIFO control register
 };
 

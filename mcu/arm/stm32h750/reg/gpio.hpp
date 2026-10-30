@@ -4,7 +4,7 @@
  *
  * Generated from: stm32h750.svd.patched
  * Generator: cecrops
- * Generated: 2026-03-09T09:57:25.151854
+ * Generated: 2026-10-30T11:17:11.792103
  *
  * DO NOT EDIT - Regenerate with: cecrops generate <mcu-dir>
  */
@@ -20,154 +20,154 @@ namespace sbl::hw::reg {
 struct GPIOA_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOB_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOC_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOD_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOE_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOF_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOG_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOH_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOI_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOJ_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 /** GPIO */
 struct GPIOK_t {
     volatile uint32_t GPIO_MODER;  ///< GPIO port mode register
     volatile uint32_t GPIO_OTYPER;  ///< GPIO port output type register
-    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed           register
-    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down           register
+    volatile uint32_t GPIO_OSPEEDR;  ///< GPIO port output speed register
+    volatile uint32_t GPIO_PUPDR;  ///< GPIO port pull-up/pull-down register
     volatile uint32_t GPIO_IDR;  ///< GPIO port input data register
     volatile uint32_t GPIO_ODR;  ///< GPIO port output data register
-    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset           register
-    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the           configuration...
-    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low           register
-    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high           register
+    volatile uint32_t GPIO_BSRR;  ///< GPIO port bit set/reset register
+    volatile uint32_t GPIO_LCKR;  ///< This register is used to lock the configuration of the po...
+    volatile uint32_t GPIO_AFRL;  ///< GPIO alternate function low register
+    volatile uint32_t GPIO_AFRH;  ///< GPIO alternate function high register
 };
 
 namespace GPIOA {
