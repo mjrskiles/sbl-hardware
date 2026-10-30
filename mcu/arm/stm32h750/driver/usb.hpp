@@ -21,16 +21,29 @@
 #undef SCB
 
 #include "init.hpp"             // For init_usb()
-#include "timer.hpp"            // For millis()
-#include "timer_callback.hpp"   // For IRQ-driven tud_task() servicing
+#include "priorities.hpp"       // For the soft-pended vector's level
+#include <sbl/hw/reg/cortex_m.hpp>
+#include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/usb_otg.hpp>  // For periph::usb2_global, GCCFG::, GOTGCTL::
 
-// TinyUSB requires a millisecond timer callback
-extern "C" inline uint32_t tusb_time_millis_api(void) {
-    return sbl::driver::Timer::millis();
-}
+// TinyUSB's millisecond hook is sound-byte-libs usb/tusb_time.cpp, over the system timer.
 
 namespace sbl::usb {
+
+/**
+ * The vector that services tud_task(), software-pended at Level::SoftPend.
+ * TAMP_STAMP is an unused peripheral line on this board. TinyUSB's class
+ * drivers are not locked under OPT_OS_NONE, so this is the one context that
+ * calls tud_task() and the tud_midi and tud_cdc functions.
+ */
+inline constexpr sbl::hw::reg::IRQn SOFT_PEND_IRQ = sbl::hw::reg::IRQn::TAMP_STAMP;
+
+/// Pend tud_task(): the OTG interrupt calls this after tud_int_handler(), and task() does.
+inline void pend_task() {
+    using namespace sbl::hw::reg;
+    const uint32_t n = static_cast<uint32_t>(SOFT_PEND_IRQ);
+    periph::nvic->ISPR[n >> 5] = (1u << (n & 0x1Fu));
+}
 
 namespace detail {
 
@@ -65,9 +78,6 @@ inline void force_usb_reenumerate() {
     dev->DCTL &= ~DCTL_SDIS;
 }
 
-// Track whether timer-driven USB servicing is active
-inline volatile bool s_timer_driven = false;
-
 } // namespace detail
 
 /**
@@ -80,7 +90,7 @@ inline volatile bool s_timer_driven = false;
  * 4. Configures PA11/PA12 for USB
  * 5. Initializes TinyUSB device stack
  * 6. Applies VBUS bypass (no VBUS sensing on Daisy/Patch boards)
- * 7. Starts 1kHz timer for automatic tud_task() servicing
+ * 7. Enables the software-pended tud_task() vector
  *
  * After init(), USB events are serviced automatically via TIM6 interrupt.
  * Applications do NOT need to call task() — it is a no-op when timer-driven
@@ -135,28 +145,21 @@ inline void init() {
         *dctl &= ~DCTL_SDIS;
     }
 
-    // Start 1kHz timer for automatic USB event processing.
-    // TIM6 at priority 8 (below USB OTG at 4, below audio DMA at 2).
-    // This ensures tud_task() is called every 1ms regardless of main loop timing.
-    detail::s_timer_driven = true;
-    sbl::driver::TimerCallback::start(1000, []() { tud_task(); });
+    // tud_task() runs in the software-pended vector at Level::SoftPend:
+    // the OTG interrupt pends it after each event, and task() pends it
+    // for housekeeping. Nothing on a timer.
+    sbl::driver::prio::enable_irq(SOFT_PEND_IRQ, sbl::driver::prio::kSoftPend);
+    pend_task();
 }
 
 /**
- * @brief Process USB events (no-op when timer-driven)
+ * @brief Request USB servicing
  *
- * When sbl::usb::init() has been called, USB events are serviced
- * automatically via TIM6 interrupt at 1kHz. This function is a no-op
- * to prevent re-entrancy with the timer ISR.
- *
- * Kept for API compatibility — existing code that calls task() will
- * compile and work correctly without changes.
+ * Pends the tud_task() vector. Call once per control-tick run (or from the
+ * main loop) for housekeeping; the OTG interrupt pends it on every event,
+ * so this is the slow path.
  */
-inline void task() {
-    if (!detail::s_timer_driven) {
-        tud_task();
-    }
-}
+inline void task() { pend_task(); }
 
 /**
  * @brief Check if USB device is ready (enumerated and configured)
@@ -168,3 +171,9 @@ inline bool ready() {
 }
 
 } // namespace sbl::usb
+
+// The software-pended vector: tud_task() at Level::SoftPend. __attribute__((used))
+// forces emission; the vector table references it by address.
+extern "C" {
+__attribute__((used)) inline void TAMP_STAMP_IRQHandler() { tud_task(); }
+}

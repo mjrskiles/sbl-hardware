@@ -28,7 +28,6 @@ set(SBL_NATIVE_DRIVER_HEADERS
     ${SBL_NATIVE_DRIVER_DIR}/sai.hpp
     ${SBL_NATIVE_DRIVER_DIR}/sdmmc.hpp
     ${SBL_NATIVE_DRIVER_DIR}/sdram.hpp
-    ${SBL_NATIVE_DRIVER_DIR}/timer.hpp
     ${SBL_NATIVE_DRIVER_DIR}/timer_callback.hpp
     ${SBL_NATIVE_DRIVER_DIR}/uart.hpp
     ${SBL_NATIVE_DRIVER_DIR}/usb.hpp

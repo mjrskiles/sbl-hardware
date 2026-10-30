@@ -29,7 +29,7 @@
 
 #include <cstdint>
 #include <sbl/hw/driver/i2c.hpp>
-#include <sbl/hw/driver/timer.hpp>
+#include <sbl/system/timer.hpp>
 
 namespace sbl::driver {
 
@@ -92,13 +92,13 @@ inline bool init_pcm3060() {
     if (!read_reg<I2cInst>(REG_SYS_CTRL, reg_val)) return false;
     reg_val &= ~MRST_BIT;
     if (!write_reg<I2cInst>(REG_SYS_CTRL, reg_val)) return false;
-    Timer::busy_wait_ms(4);
+    sbl::system::timer::busy_wait_ms(4);
 
     // 2. Clear SRST (system reset release)
     if (!read_reg<I2cInst>(REG_SYS_CTRL, reg_val)) return false;
     reg_val &= ~SRST_BIT;
     if (!write_reg<I2cInst>(REG_SYS_CTRL, reg_val)) return false;
-    Timer::busy_wait_ms(4);
+    sbl::system::timer::busy_wait_ms(4);
 
     // 3. Set DAC format to 24-bit Left-Justified
     if (!read_reg<I2cInst>(REG_DAC_CTRL1, reg_val)) return false;

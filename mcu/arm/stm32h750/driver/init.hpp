@@ -22,7 +22,6 @@
 #include <sbl/hw/reg/usb_otg.hpp>
 #include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/sai.hpp>
-#include "timer.hpp"
 #include "timeout.hpp"
 
 #include "clocks.hpp"
@@ -472,7 +471,7 @@ inline void codec_reset_release() {
  * - HSE oscillator
  * - PLL1 for 480 MHz
  * - Bus clocks (AHB, APB)
- * - SysTick timer and the tick port (TIM5), on every path
+ * - The tick port (TIM5) and the system timer, on every path
  *
  * @note Not ISR-safe — blocking. Boot-time only.
  *
@@ -484,8 +483,7 @@ inline bool init() {
     constexpr uint32_t hse_mhz = sbl::hw::target::hse_mhz;
     constexpr uint32_t sysclk_mhz = sbl::hw::target::sysclk_mhz;
 
-    // Init timer on HSI first (allows delays during clock setup if needed)
-    Timer::init(64'000'000);
+    prio::set_system_handler_levels();
 
     // Power and flash config for target frequency
     configure_power();
@@ -549,8 +547,6 @@ inline bool init() {
             SystemCoreClock = sysclk_mhz * 1'000'000;
             timer_kernel_clock_hz = sysclk_mhz * 1'000'000 / 2;
 
-            // Reinit timer for actual frequency
-            Timer::init(sysclk_mhz * 1'000'000);
             Tick::init();
             sbl::system::timer::init();
             return true;
@@ -573,8 +569,7 @@ inline bool init() {
  */
 inline void init_hsi() {
     // Default HSI is already running at 64 MHz
-    // Just initialize the timers
-    Timer::init(64'000'000);
+    prio::set_system_handler_levels();
     Tick::init();
     sbl::system::timer::init();
 }

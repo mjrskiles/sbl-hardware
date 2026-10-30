@@ -33,7 +33,7 @@ Bare-metal drivers with no vendor HAL dependencies:
 | System init (480 MHz clock tree) | `driver/init.hpp` | Complete |
 | Audio init (PLL2, SAI GPIO, codec reset) | `driver/init.hpp` | Complete |
 | GPIO | `driver/gpio.hpp` | Complete |
-| Timer (SysTick) | `driver/timer.hpp` | Complete |
+| System timer port (TIM5 at 1 MHz) | `system/port/tick.hpp` | Complete |
 | Cycle port (DWT CYCCNT) | `system/port/cycles.hpp` | Complete |
 | UART (USART3, polling) | `driver/uart.hpp` | Complete |
 | ADC (ADC1, polling) | `driver/adc.hpp` | Complete |

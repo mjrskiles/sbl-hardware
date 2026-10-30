@@ -18,8 +18,9 @@
  * |   5   | any other DMA stream                   |
  * |   8   | TIM6 control tick — BASEPRI ceiling    |
  * |   9   | TIM7 soft PWM (BCM)                    |
+ * |  11   | TAMP_STAMP, software-pended: tud_task() |
  * |  12   | debug USART                            |
- * |  14   | SysTick                                |
+ * |  14   | SysTick (unused; assigned so it is never 0)|
  * |  15   | PendSV, SVCall                         |
  */
 
@@ -46,6 +47,7 @@ inline constexpr Level kOtherDma    = Level::Dma;          ///< ADC, SDMMC, anyt
 inline constexpr Level kControlTick = Level::ControlTick;  ///< TIM6 — the BASEPRI ceiling
 inline constexpr Level kSoftPwm     = Level::SoftPwm;      ///< TIM7 BCM engine
 inline constexpr Level kDebugUart   = Level::Debug;        ///< USART TX+RX (debug)
+inline constexpr Level kSoftPend    = Level::SoftPend;     ///< TAMP_STAMP, software-pended: tud_task()
 inline constexpr Level kSysTick     = Level::SysTick;
 inline constexpr Level kSystemTimer = Level::ShortDeadline; ///< TIM5 overflow: the epoch handler, a few instructions once per 71.6 min, above every reader of count64()
 inline constexpr Level kPendSv      = Level::PendSv;
@@ -70,8 +72,7 @@ inline void enable_irq(sbl::hw::reg::IRQn irq, Level level) {
  * Reset leaves SysTick, PendSV and SVCall at level 0 — above audio — so an
  * unassigned SysTick could preempt the audio DMA handler. SCB->SHP indexes:
  * SVCall = 7, PendSV = 10, SysTick = 11 (ARMv7-M SHPR2/SHPR3 byte order,
- * CMSIS `SHP[(IRQn & 0xF) - 4]`). Called from Timer::init(), which owns
- * SysTick; idempotent.
+ * CMSIS `SHP[(IRQn & 0xF) - 4]`). Called from init(); idempotent.
  */
 inline void set_system_handler_levels() {
     using namespace sbl::hw::reg;

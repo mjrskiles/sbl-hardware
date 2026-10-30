@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/tim_basic.hpp>
+#include <sbl/system/assert.hpp>
 #include "clocks.hpp"  // timer_kernel_clock_hz
 #include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
@@ -42,6 +43,7 @@ public:
      */
     static void start(uint32_t period_us, Callback cb) {
         using namespace sbl::hw::reg;
+        SBL_ASSERT(!s_running);  // one user: the control tick; a second start() would replace it silently
 
         s_callback = cb;
 
