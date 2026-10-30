@@ -42,6 +42,7 @@ set(SBL_NATIVE_C_HEADERS
 # System ports, mounted as <sbl/system/port/...> (same pattern as stm32h750)
 set(SBL_NATIVE_SYSTEM_PORT_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/system/port/cycles.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/system/port/tick.hpp
 )
 
 set(_STAMP ${CMAKE_CURRENT_BINARY_DIR}/headers_copied.stamp)

@@ -22,7 +22,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/tim_basic.hpp>
-#include "init.hpp"  // timer_kernel_clock_hz
+#include "clocks.hpp"  // timer_kernel_clock_hz
 #include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/irq.hpp>

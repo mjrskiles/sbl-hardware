@@ -65,6 +65,13 @@
   },
 
   "patches": {
+    "TIM2": {
+      "description": "Drop the input-mode alternate views of CCMR1/CCMR2: cecrops emits an alternateRegister as a second field, which shifts CNT, PSC, ARR and the CCRs by 8 bytes (found on the bench 2026-10-30, TIM5 ARR landing at 0x34)",
+      "registers": {
+        "CCMR1_Input": { "delete": true, "reason": "alternateRegister of CCMR1_Output at 0x18; one field per offset until cecrops models alternates (sbl-workspace#30)" },
+        "CCMR2_Input": { "delete": true, "reason": "alternateRegister of CCMR2_Output at 0x1C; one field per offset until cecrops models alternates (sbl-workspace#30)" }
+      }
+    },
     "RCC": {
       "description": "Fix register offsets - SVD has duplicate HSICFGR",
       "registers": {

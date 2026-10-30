@@ -30,6 +30,7 @@ file(MAKE_DIRECTORY ${SBL_STM32H750_INCLUDE_DIR}/sbl/hw/reg)
 set(SBL_STM32H750_DRIVER_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/adc.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/clock.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/clocks.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/dma.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/dma_buffer.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/gpio.hpp
@@ -75,6 +76,7 @@ set(SBL_STM32H750_REG_HEADERS
 # mounted as <sbl/system/port/...> beside the drivers.
 set(SBL_STM32H750_SYSTEM_PORT_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/system/port/cycles.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/system/port/tick.hpp
 )
 
 # Copy headers to build include structure at build time.
