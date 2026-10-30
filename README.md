@@ -23,7 +23,7 @@ Reference this repository in your project's `sbl.json`:
         "ref": "main"
       }
     ],
-    "target": "sbl:mainboards/raspberry-pi-pico-2"
+    "target": "sbl:devices/patch-init"
   }
 }
 ```
@@ -40,7 +40,7 @@ Or use a local clone:
         "path": "../sbl-hardware"
       }
     ],
-    "target": "sbl:mainboards/raspberry-pi-pico-2"
+    "target": "sbl:devices/patch-init"
   }
 }
 ```
@@ -51,13 +51,11 @@ Or use a local clone:
 sbl-hardware/
 ├── mcu/                          # MCU definitions (FPU required — ADR-008)
 │   ├── arm/                      # ARM Cortex-M MCUs
-│   │   ├── rp2350/               # Raspberry Pi RP2350 (Cortex-M33)
 │   │   └── stm32h750/            # STM32H750 (Cortex-M7)
 │   └── native/                   # Native simulator
 ├── mainboards/                   # Primary boards running SBL applications
 │   ├── daisy-seed/               # Electrosmith Daisy Seed (STM32H750)
-│   ├── daisy-patch-sm/           # Electrosmith Daisy Patch SM (STM32H750)
-│   └── raspberry-pi-pico-2/      # Raspberry Pi Pico 2 (RP2350)
+│   └── daisy-patch-sm/           # Electrosmith Daisy Patch SM (STM32H750)
 └── modules/                      # Extension modules
     ├── boards/                   # Expansion PCBs
     │   ├── daisy-pod/            # Electrosmith Daisy Pod (knobs, encoder, LEDs)
@@ -69,8 +67,8 @@ sbl-hardware/
 
 | Level | Description | Example |
 |-------|-------------|---------|
-| MCU | Silicon + driver + pin definitions | rp2350, stm32h750 |
-| Mainboard | Primary board running SBL, exposes pins | daisy-seed, raspberry-pi-pico-2 |
+| MCU | Silicon + driver + pin definitions | stm32h750, linux-arm-host |
+| Mainboard | Primary board running SBL, exposes pins | daisy-seed, daisy-patch-sm |
 | Module | Attaches to mainboard/module, claims pins | led-panel, dac-board |
 
 ### Mainboard vs Module
@@ -86,7 +84,6 @@ sbl-hardware/
 |--------|-------|-----|------|
 | `sbl:mainboards/daisy-seed` | Electrosmith Daisy Seed | STM32H750 | Cortex-M7 |
 | `sbl:mainboards/daisy-patch-sm` | Electrosmith Daisy Patch SM | STM32H750 | Cortex-M7 |
-| `sbl:mainboards/raspberry-pi-pico-2` | Raspberry Pi Pico 2 | RP2350 | Cortex-M33 |
 
 ### Modules
 
@@ -205,7 +202,7 @@ Generate schemas: `sbl-schema generate` (outputs to `sbl-schema/generated/`)
 
 1. Create a directory under `modules/boards/` or `modules/ic/`
 2. Add a `hardware.json` with `module` schema
-3. Set `attaches_to` to reference the parent (e.g., `mainboards/raspberry-pi-pico`)
+3. Set `attaches_to` to reference the parent (e.g., `mainboards/daisy-seed`)
 4. Define pin and bus claims with explicit functions
 
 See the Daisy Pod or Patch.init() module definitions for examples.
