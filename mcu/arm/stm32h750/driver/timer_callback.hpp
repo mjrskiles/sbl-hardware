@@ -3,8 +3,9 @@
  * @brief Single-callback periodic timer using TIM6
  *
  * Provides a guaranteed-rate callback via hardware timer interrupt.
- * TIM6 is a basic timer on APB1 (240 MHz timer clock post-init).
- * PSC = 239 → 1 MHz tick (1 us resolution). Max period = 65535 us (~65 ms).
+ * TIM6 is a basic timer on APB1. The prescaler is derived from the timer
+ * kernel clock init() achieved, for a 1 MHz count (1 us resolution) on
+ * every boot path. Max period = 65535 us (~65 ms).
  *
  * Runs at prio::kControlTick (level 8): below audio DMA (2) and USB/MIDI (4),
  * above debug UART (12).
@@ -21,6 +22,7 @@
 
 #include <cstdint>
 #include <sbl/hw/reg/tim_basic.hpp>
+#include "init.hpp"  // timer_kernel_clock_hz
 #include "priorities.hpp"
 #include <sbl/hw/reg/rcc.hpp>
 #include <sbl/hw/reg/irq.hpp>
@@ -50,9 +52,9 @@ public:
 
         auto* tim = periph::tim6;
 
-        // APB1 timer clock = 240 MHz (2x multiplier when APB1 prescaler > 1)
-        // PSC = 239 → 1 MHz tick (1 us/count)
-        tim->PSC = 239;
+        // 1 MHz count from whatever timer kernel clock init() achieved
+        // (240 MHz after the PLL path, 64 MHz on HSI)
+        tim->PSC = timer_kernel_clock_hz / 1'000'000 - 1;
         tim->ARR = period_us - 1;
         tim->CR1 = TIM_Basic::CR1_ARPE;
 

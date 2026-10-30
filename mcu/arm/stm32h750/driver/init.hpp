@@ -2,13 +2,17 @@
  * @file init.hpp
  * @brief STM32H750 bare-metal system initialization
  *
- * Configures the STM32H7 clock tree for 480 MHz operation using HSE.
- * No HAL dependencies - uses SVD-generated register definitions.
+ * Configures the STM32H7 clock tree from the generated target constants:
+ * `sbl::hw::target::hse_mhz` and `sbl::hw::target::sysclk_mhz`, which the
+ * main module's manifest declares (sbl-hardware#41). A target that declares
+ * neither does not compile this driver. No HAL dependencies: SVD-generated
+ * register definitions only.
  */
 #ifndef SBL_HW_DRIVER_INIT_HPP_
 #define SBL_HW_DRIVER_INIT_HPP_
 
 #include <cstdint>
+#include <sbl/hw/config/target.hpp>
 #include <sbl/hw/reg/rcc.hpp>
 #include "priorities.hpp"
 #include <sbl/hw/reg/pwr.hpp>
@@ -30,15 +34,14 @@ inline uint32_t SystemCoreClock = 64'000'000;  // Default to HSI
 namespace sbl::driver {
 
 /**
- * @brief Clock configuration for STM32H750
+ * @brief The timer kernel clock init() achieved, in Hz
+ *
+ * Drivers derive their prescalers from it when they start, so a boot
+ * that stays on HSI gets a correct prescaler too. 64 MHz on HSI; after
+ * the PLL path, SYSCLK/2: with D2PPRE1 = /2 and TIMPRE = 0 the timers
+ * run at HCLK (RM0433 §8.7.7).
  */
-struct ClockConfig {
-    uint32_t hse_mhz = 16;       // External oscillator (Daisy Seed: 16 MHz)
-    uint32_t sysclk_mhz = 480;   // Target SYSCLK
-    uint32_t hclk_mhz = 240;     // AHB clock (SYSCLK/2 max for D1)
-    uint32_t pclk1_mhz = 120;    // APB1 clock
-    uint32_t pclk2_mhz = 120;    // APB2 clock
-};
+inline uint32_t timer_kernel_clock_hz = 64'000'000;
 
 namespace detail {
 
@@ -267,7 +270,7 @@ constexpr uint32_t PLL2_DIVP  = 16;    // P output divider → 49.152 MHz
  *
  * Must be called AFTER init() (HSE must be running).
  */
-inline bool configure_pll2_audio(uint32_t hse_mhz = 16) {
+inline bool configure_pll2_audio(uint32_t hse_mhz) {
     using namespace sbl::hw::reg;
 
     // Disable PLL2 before configuring
@@ -473,7 +476,7 @@ inline void codec_reset_release() {
 }
 
 /**
- * @brief Initialize STM32H750 for 480 MHz operation
+ * @brief Initialize the STM32H750 clock tree for the target's SYSCLK
  *
  * Configures:
  * - Power supply (LDO, VOS1)
@@ -485,19 +488,20 @@ inline void codec_reset_release() {
  *
  * @note Not ISR-safe — blocking. Boot-time only.
  *
- * @param config Clock configuration (defaults to 480 MHz from 16 MHz HSE)
- * @return true if initialization successful
+ * @return true if the PLL path succeeded; false leaves the core on HSI at 64 MHz
  */
-inline bool init(const ClockConfig& config = ClockConfig{}) {
+inline bool init() {
     using namespace detail;
     using namespace sbl::hw::reg;
+    constexpr uint32_t hse_mhz = sbl::hw::target::hse_mhz;
+    constexpr uint32_t sysclk_mhz = sbl::hw::target::sysclk_mhz;
 
     // Init timer on HSI first (allows delays during clock setup if needed)
     Timer::init(64'000'000);
 
     // Power and flash config for target frequency
     configure_power();
-    configure_flash(config.sysclk_mhz);
+    configure_flash(sysclk_mhz);
 
     // Try to start HSE
     if (!enable_hse()) {
@@ -513,7 +517,7 @@ inline bool init(const ClockConfig& config = ClockConfig{}) {
     while (periph::rcc->CR & RCC::CR_PLL1RDY) {}
 
     // PLL source = HSE, DIVM1 = 4 (16MHz / 4 = 4MHz PLL input)
-    uint32_t divm1 = config.hse_mhz / 4;
+    uint32_t divm1 = hse_mhz / 4;
     periph::rcc->PLLCKSELR = PLLCKSELR_PLLSRC_HSE | (divm1 << 4);
 
     // PLL1 config: input range 4-8MHz (PLL1RGE=2), enable P and Q outputs
@@ -525,8 +529,8 @@ inline bool init(const ClockConfig& config = ClockConfig{}) {
     // Calculate dividers for target frequency
     // VCO = target * 2 = 960 MHz, DIVN = VCO / PLL_input = 960 / 4 = 240
     // DIVP = 2 → 480 MHz SYSCLK, DIVQ = 20 → 48 MHz (SDMMC, etc.)
-    uint32_t pll_input_mhz = config.hse_mhz / divm1;
-    uint32_t vco_mhz = config.sysclk_mhz * 2;
+    uint32_t pll_input_mhz = hse_mhz / divm1;
+    uint32_t vco_mhz = sysclk_mhz * 2;
     uint32_t divn = vco_mhz / pll_input_mhz;
     uint32_t divp = 2;
     uint32_t divq = vco_mhz / 48;  // 960/48 = 20
@@ -552,10 +556,11 @@ inline bool init(const ClockConfig& config = ClockConfig{}) {
             while ((periph::rcc->CFGR & RCC::CFGR_SWS_Msk) != CFGR_SWS_PLL1) {}
 
             // Update SystemCoreClock for CMSIS-compatible code (e.g., TinyUSB)
-            SystemCoreClock = config.sysclk_mhz * 1'000'000;
+            SystemCoreClock = sysclk_mhz * 1'000'000;
+            timer_kernel_clock_hz = sysclk_mhz * 1'000'000 / 2;
 
             // Reinit timer for actual frequency
-            Timer::init(config.sysclk_mhz * 1'000'000);
+            Timer::init(sysclk_mhz * 1'000'000);
             return true;
         }
     }
@@ -754,10 +759,10 @@ inline void enable_usb1_nvic() {
  *
  * Must be called AFTER init() to ensure HSE is running.
  *
- * @param hse_mhz HSE frequency (default 16 MHz)
  * @return true if USB clock setup successful
  */
-inline bool init_usb(uint32_t hse_mhz = 16) {
+inline bool init_usb() {
+    constexpr uint32_t hse_mhz = sbl::hw::target::hse_mhz;
     using namespace detail;
 
     // Enable USB 3.3V internal power supply (MUST be first!)
@@ -803,10 +808,10 @@ inline bool init_usb(uint32_t hse_mhz = 16) {
  *
  * @note Not ISR-safe — blocking. Boot-time only.
  *
- * @param hse_mhz HSE frequency (default 16 MHz for Daisy Seed / Patch SM)
  * @return true if audio clock setup successful
  */
-inline bool init_audio(uint32_t hse_mhz = 16) {
+inline bool init_audio() {
+    constexpr uint32_t hse_mhz = sbl::hw::target::hse_mhz;
     using namespace detail;
     using namespace sbl::hw::reg;
 
