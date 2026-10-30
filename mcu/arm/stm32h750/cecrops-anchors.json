@@ -86,7 +86,20 @@
     "DBGMCU": {
       "base_address": "0x5C001000",
       "registers": {
-        "IDC": { "offset": "0x000", "fields": ["DEV_ID", "REV_ID"] }
+        "IDC": { "offset": "0x000", "fields": ["DEV_ID", "REV_ID"] },
+        "APB1LFZ1": { "offset": "0x03C", "fields": ["DBG_TIM2", "DBG_TIM5"] }
+      }
+    },
+    "TIM5": {
+      "base_address": "0x40000C00",
+      "registers": {
+        "CR1":  { "offset": "0x00", "fields": ["CEN", "URS", "ARPE"] },
+        "DIER": { "offset": "0x0C", "fields": ["UIE"] },
+        "SR":   { "offset": "0x10", "fields": ["UIF"] },
+        "EGR":  { "offset": "0x14", "fields": ["UG"] },
+        "CNT":  { "offset": "0x24" },
+        "PSC":  { "offset": "0x28" },
+        "ARR":  { "offset": "0x2C" }
       }
     },
     "AXI": {

@@ -11,6 +11,7 @@
  */
 
 #include "tusb.h"
+#include "usb.hpp"  // sbl::usb::pend_task()
 #include <cstdint>
 
 extern "C" {
@@ -18,13 +19,15 @@ extern "C" {
 #ifdef SBL_USB_OTG_HS
 
 void OTG_HS_IRQHandler(void) {
-    tud_int_handler(0);  // Port 0 = USB1_OTG_HS
+    tud_int_handler(0);
+    sbl::usb::pend_task();  // service the event at Level::SoftPend  // Port 0 = USB1_OTG_HS
 }
 
 #else
 
 void OTG_FS_IRQHandler(void) {
-    tud_int_handler(0);  // Port 0 = USB2_OTG_FS
+    tud_int_handler(0);
+    sbl::usb::pend_task();  // service the event at Level::SoftPend  // Port 0 = USB2_OTG_FS
 }
 
 #endif

@@ -54,6 +54,10 @@
       "peripherals": ["DBGMCU"],
       "output": "reg/dbgmcu.hpp"
     },
+    "tim_general": {
+      "peripherals": ["TIM2", "TIM3", "TIM4", "TIM5"],
+      "output": "reg/tim_general.hpp"
+    },
     "axi": {
       "peripherals": ["AXI"],
       "output": "reg/axi.hpp"
@@ -61,15 +65,6 @@
   },
 
   "patches": {
-    "RCC": {
-      "description": "Fix register offsets - SVD has duplicate HSICFGR",
-      "registers": {
-        "HSICFGR": {
-          "delete": true,
-          "reason": "SVD has both ICSCR (0x04) and HSICFGR (0x08) but RM0433 shows only ICSCR at 0x04; HSICFGR is duplicate that shifts all offsets by 4 bytes"
-        }
-      }
-    },
     "ADC1": {
       "description": "Remove CCR - belongs in ADC_Common, not individual ADCs",
       "registers": {
@@ -109,6 +104,7 @@
   },
 
   "manual": [
+    "reg/tim_basic.hpp",
     "reg/usart.hpp",
     "reg/cortex_m.hpp",
     "reg/usb_otg.hpp",

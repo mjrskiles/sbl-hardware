@@ -37,7 +37,8 @@
 #include <sbl/hw/driver/dma_buffer.hpp>
 #include <sbl/hw/driver/timeout.hpp>
 #include <sbl/hw/hal/audio/types.hpp>
-#include <sbl/hw/hal/audio/sample_clock.hpp>
+#include <sbl/hw/hal/audio/frame_count.hpp>
+#include <sbl/system/timer.hpp>
 
 namespace sbl::driver {
 
@@ -234,6 +235,8 @@ public:
         // Stop DMA
         Dma::disable(STREAM_A);
         Dma::disable(STREAM_B);
+
+        sbl::hal::audio::FrameCount::reset_stamp();   // no block is pending
     }
 
 private:
@@ -427,10 +430,12 @@ private:
      * we know exactly which half-buffer the DMA just finished reading —
      * that's the half we can safely overwrite.
      *
-     * Every half-transfer is one block clocked out, callback or not, so
-     * SampleClock advances unconditionally.
+     * Every half-transfer is one block clocked out, callback or not: the
+     * block is stamped with the system timer's count before the callback and
+     * the frame count advances after it (hal/audio/frame_count.hpp).
      */
     static void dma_callback() {
+        sbl::hal::audio::FrameCount::stamp(sbl::system::timer::count());
         if (s_callback) {
             const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
             const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
@@ -444,7 +449,7 @@ private:
             uint32_t offset = is_half ? 0 : half_samples;
             s_callback(&tx_buf[offset], &rx_buf[offset], s_block_size);
         }
-        sbl::hal::audio::SampleClock::advance(s_block_size);
+        sbl::hal::audio::FrameCount::advance(s_block_size);
     }
 };
 

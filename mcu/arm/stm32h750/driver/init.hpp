@@ -22,26 +22,13 @@
 #include <sbl/hw/reg/usb_otg.hpp>
 #include <sbl/hw/reg/irq.hpp>
 #include <sbl/hw/reg/sai.hpp>
-#include "timer.hpp"
 #include "timeout.hpp"
 
-// SystemCoreClock - required by TinyUSB and other CMSIS-compatible code
-// Updated by init() when clock configuration changes
-extern "C" {
-inline uint32_t SystemCoreClock = 64'000'000;  // Default to HSI
-}
+#include "clocks.hpp"
+#include <sbl/system/port/tick.hpp>
+#include <sbl/system/timer.hpp>
 
 namespace sbl::driver {
-
-/**
- * @brief The timer kernel clock init() achieved, in Hz
- *
- * Drivers derive their prescalers from it when they start, so a boot
- * that stays on HSI gets a correct prescaler too. 64 MHz on HSI; after
- * the PLL path, SYSCLK/2: with D2PPRE1 = /2 and TIMPRE = 0 the timers
- * run at HCLK (RM0433 §8.7.7).
- */
-inline uint32_t timer_kernel_clock_hz = 64'000'000;
 
 namespace detail {
 
@@ -484,7 +471,7 @@ inline void codec_reset_release() {
  * - HSE oscillator
  * - PLL1 for 480 MHz
  * - Bus clocks (AHB, APB)
- * - SysTick timer
+ * - The tick port (TIM5) and the system timer, on every path
  *
  * @note Not ISR-safe — blocking. Boot-time only.
  *
@@ -496,8 +483,7 @@ inline bool init() {
     constexpr uint32_t hse_mhz = sbl::hw::target::hse_mhz;
     constexpr uint32_t sysclk_mhz = sbl::hw::target::sysclk_mhz;
 
-    // Init timer on HSI first (allows delays during clock setup if needed)
-    Timer::init(64'000'000);
+    prio::set_system_handler_levels();
 
     // Power and flash config for target frequency
     configure_power();
@@ -506,6 +492,8 @@ inline bool init() {
     // Try to start HSE
     if (!enable_hse()) {
         // HSE failed - stay on HSI
+        Tick::init();
+        sbl::system::timer::init();
         return false;
     }
 
@@ -559,13 +547,15 @@ inline bool init() {
             SystemCoreClock = sysclk_mhz * 1'000'000;
             timer_kernel_clock_hz = sysclk_mhz * 1'000'000 / 2;
 
-            // Reinit timer for actual frequency
-            Timer::init(sysclk_mhz * 1'000'000);
+            Tick::init();
+            sbl::system::timer::init();
             return true;
         }
     }
 
     // PLL failed to lock - stay on HSI
+    Tick::init();
+    sbl::system::timer::init();
     return false;
 }
 
@@ -579,8 +569,9 @@ inline bool init() {
  */
 inline void init_hsi() {
     // Default HSI is already running at 64 MHz
-    // Just initialize the timer
-    Timer::init(64'000'000);
+    prio::set_system_handler_levels();
+    Tick::init();
+    sbl::system::timer::init();
 }
 
 /**

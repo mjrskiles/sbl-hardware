@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <sbl/hw/driver/i2c.hpp>
-#include <sbl/hw/driver/timer.hpp>
 
 namespace sbl::driver {
 

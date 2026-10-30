@@ -24,7 +24,8 @@
 #include "miniaudio.h"
 #include "sai.hpp"
 
-#include <sbl/hw/hal/audio/sample_clock.hpp>
+#include <sbl/hw/hal/audio/frame_count.hpp>
+#include <sbl/system/timer.hpp>
 
 #include <cstdio>
 #include <cstdlib>
@@ -166,13 +167,18 @@ bool find_device(ma_context* ctx, const char* query,
 /// SBL audio callbacks receive interleaved int32_t words in s24_rj_i32.
 /// The application's callback uses interleave_from_float/deinterleave_to_float
 /// at the DMA boundary, exactly as on hardware.
+///
+/// One miniaudio period runs the app callback once per block it holds, back
+/// to back, so the frame stamp is recorded once per period and the frame
+/// count advances per block.
 void ma_data_callback(ma_device* device, void* output, const void* input,
                       ma_uint32 frame_count) {
     (void)device;
 
+    sbl::hal::audio::FrameCount::stamp(sbl::system::timer::count());
     if (!s_callback) {
         memset(output, 0, frame_count * 2 * sizeof(float));
-        sbl::hal::audio::SampleClock::advance(frame_count);
+        sbl::hal::audio::FrameCount::advance(frame_count);
         return;
     }
 
@@ -208,7 +214,7 @@ void ma_data_callback(ma_device* device, void* output, const void* input,
 
         // Call the SBL audio callback (same signature as on hardware)
         s_callback(tx_buf, rx_buf, frames);
-        sbl::hal::audio::SampleClock::advance(frames);
+        sbl::hal::audio::FrameCount::advance(frames);
 
         // Convert output s24_rj_i32 → float [-1,1], sign-extending from bit 23
         // so the upper byte is ignored as the SAI ignores it. The left shift is

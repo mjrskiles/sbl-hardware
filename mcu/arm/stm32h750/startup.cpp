@@ -92,6 +92,7 @@ extern "C" {
     // TIM6/TIM7 interrupt handlers
     void TIM6_DAC_IRQHandler()       __attribute__((weak, alias("Default_Handler")));
     void TIM7_IRQHandler()           __attribute__((weak, alias("Default_Handler")));
+    void TIM5_IRQHandler()           __attribute__((weak, alias("Default_Handler")));
 
     // USB OTG interrupt handlers
     // USB1_OTG_HS (at 0x40040000) - NOT used by Daisy Seed
@@ -357,7 +358,7 @@ const void* const vector_table[] = {
     reinterpret_cast<void*>(DMA1_Stream7_IRQHandler),    // 47 - DMA1 stream 7
     reinterpret_cast<void*>(Default_Handler),           // 48
     reinterpret_cast<void*>(Default_Handler),           // 49
-    reinterpret_cast<void*>(Default_Handler),           // 50
+    reinterpret_cast<void*>(TIM5_IRQHandler),           // 50 - TIM5 (the tick port)
     reinterpret_cast<void*>(Default_Handler),           // 51
     reinterpret_cast<void*>(Default_Handler),           // 52
     reinterpret_cast<void*>(Default_Handler),           // 53
