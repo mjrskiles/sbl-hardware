@@ -14,7 +14,8 @@ This is a paravirtual layer: the drivers know they are on a host; nothing above 
 | ADC | Scan buffer initialized to each channel's idle code from the manifest electrics (`sbl::hw::electrical::idle_counts`, FDP-076 Phase 0); nothing writes it afterwards until the VDH client lands (FDP-076 Phase 2). |
 | GPIO | In-memory pin array; models pull-up/pull-down idle state only. |
 | FatFs | `ff.h` reimplemented over POSIX file I/O (`ff_stubs.c`); `f_mount` always succeeds. |
-| Timer / TimerCallback | `clock_gettime(CLOCK_MONOTONIC)`; periodic callback on a `std::thread`. |
+| TimerCallback | Periodic callback on a `std::thread`. |
+| Tick port (`system/port/tick.hpp`) | `CLOCK_MONOTONIC` in microseconds; a thread calls the overflow handler at each 2^32 boundary. |
 | UART | stdout (write), stub (read). |
 | I2C | No-op (codec init succeeds). |
 | USB | CDC routes to stdout, read side stubbed. |
