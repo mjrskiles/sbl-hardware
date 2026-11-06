@@ -371,21 +371,22 @@ private:
      *   A_TX_B_RX: Stream 0 = Mem->Periph (TX), Stream 1 = Periph->Mem (RX)
      *   A_RX_B_TX: Stream 0 = Periph->Mem (RX), Stream 1 = Mem->Periph (TX)
      *
-     * The ISR callback always fires on Stream 0 (Block A, the primary).
-     * Block A always runs because it generates the clocks — its DMA is
-     * guaranteed to transfer regardless of TX/RX direction.
+     * The RX stream's half-transfer and transfer-complete interrupts drive
+     * the callback. The TX DMA moves a word into the TX FIFO before it is
+     * clocked out and the RX DMA moves one out of the RX FIFO after it is
+     * clocked in, so the TX stream runs ahead of the RX stream: when the RX
+     * stream completes a half, the TX stream has finished reading the same
+     * half.
      */
     static void configure_dma() {
         using namespace sbl::hw::reg;
 
         const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
 
-        // The TX stream drives the ISR — the callback must know the TX DMA
-        // position to safely write to the half-buffer the DMA isn't reading.
         const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
         const DmaStream rx_stream = a_is_tx ? STREAM_B : STREAM_A;
 
-        // --- TX stream (drives ISR) ---
+        // --- TX stream (no ISR) ---
         DmaConfig cfg_tx{};
         cfg_tx.direction = DmaDirection::MemoryToPeriph;
         cfg_tx.periph_width = DmaDataWidth::Word;
@@ -394,17 +395,16 @@ private:
         cfg_tx.circular = true;
         cfg_tx.periph_increment = false;
         cfg_tx.memory_increment = true;
-        cfg_tx.half_transfer_irq = true;
-        cfg_tx.transfer_complete_irq = true;
+        cfg_tx.half_transfer_irq = false;
+        cfg_tx.transfer_complete_irq = false;
 
         auto* tx_periph_reg = a_is_tx ? &periph::sai1->SAI_ADR
                                       : &periph::sai1->SAI_BDR;
         int32_t* tx_buf = a_is_tx ? s_buf_a : s_buf_b;
         Dma::configure(tx_stream, cfg_tx, tx_periph_reg, tx_buf, s_buf_samples);
         Dma::set_request(tx_stream, a_is_tx ? DMAMUX_SAI1_A : DMAMUX_SAI1_B);
-        Dma::set_callback(tx_stream, dma_callback);
 
-        // --- RX stream (no ISR) ---
+        // --- RX stream (drives ISR) ---
         DmaConfig cfg_rx{};
         cfg_rx.direction = DmaDirection::PeriphToMemory;
         cfg_rx.periph_width = DmaDataWidth::Word;
@@ -413,35 +413,36 @@ private:
         cfg_rx.circular = true;
         cfg_rx.periph_increment = false;
         cfg_rx.memory_increment = true;
-        cfg_rx.half_transfer_irq = false;
-        cfg_rx.transfer_complete_irq = false;
+        cfg_rx.half_transfer_irq = true;
+        cfg_rx.transfer_complete_irq = true;
 
         auto* rx_periph_reg = a_is_tx ? &periph::sai1->SAI_BDR
                                       : &periph::sai1->SAI_ADR;
         int32_t* rx_buf = a_is_tx ? s_buf_b : s_buf_a;
         Dma::configure(rx_stream, cfg_rx, rx_periph_reg, rx_buf, s_buf_samples);
         Dma::set_request(rx_stream, a_is_tx ? DMAMUX_SAI1_B : DMAMUX_SAI1_A);
+        Dma::set_callback(rx_stream, dma_callback);
     }
 
     /**
      * @brief DMA callback — determines half-buffer and invokes user callback
      *
-     * Called from the TX stream's ISR. The ISR fires on the TX stream so
-     * we know exactly which half-buffer the DMA just finished reading —
-     * that's the half we can safely overwrite.
+     * Called from the RX stream's ISR, on the half the RX DMA just finished
+     * writing. The TX stream, ahead of it, has finished reading the same
+     * half, so the callback reads the one and overwrites the other.
      *
-     * Every half-transfer is one block clocked out, callback or not: the
-     * block is stamped with the system timer's count before the callback and
-     * the frame count advances after it (hal/audio/frame_count.hpp).
+     * Every half-transfer is one block, callback or not: the block is
+     * stamped with the system timer's count before the callback and the
+     * frame count advances after it (hal/audio/frame_count.hpp).
      */
     static void dma_callback() {
         sbl::hal::audio::FrameCount::stamp(sbl::system::timer::count());
         if (s_callback) {
             const bool a_is_tx = (s_layout == SaiLayout::A_TX_B_RX);
-            const DmaStream tx_stream = a_is_tx ? STREAM_A : STREAM_B;
+            const DmaStream rx_stream = a_is_tx ? STREAM_B : STREAM_A;
 
             uint16_t half_samples = s_block_size * 2;  // stereo samples per half
-            bool is_half = Dma::is_half_transfer(tx_stream);
+            bool is_half = Dma::is_half_transfer(rx_stream);
 
             int32_t* tx_buf = a_is_tx ? s_buf_a : s_buf_b;
             int32_t* rx_buf = a_is_tx ? s_buf_b : s_buf_a;
